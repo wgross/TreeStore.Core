@@ -1,15 +1,17 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.26124.0
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30804.86
 MinimumVisualStudioVersion = 15.0.26124.0
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{33B5892E-A9AB-4F48-9531-74C2E1741D4D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PowerShellFilesystemProviderBase", "src\PowerShellFilesystemProviderBase\PowerShellFilesystemProviderBase.csproj", "{C3C89AA4-F1F7-4260-813F-18B0F2983832}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PowerShellFilesystemProviderBase", "src\PowerShellFilesystemProviderBase\PowerShellFilesystemProviderBase.csproj", "{C3C89AA4-F1F7-4260-813F-18B0F2983832}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{F7CE7D56-263A-40FA-918C-CC28E9BC64E7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PowerShellFilesystemProviderBase.Test", "test\PowerShellFilesystemProviderBase.Test\PowerShellFilesystemProviderBase.Test.csproj", "{75C0AB96-F95F-4553-AB75-24E3A96AA979}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PowerShellFilesystemProviderBase.Test", "test\PowerShellFilesystemProviderBase.Test\PowerShellFilesystemProviderBase.Test.csproj", "{75C0AB96-F95F-4553-AB75-24E3A96AA979}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestFileSystem", "test\TestFileSystem\TestFileSystem.csproj", "{805AFFD0-3603-4912-9CE9-C140F02DDA2C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -19,9 +21,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 		Release|x64 = Release|x64
 		Release|x86 = Release|x86
-	EndGlobalSection
-	GlobalSection(SolutionProperties) = preSolution
-		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{C3C89AA4-F1F7-4260-813F-18B0F2983832}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -48,9 +47,28 @@ Global
 		{75C0AB96-F95F-4553-AB75-24E3A96AA979}.Release|x64.Build.0 = Release|Any CPU
 		{75C0AB96-F95F-4553-AB75-24E3A96AA979}.Release|x86.ActiveCfg = Release|Any CPU
 		{75C0AB96-F95F-4553-AB75-24E3A96AA979}.Release|x86.Build.0 = Release|Any CPU
+		{805AFFD0-3603-4912-9CE9-C140F02DDA2C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{805AFFD0-3603-4912-9CE9-C140F02DDA2C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{805AFFD0-3603-4912-9CE9-C140F02DDA2C}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{805AFFD0-3603-4912-9CE9-C140F02DDA2C}.Debug|x64.Build.0 = Debug|Any CPU
+		{805AFFD0-3603-4912-9CE9-C140F02DDA2C}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{805AFFD0-3603-4912-9CE9-C140F02DDA2C}.Debug|x86.Build.0 = Debug|Any CPU
+		{805AFFD0-3603-4912-9CE9-C140F02DDA2C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{805AFFD0-3603-4912-9CE9-C140F02DDA2C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{805AFFD0-3603-4912-9CE9-C140F02DDA2C}.Release|x64.ActiveCfg = Release|Any CPU
+		{805AFFD0-3603-4912-9CE9-C140F02DDA2C}.Release|x64.Build.0 = Release|Any CPU
+		{805AFFD0-3603-4912-9CE9-C140F02DDA2C}.Release|x86.ActiveCfg = Release|Any CPU
+		{805AFFD0-3603-4912-9CE9-C140F02DDA2C}.Release|x86.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{C3C89AA4-F1F7-4260-813F-18B0F2983832} = {33B5892E-A9AB-4F48-9531-74C2E1741D4D}
 		{75C0AB96-F95F-4553-AB75-24E3A96AA979} = {F7CE7D56-263A-40FA-918C-CC28E9BC64E7}
+		{805AFFD0-3603-4912-9CE9-C140F02DDA2C} = {F7CE7D56-263A-40FA-918C-CC28E9BC64E7}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {FA6EE7C3-ACC3-44DE-963E-E39213C90EF4}
 	EndGlobalSection
 EndGlobal
