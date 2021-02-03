@@ -37,7 +37,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         public void Create_container_node_from_IGetChildItem()
         {
             // ACT
-            var result = ContainerNodeFactory.Create("name", Mock.Of<IItemContainer>());
+            var result = ContainerNodeFactory.CreateFromIItemContainer("name", Mock.Of<IItemContainer>());
 
             // ASSERT
             Assert.IsType<ContainerNode>(result);

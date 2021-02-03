@@ -4,7 +4,9 @@ using System.Management.Automation;
 
 namespace PowerShellFilesystemProviderBase.Nodes
 {
-    public abstract class ProviderNode : IGetItem, ISetItem, IClearItem, IItemExists, IInvokeItem
+    public abstract class ProviderNode :
+        IGetItem, ISetItem, IClearItem, IItemExists, IInvokeItem
+
     {
         private readonly string name;
         private readonly object underlying;

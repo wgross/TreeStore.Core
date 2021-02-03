@@ -1,4 +1,6 @@
-﻿using System.Management.Automation;
+﻿using PowerShellFilesystemProviderBase.Capabilities;
+using System.IO;
+using System.Management.Automation;
 
 namespace PowerShellFilesystemProviderBase.Providers
 {
@@ -26,12 +28,30 @@ namespace PowerShellFilesystemProviderBase.Providers
 
         protected override void GetChildItems(string path, bool recurse, uint depth)
         {
-            base.GetChildItems(path, recurse, depth);
+            if (this.TryGetNodeByPath<IGetChildItems>(path, out var getChildItems))
+            {
+                foreach (var getItem in getChildItems.GetChildItems())
+                {
+                    var pso = getItem.GetItem();
+                    if (pso is not null)
+                    {
+                        var itemPath = Path.Join(path, getItem.Name);
+                        this.WriteItemObject(
+                            item: this.DecorateItem(itemPath, pso),
+                            path: this.DecoratePath(itemPath),
+                            isContainer: getItem.IsContainer);
+                    }
+                }
+            };
         }
 
-        protected override object GetChildItemsDynamicParameters(string path, bool recurse)
+        protected override object? GetChildItemsDynamicParameters(string path, bool recurse)
         {
-            return base.GetChildItemsDynamicParameters(path, recurse);
+            if (this.TryGetNodeByPath<IGetChildItems>(path, out var getChildItems))
+            {
+                return getChildItems.GetChildItemParameters();
+            }
+            return null;
         }
 
         protected override void GetChildNames(string path, ReturnContainers returnContainers)

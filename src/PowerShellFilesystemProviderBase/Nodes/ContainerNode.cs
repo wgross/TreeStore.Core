@@ -3,40 +3,16 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Management.Automation;
 using System.Reflection;
 
 namespace PowerShellFilesystemProviderBase.Nodes
 {
-    public class ContainerNode : ProviderNode
+    public class ContainerNode : ProviderNode, IGetChildItems
     {
         public ContainerNode(string? name, object? underlying)
             : base(name, underlying)
         { }
-
-        /// <summary>
-        /// A defualt root node doesn't know how to retrieve child nodes.
-        /// Override this method to provide children under the root.
-        /// </summary>
-        /// <remarks>
-        /// if not overriode in the payload a child node is always a container node.
-        /// The payloads properties are considers as ItemProperies if ther aren't enumerable.
-        /// </remarks>
-        /// <param name="pathItem"></param>
-        /// <returns></returns>
-        public (bool exists, ProviderNode? node) TryGetChildItem(string childName)
-        {
-            if (this.Underlying is IItemContainer itemContainer)
-            {
-                return itemContainer.TryGetChildNode(childName);
-            }
-
-            //var node = this.GetDictionaryProperties()
-            //    .Where(p => p.Name.Equals(childName))
-            //    .Select(pi => AsContainerNode(childName, pi))
-            //    .FirstOrDefault();
-
-            return (false, default);
-        }
 
         #region Reflection Queries
 
@@ -110,13 +86,65 @@ namespace PowerShellFilesystemProviderBase.Nodes
 
         #endregion Reflection Queries
 
-        #region Node converers
+        #region Node converter
 
         private ContainerNode AsContainerNode(string? name, PropertyInfo property)
         {
             return new ContainerNode(name, property.GetValue(this.Underlying, null));
         }
 
-        #endregion Node converers
+        #endregion Node converter
+
+        #region IItemContainer
+
+        /// <summary>
+        /// Override this method to provide children under the root.
+        /// </summary>
+        /// <remarks>
+        /// if not overriode in the payload a child node is always a container node.
+        /// The payloads properties are considers as ItemProperies if ther aren't enumerable.
+        /// </remarks>
+        /// <param name="pathItem"></param>
+        /// <returns></returns>
+        public (bool exists, ProviderNode? node) TryGetChildNode(string childName)
+        {
+            if (this.Underlying is IItemContainer itemContainer)
+            {
+                /// this is also true for <see cref="DictionaryContainerNode{T, V}"/>
+                /// wrapping a <see cref="IDictionary{TKey, TValue}"/>.
+                return itemContainer.TryGetChildNode(childName);
+            }
+
+            //var node = this.GetDictionaryProperties()
+            //    .Where(p => p.Name.Equals(childName))
+            //    .Select(pi => AsContainerNode(childName, pi))
+            //    .FirstOrDefault();
+
+            return (false, default);
+        }
+
+        #endregion IItemContainer
+
+        #region IGetChildItems
+
+        public IEnumerable<ProviderNode> GetChildItems()
+        {
+            if (this.Underlying is IGetChildItems getChildItem)
+            {
+                return getChildItem.GetChildItems();
+            }
+            return Enumerable.Empty<ProviderNode>();
+        }
+
+        public object? GetChildItemParameters()
+        {
+            if (this.Underlying is IGetChildItems getChildItem)
+            {
+                return getChildItem.GetChildItemParameters();
+            }
+            else return new RuntimeDefinedParameterDictionary();
+        }
+
+        #endregion IGetChildItems
     }
 }

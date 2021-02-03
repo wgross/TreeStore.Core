@@ -47,7 +47,7 @@ namespace PowerShellFilesystemProviderBase.Nodes
 
             if (underlying is IItemContainer)
             {
-                return ContainerNodeFactory.Create(GetName(underlying), (IItemContainer)underlying);
+                return ContainerNodeFactory.CreateFromIItemContainer(GetName(underlying), (IItemContainer)underlying);
             }
             else if (underlying.GetType().IsDictionaryWithStringKey())
             {

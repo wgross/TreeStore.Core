@@ -3,6 +3,7 @@ using PowerShellFilesystemProviderBase.Capabilities;
 using PowerShellFilesystemProviderBase.Nodes;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Management.Automation;
 using Xunit;
 
@@ -47,7 +48,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
 
         #endregion Name
 
-        #region TryGetChildItem: Node Traversal
+        #region IContainerItem
 
         [Fact]
         public void ContainerNode_is_container()
@@ -63,7 +64,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         }
 
         [Fact]
-        public void ContainerNode_finds_child_container_by_name()
+        public void ContainerNode_finds_child_dictionary_container_by_name()
         {
             // ARRANGE
             var node = ContainerNodeFactory.Create("name", new Dictionary<string, object>
@@ -72,7 +73,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
             });
 
             // ACT
-            var result = node.TryGetChildItem("container");
+            var result = node.TryGetChildNode("container");
 
             // ASSERT
             Assert.True(result.exists);
@@ -81,16 +82,50 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         }
 
         [Fact]
+        public void ContainerNode_finds_child_IItemContainer_by_name()
+        {
+            // ARRANGE
+            var node = ContainerNodeFactory.Create("name", new Dictionary<string, object>
+            {
+                { "container", Mock.Of<IItemContainer>() }
+            });
+
+            // ACT
+            var result = node.TryGetChildNode("container");
+
+            // ASSERT
+            Assert.True(result.exists);
+            Assert.Equal("container", result.node.Name);
+            Assert.True(result.node.IsContainer);
+        }
+
+        [Fact]
+        public void ContainerNode_TryGetchildItem_ignores_data_property()
+        {
+            // ARRANGE
+            var node = ContainerNodeFactory.Create("name", new Dictionary<string, object>
+            {
+                { "data", new { } }
+            });
+
+            // ACT
+            var result = node.TryGetChildNode("data");
+
+            // ASSERT
+            Assert.False(result.exists);
+        }
+
+        [Fact]
         public void ContainerNode_finds_child_leaf_by_name()
         {
             // ARRANGE
             var node = ContainerNodeFactory.Create("name", new Dictionary<string, object>
             {
-                { "leaf", new { } }
+                { "leaf", new { } } // ToDo: is this a leaf or a property value?
             });
 
             // ACT
-            var result = node.TryGetChildItem("leaf");
+            var result = node.TryGetChildNode("leaf");
 
             // ASSERT
             Assert.True(result.exists);
@@ -108,7 +143,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
             });
 
             // ACT
-            var result = node.TryGetChildItem("unknown");
+            var result = node.TryGetChildNode("unknown");
 
             // ASSERT
             Assert.Equal((false, default), result);
@@ -126,10 +161,10 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         public void ContainerNode_finds_child_leaf_data_by_name()
         {
             // ARRANGE
-            var node = ContainerNodeFactory.Create("name", new ContainerData());
+            var node = ContainerNodeFactory.CreateFromIItemContainer("name", new ContainerData());
 
             // ACT
-            var result = node.TryGetChildItem("child");
+            var result = node.TryGetChildNode("child");
 
             // ASSERT
             Assert.True(result.exists);
@@ -137,7 +172,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
             Assert.False(result.node.IsContainer);
         }
 
-        #endregion TryGetChildItem: Node Traversal
+        #endregion IContainerItem
 
         #region IGetItem
 
@@ -460,5 +495,117 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         }
 
         #endregion IInvokeItem
+
+        #region IGetChildItems
+
+        [Fact]
+        public void Invoke_GetChildItems_at_underlying()
+        {
+            // ARRANGE
+            var childItems = new ProviderNode[]
+            {
+                LeafNodeFactory.Create("child1", new { }),
+                ContainerNodeFactory.Create("child2", new Dictionary<string,object>())
+            };
+
+            var underlying = this.mocks.Create<IGetChildItems>();
+            underlying
+                .Setup(u => u.GetChildItems())
+                .Returns(childItems);
+
+            var node = this.ArrangeNode("name", underlying.Object);
+
+            // ACT
+            var result = node.GetChildItems().ToArray();
+
+            // ASSERT
+            Assert.Equal(childItems, result);
+        }
+
+        [Fact]
+        public void Invoke_GetChildItemsParameters_at_underlying()
+        {
+            // ARRANGE
+            var childItems = new ProviderNode[]
+            {
+                LeafNodeFactory.Create("child1", new { }),
+                ContainerNodeFactory.Create("child2", new Dictionary<string,object>())
+            };
+
+            var parameters = new object();
+            var underlying = this.mocks.Create<IGetChildItems>();
+            underlying
+                .Setup(u => u.GetChildItemParameters())
+                .Returns(parameters);
+
+            var node = this.ArrangeNode("name", underlying.Object);
+
+            // ACT
+            var result = node.GetChildItemParameters();
+
+            // ASSERT
+            Assert.Same(parameters, result);
+        }
+
+        [Fact]
+        public void Invoke_GetChildItems_from_dictionary_container_by_default()
+        {
+            // ARRANGE
+
+            var underlying = new Dictionary<string, object>
+            {
+                { "container1", new Dictionary<string, object> { { "leaf", new { } } } },
+                { "property" , "text" },
+                { "container2", Mock.Of<IItemContainer>() },
+            };
+
+            var node = this.ArrangeNode("name", new DictionaryContainerNode<Dictionary<string, object>, object>(underlying));
+
+            // ACT
+            var result = node.GetChildItems().ToArray();
+
+            // ASSERT
+            Assert.Equal(2, result.Count());
+            Assert.Equal(new[] { "container1", "container2" }, result.Select(n => n.Name));
+            Assert.All(result, r => Assert.True(r.IsContainer));
+        }
+
+        [Fact]
+        public void Invoke_GetChildItemParameters_from_dictionary_container_by_default()
+        {
+            // ARRANGE
+
+            var underlying = new Dictionary<string, object>
+            {
+                { "container1", new Dictionary<string, object> { { "leaf", new { } } } },
+                { "property" , "text" },
+                { "container2", Mock.Of<IItemContainer>() },
+            };
+
+            var node = this.ArrangeNode("name", new DictionaryContainerNode<Dictionary<string, object>, object>(underlying));
+
+            // ACT
+            var result = node.GetChildItemParameters();
+
+            // ASSERT
+            Assert.Empty((RuntimeDefinedParameterDictionary)result);
+        }
+
+        [Fact]
+        public void Invoke_GetChildItems_from_empty_container_is_empty()
+        {
+            // ARRANGE
+
+            var underlying = new Dictionary<string, object>();
+            var node = this.ArrangeNode("name", new DictionaryContainerNode<Dictionary<string, object>, object>(underlying));
+
+            // ACT
+            var result = node.GetChildItems().ToArray();
+
+            // ASSERT
+            Assert.Empty(result);
+        }
+
+        #endregion IGetChildItems
     }
 }

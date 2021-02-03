@@ -9,7 +9,15 @@ namespace PowerShellFilesystemProviderBase.Nodes
 {
     public class ContainerNodeFactory
     {
-        public static ContainerNode Create<T>(string? name, T underlying)
+        /// <summary>
+        /// Creates a <see cref="ContainerNode"/> from a <see cref="IItemContainer"/> and a name.
+        /// the <paramref name="underlying"/> isn't checked at runtome. It has to be suer at compile time
+        /// the instance of <typeparamref name="T"/> fullkfils the constraint.
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="underlying"></param>
+        /// <returns></returns>
+        public static ContainerNode CreateFromIItemContainer<T>(string? name, T underlying)
            where T : IItemContainer
         {
             return new ContainerNode(name, underlying);
@@ -25,11 +33,26 @@ namespace PowerShellFilesystemProviderBase.Nodes
             return CreateFromDictionary(name, underlying);
         }
 
+        /// <summary>
+        /// Creates a <see cref="ContainerNode"/> from a <see cref="IDictionary{TKey, TValue}"/> and a name.
+        /// the <paramref name="underlying"/> isn't checked again.
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="underlying"></param>
+        /// <returns></returns>
         internal static ContainerNode CreateFromDictionary(string? name, object underlying)
         {
             return new ContainerNode(name, MakeDictionaryAdpater(underlying));
         }
 
+        /// <summary>
+        /// Creates a <see cref="ContainerNode"/> from a <see cref="IDictionary{TKey, TValue}"/>.
+        /// the <paramref name="underlying"/> isn't checked again. The name is extacted from the
+        /// <see cref="DictionaryContainerNode{T, V}"/> property Name.
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="underlying"></param>
+        /// <returns></returns>
         internal static ContainerNode CreateFromDictionary(object underlying)
         {
             var dictionaryAdapter = MakeDictionaryAdpater(underlying);

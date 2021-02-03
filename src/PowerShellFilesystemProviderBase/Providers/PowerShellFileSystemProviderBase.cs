@@ -18,13 +18,27 @@ namespace PowerShellFilesystemProviderBase.Providers
             {
                 traversal = traversal.node switch
                 {
-                    ContainerNode r => r.TryGetChildItem(pathItem),
+                    ContainerNode r => r.TryGetChildNode(pathItem),
                     _ => (false, default)
                 };
                 if (!traversal.exists) return false;
             }
             pathNode = traversal.node;
             return true;
+        }
+
+        protected bool TryGetNodeByPath<T>(string path, [NotNullWhen(returnValue: true)] out T? pathNodeWithCapability)
+        {
+            if (this.TryGetNodeByPath(path, out var node))
+            {
+                if (node is T hasCapability)
+                {
+                    pathNodeWithCapability = hasCapability;
+                    return true;
+                }
+            }
+            pathNodeWithCapability = default;
+            return false;
         }
 
         protected PSObject DecorateItem(string path, PSObject psobject)
