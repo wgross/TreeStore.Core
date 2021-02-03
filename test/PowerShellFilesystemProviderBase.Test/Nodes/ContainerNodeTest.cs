@@ -116,24 +116,6 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         }
 
         [Fact]
-        public void ContainerNode_finds_child_leaf_by_name()
-        {
-            // ARRANGE
-            var node = ContainerNodeFactory.Create("name", new Dictionary<string, object>
-            {
-                { "leaf", new { } } // ToDo: is this a leaf or a property value?
-            });
-
-            // ACT
-            var result = node.TryGetChildNode("leaf");
-
-            // ASSERT
-            Assert.True(result.exists);
-            Assert.Equal("leaf", result.node.Name);
-            Assert.False(result.node.IsContainer);
-        }
-
-        [Fact]
         public void ContainerNode_finding_unknown_child_item_by_name_returns_null()
         {
             // ARRANGE
@@ -191,6 +173,26 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
             // ASSERT
             Assert.Equal("name", result.Property<string>("PSChildName"));
             Assert.Equal("data", result.Property<string>("Data"));
+        }
+
+        [Fact]
+        public void Invoke_GetItem_creates_PSObject_of_Dictionary()
+        {
+            // ARRANGE
+            var data = new object();
+            var node = ContainerNodeFactory.Create("name", new Dictionary<string, object>
+            {
+                { "data", data },
+                { "null", (string)null }
+            });
+
+            // ACT
+            var result = node.GetItem();
+
+            // ASSERT
+            Assert.Equal("name", result.Property<string>("PSChildName"));
+            Assert.Same(data, result.Property<object>("data"));
+            Assert.Null(result.Property<object>("null"));
         }
 
         [Fact]

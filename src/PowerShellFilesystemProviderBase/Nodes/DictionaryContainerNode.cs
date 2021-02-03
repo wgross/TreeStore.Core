@@ -1,10 +1,11 @@
 ﻿using PowerShellFilesystemProviderBase.Capabilities;
 using System;
 using System.Collections.Generic;
+using System.Management.Automation;
 
 namespace PowerShellFilesystemProviderBase.Nodes
 {
-    public record DictionaryContainerNode<T, V> : IItemContainer, IGetChildItems
+    public record DictionaryContainerNode<T, V> : IItemContainer, IGetChildItems, IGetItem
         where T : IDictionary<string, V>
     {
         public DictionaryContainerNode(T dictionary)
@@ -28,10 +29,6 @@ namespace PowerShellFilesystemProviderBase.Nodes
                         return (true, ContainerNodeFactory.CreateFromIItemContainer(childName, itemContainer));
                     if (childData.GetType().IsDictionaryWithStringKey())
                         return (true, ContainerNodeFactory.CreateFromDictionary(childName, childData));
-                    // this measn that every non-null item in a dictonary is a leaf?
-                    // can't be!
-                    // whats the diurrenerec between a child leaf and a value property?
-                    return (true, LeafNodeFactory.Create(childName, childData));
                 }
             return (false, default);
         }
@@ -51,7 +48,33 @@ namespace PowerShellFilesystemProviderBase.Nodes
                 }
             }
         }
+
+        #endregion IGetChildItem
+
+        #region IGetItem
+
+        public PSObject? GetItem()
+        {
+            var pso = new PSObject();
+            foreach (var item in this.Underlying)
+            {
+                if (item.Value is not null)
+                {
+                    if (!(item.Value is IItemContainer))
+                        if (!item.Value.GetType().IsDictionaryWithStringKey())
+                            pso.Properties.Add(new PSNoteProperty(name: item.Key, item.Value));
+                }
+                else
+                {
+                    // TODO: if te value is null it isn't inspscted for its container potential.
+                    // It would be mor sphistiocated to inspect the second type parameter pf the ditionary if the
+                    // type itself has container genes
+                    pso.Properties.Add(new PSNoteProperty(item.Key, null));
+                }
+            }
+            return pso;
+        }
     }
 
-    #endregion IGetChildItem
+    #endregion IGetItem
 }
