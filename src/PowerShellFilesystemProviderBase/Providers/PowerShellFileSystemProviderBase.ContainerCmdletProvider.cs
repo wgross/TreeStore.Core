@@ -29,20 +29,31 @@ namespace PowerShellFilesystemProviderBase.Providers
         protected override void GetChildItems(string path, bool recurse, uint depth)
         {
             if (this.TryGetNodeByPath<IGetChildItems>(path, out var getChildItems))
+                this.GetChildItems(parentGetChildItems: getChildItems, path, recurse, depth);
+        }
+
+        private void GetChildItems(IGetChildItems parentGetChildItems, string path, bool recurse, uint depth)
+        {
+            foreach (var childGetItem in parentGetChildItems.GetChildItems())
             {
-                foreach (var getItem in getChildItems.GetChildItems())
+                var childItemPSObject = childGetItem.GetItem();
+                if (childItemPSObject is not null)
                 {
-                    var pso = getItem.GetItem();
-                    if (pso is not null)
-                    {
-                        var itemPath = Path.Join(path, getItem.Name);
-                        this.WriteItemObject(
-                            item: this.DecorateItem(itemPath, pso),
-                            path: this.DecoratePath(itemPath),
-                            isContainer: getItem.IsContainer);
-                    }
+                    var childItemPath = Path.Join(path, childGetItem.Name);
+                    this.WriteItemObject(
+                        item: this.DecorateItem(childItemPath, childItemPSObject),
+                        path: this.DecoratePath(childItemPath),
+                        isContainer: childGetItem.IsContainer);
+
+                    //TODO: recurse in cmdlet provider will be slow if the underlying model could optimize fetching of data.
+                    // alternatives:
+                    // - let first container pull in the whole operation -> change IGetChildItems to GetChildItems( bool recurse, uint depth)
+                    // - notify first container of incoming request so it can prepare the fetch: IPrepareGetChildItems: Prepare(bool recurse, uint depth) then resurce in provider
+                    //   General solution would be to introduce a call context to allow an impl. to inspect the original request.
+                    if (recurse && childGetItem is IGetChildItems childGetChildItems)
+                        this.GetChildItems(childGetChildItems, childItemPath, recurse, depth);
                 }
-            };
+            }
         }
 
         protected override object? GetChildItemsDynamicParameters(string path, bool recurse)
