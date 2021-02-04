@@ -8,6 +8,7 @@ using Xunit;
 
 namespace PowerShellFilesystemProviderBase.Test.ContainerCmdletProvider
 {
+    [Collection(nameof(PowerShell))]
     public class ContainerCmdletProviderTest : ItemCmdletProviderTestBase
     {
         #region Get-Item -Path
