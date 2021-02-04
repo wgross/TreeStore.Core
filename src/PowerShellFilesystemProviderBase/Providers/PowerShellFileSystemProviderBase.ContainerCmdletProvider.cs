@@ -50,8 +50,8 @@ namespace PowerShellFilesystemProviderBase.Providers
                     // - let first container pull in the whole operation -> change IGetChildItems to GetChildItems( bool recurse, uint depth)
                     // - notify first container of incoming request so it can prepare the fetch: IPrepareGetChildItems: Prepare(bool recurse, uint depth) then resurce in provider
                     //   General solution would be to introduce a call context to allow an impl. to inspect the original request.
-                    if (recurse && childGetItem is IGetChildItems childGetChildItems)
-                        this.GetChildItems(childGetChildItems, childItemPath, recurse, depth);
+                    if (recurse && depth > 0 && childGetItem is IGetChildItems childGetChildItems)
+                        this.GetChildItems(childGetChildItems, childItemPath, recurse, depth-1);
                 }
             }
         }
