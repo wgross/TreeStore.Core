@@ -6,7 +6,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="PowerShellStandard.Library" Version="5.1.0" />
+    <!--<PackageReference Include="PowerShellStandard.Library" Version="5.1.0" />-->
+    <ProjectReference Include="..\..\submodules\PowerShell\src\Microsoft.WSMan.Management\Microsoft.WSMan.Management.csproj" />
+    <ProjectReference Include="..\..\submodules\PowerShell\src\System.Management.Automation\System.Management.Automation.csproj" />
   </ItemGroup>
 
 </Project>

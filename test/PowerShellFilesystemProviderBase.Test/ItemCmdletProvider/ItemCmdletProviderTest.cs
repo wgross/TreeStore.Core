@@ -12,7 +12,7 @@ namespace PowerShellFilesystemProviderBase.Test.ItemCmdletProvider
         #region Get-Item -Path
 
         [Fact]
-        public void Powershell_retrieves_root_leaf()
+        public void Powershell_retrieves_root_node()
         {
             // ARRANGE
             var root = new { };
@@ -281,7 +281,7 @@ namespace PowerShellFilesystemProviderBase.Test.ItemCmdletProvider
 
         #region Invoke-Item -Path
 
-        [Fact(Skip = "InvokeDefaultAction isn't recibed in teh provide. Needs debugging pwsh behavior")]
+        [Fact(Skip = "Flawed test: childleafis property. How to force leaf!")]
         public void Powershell_invokes_default_action()
         {
             // ARRANGE
@@ -291,6 +291,13 @@ namespace PowerShellFilesystemProviderBase.Test.ItemCmdletProvider
             itemExistsMock
                 .Setup(ie => ie.InvokeItemParameters())
                 .Returns(new { });
+
+            var root = new Dictionary<string, object>
+            {
+                { "item" , itemExistsMock.Object }
+            };
+
+            this.ArrangeFileSystem(root);
 
             // ACT
             var result = this.PowerShell.AddCommand("Invoke-Item")
