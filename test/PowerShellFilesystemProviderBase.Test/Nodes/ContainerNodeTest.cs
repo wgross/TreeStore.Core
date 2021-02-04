@@ -64,24 +64,6 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         }
 
         [Fact]
-        public void ContainerNode_finds_child_dictionary_container_by_name()
-        {
-            // ARRANGE
-            var node = ContainerNodeFactory.Create("name", new Dictionary<string, object>
-            {
-                { "container", new Dictionary<string,DateTime> { } }
-            });
-
-            // ACT
-            var result = node.TryGetChildNode("container");
-
-            // ASSERT
-            Assert.True(result.exists);
-            Assert.Equal("container", result.node.Name);
-            Assert.True(result.node.IsContainer);
-        }
-
-        [Fact]
         public void ContainerNode_finds_child_IItemContainer_by_name()
         {
             // ARRANGE
@@ -97,22 +79,6 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
             Assert.True(result.exists);
             Assert.Equal("container", result.node.Name);
             Assert.True(result.node.IsContainer);
-        }
-
-        [Fact]
-        public void ContainerNode_TryGetchildItem_ignores_data_property()
-        {
-            // ARRANGE
-            var node = ContainerNodeFactory.Create("name", new Dictionary<string, object>
-            {
-                { "data", new { } }
-            });
-
-            // ACT
-            var result = node.TryGetChildNode("data");
-
-            // ASSERT
-            Assert.False(result.exists);
         }
 
         [Fact]
@@ -173,26 +139,6 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
             // ASSERT
             Assert.Equal("name", result.Property<string>("PSChildName"));
             Assert.Equal("data", result.Property<string>("Data"));
-        }
-
-        [Fact]
-        public void Invoke_GetItem_creates_PSObject_of_Dictionary()
-        {
-            // ARRANGE
-            var data = new object();
-            var node = ContainerNodeFactory.Create("name", new Dictionary<string, object>
-            {
-                { "data", data },
-                { "null", (string)null }
-            });
-
-            // ACT
-            var result = node.GetItem();
-
-            // ASSERT
-            Assert.Equal("name", result.Property<string>("PSChildName"));
-            Assert.Same(data, result.Property<object>("data"));
-            Assert.Null(result.Property<object>("null"));
         }
 
         [Fact]
@@ -547,65 +493,6 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
 
             // ASSERT
             Assert.Same(parameters, result);
-        }
-
-        [Fact]
-        public void Invoke_GetChildItems_from_dictionary_container_by_default()
-        {
-            // ARRANGE
-
-            var underlying = new Dictionary<string, object>
-            {
-                { "container1", new Dictionary<string, object> { { "leaf", new { } } } },
-                { "property" , "text" },
-                { "container2", Mock.Of<IItemContainer>() },
-            };
-
-            var node = this.ArrangeNode("name", new DictionaryContainerNode<Dictionary<string, object>, object>(underlying));
-
-            // ACT
-            var result = node.GetChildItems().ToArray();
-
-            // ASSERT
-            Assert.Equal(2, result.Count());
-            Assert.Equal(new[] { "container1", "container2" }, result.Select(n => n.Name));
-            Assert.All(result, r => Assert.True(r.IsContainer));
-        }
-
-        [Fact]
-        public void Invoke_GetChildItemParameters_from_dictionary_container_by_default()
-        {
-            // ARRANGE
-
-            var underlying = new Dictionary<string, object>
-            {
-                { "container1", new Dictionary<string, object> { { "leaf", new { } } } },
-                { "property" , "text" },
-                { "container2", Mock.Of<IItemContainer>() },
-            };
-
-            var node = this.ArrangeNode("name", new DictionaryContainerNode<Dictionary<string, object>, object>(underlying));
-
-            // ACT
-            var result = node.GetChildItemParameters();
-
-            // ASSERT
-            Assert.Empty((RuntimeDefinedParameterDictionary)result);
-        }
-
-        [Fact]
-        public void Invoke_GetChildItems_from_empty_container_is_empty()
-        {
-            // ARRANGE
-
-            var underlying = new Dictionary<string, object>();
-            var node = this.ArrangeNode("name", new DictionaryContainerNode<Dictionary<string, object>, object>(underlying));
-
-            // ACT
-            var result = node.GetChildItems().ToArray();
-
-            // ASSERT
-            Assert.Empty(result);
         }
 
         #endregion IGetChildItems
