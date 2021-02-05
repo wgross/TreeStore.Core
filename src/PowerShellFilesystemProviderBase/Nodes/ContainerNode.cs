@@ -106,14 +106,15 @@ namespace PowerShellFilesystemProviderBase.Nodes
         /// </remarks>
         /// <param name="pathItem"></param>
         /// <returns></returns>
+        [Obsolete("For now..")]
         public (bool exists, ProviderNode? node) TryGetChildNode(string childName)
         {
-            if (this.Underlying is IItemContainer itemContainer)
-            {
-                /// this is also true for <see cref="DictionaryContainerNode{T, V}"/>
-                /// wrapping a <see cref="IDictionary{TKey, TValue}"/>.
-                return itemContainer.TryGetChildNode(childName);
-            }
+            //if (this.Underlying is IItemContainer itemContainer)
+            //{
+            //    /// this is also true for <see cref="DictionaryContainerNode{T, V}"/>
+            //    /// wrapping a <see cref="IDictionary{TKey, TValue}"/>.
+            //    return itemContainer.TryGetChildNode(childName);
+            //}
 
             //var node = this.GetDictionaryProperties()
             //    .Where(p => p.Name.Equals(childName))

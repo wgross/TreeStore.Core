@@ -63,7 +63,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
             Assert.True(result);
         }
 
-        [Fact]
+        [Fact(Skip="TryGetChildNode is currently retired")]
         public void ContainerNode_finds_child_IItemContainer_by_name()
         {
             // ARRANGE
@@ -105,7 +105,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
             }
         }
 
-        [Fact]
+        [Fact(Skip = "TryGetChildNode is currently retired")]
         public void ContainerNode_finds_child_leaf_data_by_name()
         {
             // ARRANGE

@@ -1,6 +1,8 @@
 ﻿using PowerShellFilesystemProviderBase.Nodes;
+using System;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using System.Linq;
 using System.Management.Automation;
 using System.Management.Automation.Provider;
 
@@ -10,6 +12,15 @@ namespace PowerShellFilesystemProviderBase.Providers
     {
         private PowershellFileSystemDriveInfo DriveInfo => (PowershellFileSystemDriveInfo)this.PSDriveInfo;
 
+        public (bool exists, ProviderNode? node) TryGetChildNode(ContainerNode parentNode, string childName)
+        {
+            var childNode = parentNode
+                .GetChildItems()
+                .FirstOrDefault(n => StringComparer.OrdinalIgnoreCase.Equals(n.Name, childName));
+
+            return (childNode is not null, childNode);
+        }
+
         protected bool TryGetNodeByPath(string path, [NotNullWhen(returnValue: true)] out ProviderNode? pathNode)
         {
             pathNode = default;
@@ -18,7 +29,7 @@ namespace PowerShellFilesystemProviderBase.Providers
             {
                 traversal = traversal.node switch
                 {
-                    ContainerNode r => r.TryGetChildNode(pathItem),
+                    ContainerNode container => this.TryGetChildNode(container, pathItem),
                     _ => (false, default)
                 };
                 if (!traversal.exists) return false;
