@@ -74,21 +74,7 @@ namespace PowerShellFilesystemProviderBase.Nodes
         {
             var pso = new PSObject();
             foreach (var item in this.Underlying)
-            {
-                if (item.Value is not null)
-                {
-                    if (!(item.Value is IItemContainer))
-                        if (!item.Value.GetType().IsDictionaryWithStringKey())
-                            pso.Properties.Add(new PSNoteProperty(name: item.Key, item.Value));
-                }
-                else
-                {
-                    // TODO: if te value is null it isn't inspscted for its container potential.
-                    // It would be mor sphistiocated to inspect the second type parameter pf the ditionary if the
-                    // type itself has container genes
-                    pso.Properties.Add(new PSNoteProperty(item.Key, null));
-                }
-            }
+                pso.Properties.Add(new PSNoteProperty(item.Key, item.Value));
             return pso;
         }
 

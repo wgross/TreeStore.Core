@@ -64,10 +64,12 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         {
             // ARRANGE
             var data = new object();
+            var child = new Dictionary<string, object>();
             var node = ContainerNodeFactory.Create("name", new Dictionary<string, object>
             {
                 { "data", data },
-                { "null", (string)null }
+                { "null", (string)null },
+                { "child", child }
             });
 
             // ACT
@@ -77,6 +79,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
             Assert.Equal("name", result.Property<string>("PSChildName"));
             Assert.Same(data, result.Property<object>("data"));
             Assert.Null(result.Property<object>("null"));
+            Assert.Same(child, result.Property<object>("child"));
         }
 
         #endregion IGetItem
