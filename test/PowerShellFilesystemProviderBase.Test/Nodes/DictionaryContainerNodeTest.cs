@@ -143,7 +143,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         #region IRemoveChildItem
 
         [Fact]
-        public void RemoveCholdItem_removes_dictionary_item()
+        public void RemoveChildItem_removes_dictionary_item()
         {
             // ARRANGE
             var underlying = new Dictionary<string, object>
@@ -163,5 +163,33 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         }
 
         #endregion IRemoveChildItem
+
+        #region INewChildItem
+
+        [Fact]
+        public void NewChildItem_creates_dictionary_item()
+        {
+            // ARRANGE
+            var underlying = new Dictionary<string, object>
+            {
+                { "property" , "text" },
+                { "container2", Mock.Of<IItemContainer>() },
+            };
+
+            var node = this.ArrangeContainerNode("name", underlying);
+
+            // ACT
+            var value = new Dictionary<string, object>();
+            var result = node.NewChildItem("container1", "itemTypeValue", value);
+
+            // ASSERT
+            Assert.NotNull(result);
+            Assert.Equal("container1", result.Name);
+            Assert.True(result.IsContainer);
+            Assert.True(underlying.TryGetValue("container1", out var added));
+            Assert.Same(value, added);
+        }
+
+        #endregion INewChildItem
     }
 }

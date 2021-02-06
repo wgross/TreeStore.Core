@@ -112,12 +112,27 @@ namespace PowerShellFilesystemProviderBase.Providers
 
         protected override void NewItem(string path, string itemTypeName, object newItemValue)
         {
-            base.NewItem(path, itemTypeName, newItemValue);
+            var (parentPath, childName) = new PathTool().SplitParentPath(path);
+
+            if (this.TryGetNodeByPath<INewChildItem>(this.DriveInfo.RootNode, parentPath, out var providerNode, out var newChildItem))
+            {
+                var resultNode = newChildItem.NewChildItem(childName, itemTypeName, newItemValue);
+                if (resultNode is not null)
+                {
+                    this.WriteProviderNode(path, resultNode);
+                }
+            }
         }
 
-        protected override object NewItemDynamicParameters(string path, string itemTypeName, object newItemValue)
+        protected override object? NewItemDynamicParameters(string path, string itemTypeName, object newItemValue)
         {
-            return base.NewItemDynamicParameters(path, itemTypeName, newItemValue);
+            var (parentPath, childName) = new PathTool().SplitParentPath(path);
+
+            if (this.TryGetNodeByPath<INewChildItem>(this.DriveInfo.RootNode, parentPath, out var providerNode, out var removeChildItem))
+            {
+                removeChildItem.NewChildItemParameters(childName, itemTypeName, newItemValue);
+            }
+            return null;
         }
 
         protected override void RenameItem(string path, string newName)

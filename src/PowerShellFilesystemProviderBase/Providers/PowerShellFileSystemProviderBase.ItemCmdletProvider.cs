@@ -62,14 +62,7 @@
         {
             if (this.TryGetNodeByPath(path, out var node))
             {
-                var psobject = node.GetItem();
-                if (psobject is null)
-                    return;
-
-                this.WriteItemObject(
-                    item: this.DecorateItem(path, psobject),
-                    path: this.DecoratePath(path),
-                    isContainer: node.IsContainer);
+                this.WriteProviderNode(path, node);
             }
         }
 

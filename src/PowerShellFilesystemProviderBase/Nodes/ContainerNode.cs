@@ -7,7 +7,7 @@ using System.Reflection;
 
 namespace PowerShellFilesystemProviderBase.Nodes
 {
-    public class ContainerNode : ProviderNode, IGetChildItems, IRemoveChildItem
+    public class ContainerNode : ProviderNode, IGetChildItems, IRemoveChildItem, INewChildItem
     {
         public ContainerNode(string? name, object? underlying)
             : base(name, underlying)
@@ -158,14 +158,17 @@ namespace PowerShellFilesystemProviderBase.Nodes
 
         #region IRemoveChildItem
 
+        ///<inheritdoc/>
         public void RemoveChildItem(string childName)
         {
             if (this.Underlying is IRemoveChildItem removeChildItem)
             {
                 removeChildItem.RemoveChildItem(childName);
             }
+            else throw this.CapabilityNotSupported<IRemoveChildItem>();
         }
 
+        ///<inheritdoc/>
         public object? RemoveChildItemParameters(string childName)
         {
             if (this.Underlying is IRemoveChildItem removeChildItem)
@@ -176,5 +179,29 @@ namespace PowerShellFilesystemProviderBase.Nodes
         }
 
         #endregion IRemoveChildItem
+
+        #region INewChildItem
+
+        ///<inheritdoc/>
+        public ProviderNode? NewChildItem(string childName, string itemTypeName, object value)
+        {
+            if (this.Underlying is INewChildItem removeChildItem)
+            {
+                return removeChildItem.NewChildItem(childName, "itemTypeName", value);
+            }
+            else throw this.CapabilityNotSupported<INewChildItem>();
+        }
+
+        ///<inheritdoc/>
+        public object? NewChildItemParameters(string childName, string itemTypeName, object value)
+        {
+            if (this.Underlying is INewChildItem newChildItem)
+            {
+                return newChildItem.NewChildItemParameters(childName, itemTypeName, value);
+            }
+            return null;
+        }
+
+        #endregion INewChildItem
     }
 }

@@ -226,5 +226,44 @@ namespace PowerShellFilesystemProviderBase.Test.ContainerCmdletProvider
         }
 
         #endregion Remove-Item -Path
+
+        #region New-Item -Path
+
+        [Fact]
+        public void Powershell_creates_child_item()
+        {
+            // ARRANGE
+            var root = new Dictionary<string, object>();
+            var child = new Dictionary<string, object>()
+            {
+                { "Name", "child1" }
+            };
+
+            this.ArrangeFileSystem(root);
+
+            // ACT
+            var result = this.PowerShell.AddCommand("New-Item")
+                .AddParameter("Path", @"test:\child1")
+                .AddParameter("Value", child)
+                .Invoke()
+                .ToArray();
+
+            // ASSERT
+            Assert.False(this.PowerShell.HadErrors);
+
+            var psobject = result.Single();
+
+            Assert.Equal("child1", psobject.Property<string>("PSChildName"));
+            Assert.True(psobject.Property<bool>("PSIsContainer"));
+            Assert.Equal("test", psobject.Property<PSDriveInfo>("PSDrive").Name);
+            Assert.Equal("TestFilesystem", psobject.Property<ProviderInfo>("PSProvider").Name);
+            Assert.Equal(@"TestFileSystem\TestFilesystem::test:\child1", psobject.Property<string>("PSPath"));
+            Assert.Equal(@"TestFileSystem\TestFilesystem::test:\", psobject.Property<string>("PSParentPath"));
+
+            Assert.True(root.TryGetValue("child1", out var added));
+            Assert.Same(child, added);
+        }
+
+        #endregion New-Item -Path
     }
 }

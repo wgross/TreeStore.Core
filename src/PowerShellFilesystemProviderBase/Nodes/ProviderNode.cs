@@ -26,6 +26,9 @@ namespace PowerShellFilesystemProviderBase.Nodes
 
         public string Name => this.name;
 
+        protected Exception CapabilityNotSupported<T>()
+            => new PSNotSupportedException($"Node(name='{this.Name}') doesn't provide an implementation of capability '{typeof(T).Name}'.");
+
         #region IGetItem
 
         public object? GetItemParameters()
@@ -101,7 +104,7 @@ namespace PowerShellFilesystemProviderBase.Nodes
 
         #endregion IClearItem
 
-        #region IITemExists
+        #region IItemExists
 
         public bool ItemExists()
         {
@@ -121,7 +124,7 @@ namespace PowerShellFilesystemProviderBase.Nodes
             else return new RuntimeDefinedParameterDictionary();
         }
 
-        #endregion IITemExists
+        #endregion IItemExists
 
         #region IInvokeItem
 
@@ -131,6 +134,7 @@ namespace PowerShellFilesystemProviderBase.Nodes
             {
                 invokeItem.InvokeItem();
             }
+            else throw this.CapabilityNotSupported<IInvokeItem>();
         }
 
         public object? InvokeItemParameters()

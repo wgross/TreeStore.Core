@@ -5,7 +5,7 @@ namespace PowerShellFilesystemProviderBase.Capabilities
     public interface IRemoveChildItem
     {
         /// <summary>
-        /// Returns custom parameters to be applie the removal of the child node <paramref name="childName"/>
+        /// Returns custom parameters to be applied for the removal of the child node <paramref name="childName"/>
         /// </summary>
         /// <param name="childName"></param>
         /// <returns>empty <see cref="RuntimeDefinedParameterDictionary"/> by default</returns>

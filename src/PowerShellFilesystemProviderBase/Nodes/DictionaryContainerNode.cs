@@ -17,13 +17,14 @@ namespace PowerShellFilesystemProviderBase.Nodes
     /// </summary>
     /// <typeparam name="TUnderlying"></typeparam>
     /// <typeparam name="V"></typeparam>
-    public record DictionaryContainerNode<TUnderlying, V> : IGetChildItems, IGetItem, IRemoveChildItem
+    public record DictionaryContainerNode<TUnderlying, V> : IGetChildItems, IGetItem, IRemoveChildItem, INewChildItem
         where TUnderlying : IDictionary<string, V>
     {
         public DictionaryContainerNode(TUnderlying dictionary)
         {
             this.Underlying = dictionary;
         }
+
         private TUnderlying Underlying { get; }
 
         /// <summary>
@@ -89,5 +90,16 @@ namespace PowerShellFilesystemProviderBase.Nodes
         }
 
         #endregion IRemoveChildItem
+
+        #region INewChildItem
+
+        ///<inheritdoc/>
+        public ProviderNode? NewChildItem(string childName, string itemTypeValue, object value)
+        {
+            this.Underlying.Add(childName, (V)value);
+            return ContainerNodeFactory.CreateFromDictionary(value);
+        }
+
+        #endregion INewChildItem
     }
 }

@@ -62,6 +62,20 @@ namespace PowerShellFilesystemProviderBase.Providers
             return providerNodeCapbility is not null;
         }
 
+        #region Write a ProviderNode to pipeline
+
+        protected void WriteProviderNode(string path, ProviderNode node)
+        {
+            var psobject = node.GetItem();
+            if (psobject is null)
+                return;
+
+            this.WriteItemObject(
+                item: this.DecorateItem(path, psobject),
+                path: this.DecoratePath(path),
+                isContainer: node.IsContainer);
+        }
+
         protected PSObject DecorateItem(string path, PSObject psobject)
         {
             psobject.Properties.Add(new PSNoteProperty("PSParentPath",
@@ -70,5 +84,7 @@ namespace PowerShellFilesystemProviderBase.Providers
         }
 
         protected string DecoratePath(string path) => @$"{this.PSDriveInfo.Provider.ModuleName}\{this.PSDriveInfo.Provider.Name}::{this.PSDriveInfo.Name}:\{path}";
+
+        #endregion Write a ProviderNode to pipeline
     }
 }
