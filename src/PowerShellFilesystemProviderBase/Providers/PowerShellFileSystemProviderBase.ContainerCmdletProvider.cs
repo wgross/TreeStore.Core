@@ -1,4 +1,5 @@
 ﻿using PowerShellFilesystemProviderBase.Capabilities;
+using PowerShellFilesystemProviderBase.Nodes;
 using System.IO;
 using System.Management.Automation;
 
@@ -28,7 +29,7 @@ namespace PowerShellFilesystemProviderBase.Providers
 
         protected override void GetChildItems(string path, bool recurse, uint depth)
         {
-            if (this.TryGetNodeByPath<IGetChildItems>(path, out var getChildItems))
+            if (this.TryGetNodeByPath<IGetChildItems>(path, out var providerNode, out var getChildItems))
                 this.GetChildItems(parentGetChildItems: getChildItems, path, recurse, depth);
         }
 
@@ -51,14 +52,14 @@ namespace PowerShellFilesystemProviderBase.Providers
                     // - notify first container of incoming request so it can prepare the fetch: IPrepareGetChildItems: Prepare(bool recurse, uint depth) then resurce in provider
                     //   General solution would be to introduce a call context to allow an impl. to inspect the original request.
                     if (recurse && depth > 0 && childGetItem is IGetChildItems childGetChildItems)
-                        this.GetChildItems(childGetChildItems, childItemPath, recurse, depth-1);
+                        this.GetChildItems(childGetChildItems, childItemPath, recurse, depth - 1);
                 }
             }
         }
 
         protected override object? GetChildItemsDynamicParameters(string path, bool recurse)
         {
-            if (this.TryGetNodeByPath<IGetChildItems>(path, out var getChildItems))
+            if (this.TryGetNodeByPath<IGetChildItems>(path, out var providerNode, out var getChildItems))
             {
                 return getChildItems.GetChildItemParameters();
             }
@@ -77,17 +78,36 @@ namespace PowerShellFilesystemProviderBase.Providers
 
         protected override bool HasChildItems(string path)
         {
-            return base.HasChildItems(path);
+            if (this.TryGetNodeByPath(path, out var node))
+            {
+                return node switch
+                {
+                    ContainerNode container => container.HasChildItems(),
+                    _ => false
+                };
+            }
+            return false;
         }
 
         protected override void RemoveItem(string path, bool recurse)
         {
-            base.RemoveItem(path, recurse);
+            var (parentPath, childName) = new PathTool().SplitParentPath(path);
+
+            if (this.TryGetNodeByPath<IRemoveChildItem>(this.DriveInfo.RootNode, parentPath, out var providerNode, out var removeChildItem))
+            {
+                removeChildItem.RemoveChildItem(childName);
+            }
         }
 
-        protected override object RemoveItemDynamicParameters(string path, bool recurse)
+        protected override object? RemoveItemDynamicParameters(string path, bool recurse)
         {
-            return base.RemoveItemDynamicParameters(path, recurse);
+            var (parentPath, childName) = new PathTool().SplitParentPath(path);
+
+            if (this.TryGetNodeByPath<IRemoveChildItem>(this.DriveInfo.RootNode, parentPath, out var providerNode, out var removeChildItem))
+            {
+                removeChildItem.RemoveChildItemParameters(childName);
+            }
+            return null;
         }
 
         protected override void NewItem(string path, string itemTypeName, object newItemValue)

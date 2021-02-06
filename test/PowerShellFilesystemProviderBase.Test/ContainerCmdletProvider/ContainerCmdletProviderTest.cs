@@ -11,7 +11,7 @@ namespace PowerShellFilesystemProviderBase.Test.ContainerCmdletProvider
     [Collection(nameof(PowerShell))]
     public class ContainerCmdletProviderTest : ItemCmdletProviderTestBase
     {
-        #region Get-Item -Path
+        #region Get-ChildItem -Path
 
         [Fact]
         public void Powershell_retrieves_roots_childnodes()
@@ -19,9 +19,9 @@ namespace PowerShellFilesystemProviderBase.Test.ContainerCmdletProvider
             // ARRANGE
             var root = new Dictionary<string, object>
             {
-                { "container1", new Dictionary<string, object> { { "leaf", new { } } } },
+                { "child1", new Dictionary<string, object> { { "leaf", new { } } } },
                 { "property" , "text" },
-                { "container2", Mock.Of<IItemContainer>() },
+                { "child2", Mock.Of<IItemContainer>() },
             }; ;
 
             this.ArrangeFileSystem(root);
@@ -38,20 +38,20 @@ namespace PowerShellFilesystemProviderBase.Test.ContainerCmdletProvider
 
             var psobject = result.ElementAt(0);
 
-            Assert.Equal("container1", psobject.Property<string>("PSChildName"));
+            Assert.Equal("child1", psobject.Property<string>("PSChildName"));
             Assert.True(psobject.Property<bool>("PSIsContainer"));
             Assert.Equal("test", psobject.Property<PSDriveInfo>("PSDrive").Name);
             Assert.Equal("TestFilesystem", psobject.Property<ProviderInfo>("PSProvider").Name);
-            Assert.Equal(@"TestFileSystem\TestFilesystem::test:\container1", psobject.Property<string>("PSPath"));
+            Assert.Equal(@"TestFileSystem\TestFilesystem::test:\child1", psobject.Property<string>("PSPath"));
             Assert.Equal(@"TestFileSystem\TestFilesystem::test:\", psobject.Property<string>("PSParentPath"));
 
             psobject = result.ElementAt(1);
 
-            Assert.Equal("container2", psobject.Property<string>("PSChildName"));
+            Assert.Equal("child2", psobject.Property<string>("PSChildName"));
             Assert.True(psobject.Property<bool>("PSIsContainer"));
             Assert.Equal("test", psobject.Property<PSDriveInfo>("PSDrive").Name);
             Assert.Equal("TestFilesystem", psobject.Property<ProviderInfo>("PSProvider").Name);
-            Assert.Equal(@"TestFileSystem\TestFilesystem::test:\container2", psobject.Property<string>("PSPath"));
+            Assert.Equal(@"TestFileSystem\TestFilesystem::test:\child2", psobject.Property<string>("PSPath"));
             Assert.Equal(@"TestFileSystem\TestFilesystem::test:\", psobject.Property<string>("PSParentPath"));
         }
 
@@ -113,7 +113,7 @@ namespace PowerShellFilesystemProviderBase.Test.ContainerCmdletProvider
             // ARRANGE
             var root = new Dictionary<string, object>
             {
-                { 
+                {
                     "child1", new Dictionary<string, object>
                     {
                         {
@@ -170,6 +170,61 @@ namespace PowerShellFilesystemProviderBase.Test.ContainerCmdletProvider
             Assert.Equal(@"TestFileSystem\TestFilesystem::test:\", psobject.Property<string>("PSParentPath"));
         }
 
-        #endregion Get-Item -Path
+        #endregion Get-ChildItem -Path
+
+        #region Remove-Item -Path
+
+        [Fact]
+        public void Powershell_removes_root_child_node()
+        {
+            // ARRANGE
+            var root = new Dictionary<string, object>
+            {
+                { "child1", new Dictionary<string, object>() },
+            };
+
+            this.ArrangeFileSystem(root);
+
+            // ACT
+            var result = this.PowerShell.AddCommand("Remove-Item")
+                .AddParameter("Path", @"test:\child1")
+                .Invoke()
+                .ToArray();
+
+            // ASSERT
+            Assert.False(this.PowerShell.HadErrors);
+            Assert.Empty(root);
+        }
+
+        [Fact]
+        public void Powershell_removes_root_child_node_recursive()
+        {
+            // ARRANGE
+            var root = new Dictionary<string, object>
+            {
+                {
+                    "child1",
+                    new Dictionary<string, object>
+                    {
+                        { "grandchild1", new Dictionary<string,object>() }
+                    }
+                }
+            };
+
+            this.ArrangeFileSystem(root);
+
+            // ACT
+            var result = this.PowerShell.AddCommand("Remove-Item")
+                .AddParameter("Path", @"test:\child1")
+                .AddParameter("Recurse", true)
+                .Invoke()
+                .ToArray();
+
+            // ASSERT
+            Assert.False(this.PowerShell.HadErrors);
+            Assert.Empty(root);
+        }
+
+        #endregion Remove-Item -Path
     }
 }

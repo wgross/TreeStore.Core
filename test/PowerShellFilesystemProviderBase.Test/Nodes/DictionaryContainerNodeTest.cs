@@ -8,8 +8,12 @@ using Xunit;
 
 namespace PowerShellFilesystemProviderBase.Test.Nodes
 {
-    public class DictionaryContainerAdapterTest
+    public class DictionaryContainerAdapterTest : IDisposable
     {
+        private readonly MockRepository mocks = new MockRepository(MockBehavior.Strict);
+
+        public void Dispose() => this.mocks.VerifyAll();
+
         private DictionaryContainerNode<IDictionary<string, object>, object> ArrangeContainerNode(string name, IDictionary<string, object> dictionary)
         {
             return new DictionaryContainerNode<IDictionary<string, object>, object>(dictionary);
@@ -83,7 +87,6 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         public void GetChildItems_gets_containers()
         {
             // ARRANGE
-
             var underlying = new Dictionary<string, object>
             {
                 { "container1", new Dictionary<string, object> { { "leaf", new { } } } },
@@ -106,7 +109,6 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         public void GetChildItems_from_empty_returns_empty()
         {
             // ARRANGE
-
             var underlying = new Dictionary<string, object>();
             var node = this.ArrangeContainerNode("name", underlying);
 
@@ -117,6 +119,46 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
             Assert.Empty(result);
         }
 
+        [Fact]
+        public void HasChildItem_returns_GetChildItems_Any()
+        {
+            // ARRANGE
+            var node = this.ArrangeContainerNode("name", new Dictionary<string, object>
+            {
+                { "child", new Dictionary<string,object>()}
+            });
+
+            // ACT
+            var result = node.HasChildItems();
+
+            // ASSERT
+            Assert.True(result);
+        }
+
         #endregion IGetChildItem
+
+        #region IRemoveChildItem
+
+        [Fact]
+        public void RemoveCholdItem_removes_dictionary_item()
+        {
+            // ARRANGE
+            var underlying = new Dictionary<string, object>
+            {
+                { "container1", new Dictionary<string, object> { { "leaf", new { } } } },
+                { "property" , "text" },
+                { "container2", Mock.Of<IItemContainer>() },
+            };
+
+            var node = this.ArrangeContainerNode("name", underlying);
+
+            // ACT
+            node.RemoveChildItem("container1");
+
+            // ASSERT
+            Assert.False(underlying.TryGetValue("container1", out var _));
+        }
+
+        #endregion IRemoveChildItem
     }
 }

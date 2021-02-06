@@ -63,7 +63,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
             Assert.True(result);
         }
 
-        [Fact(Skip="TryGetChildNode is currently retired")]
+        [Fact(Skip = "TryGetChildNode is currently retired")]
         public void ContainerNode_finds_child_IItemContainer_by_name()
         {
             // ARRANGE
@@ -125,7 +125,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         #region IGetItem
 
         [Fact]
-        public void Invoke_GetItem_creates_PSObject_of_underlying()
+        public void Invoke_GetItem_default_to_PSObject_of_underlying()
         {
             // ARRANGE
             var node = this.ArrangeNode("name", new
@@ -471,15 +471,22 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         }
 
         [Fact]
+        public void Invoke_GetChildItems_defaults_to_empty()
+        {
+            // ARRANGE
+            var node = this.ArrangeNode("name", new { });
+
+            // ACT
+            var result = node.GetChildItems().ToArray();
+
+            // ASSERT
+            Assert.Empty(result);
+        }
+
+        [Fact]
         public void Invoke_GetChildItemsParameters_at_underlying()
         {
             // ARRANGE
-            var childItems = new ProviderNode[]
-            {
-                LeafNodeFactory.Create("child1", new { }),
-                ContainerNodeFactory.Create("child2", new Dictionary<string,object>())
-            };
-
             var parameters = new object();
             var underlying = this.mocks.Create<IGetChildItems>();
             underlying
@@ -495,6 +502,100 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
             Assert.Same(parameters, result);
         }
 
+        [Fact]
+        public void Invoke_GetChildItemsParameters_defaults_to_empty()
+        {
+            // ARRANGE
+            var node = this.ArrangeNode("name", new { });
+
+            // ACT
+            var result = node.GetChildItemParameters();
+
+            // ASSERT
+            Assert.Null(result);
+        }
+
+        [Fact]
+        public void Invoke_HasChildItems_at_underlying()
+        {
+            // ARRANGE
+            var underlying = this.mocks.Create<IGetChildItems>();
+            underlying
+                .Setup(u => u.HasChildItems())
+                .Returns(true);
+
+            var node = this.ArrangeNode("name", underlying.Object);
+
+            // ACT
+            var result = node.HasChildItems();
+
+            // ASSERT
+            Assert.True(result);
+        }
+
+        [Fact]
+        public void Invoke_HasChildItems_default_to_false()
+        {
+            // ARRANGE
+            var node = this.ArrangeNode("name", new { });
+
+            // ACT
+            var result = node.HasChildItems();
+
+            // ASSERT
+            Assert.False(result);
+        }
+
         #endregion IGetChildItems
+
+        #region IRemoveItem
+
+        [Fact]
+        public void Invoke_RemoveItem_at_underlying()
+        {
+            // ARRANGE
+            var underlying = this.mocks.Create<IRemoveChildItem>();
+            underlying
+                .Setup(u => u.RemoveChildItem("child1"));
+
+            var node = this.ArrangeNode("name", underlying.Object);
+
+            // ACT
+            node.RemoveChildItem("child1");
+        }
+
+        [Fact]
+        public void Invoke_RemoveItemParameters_at_underlying()
+        {
+            // ARRANGE
+            var parameters = new object();
+            var underlying = this.mocks.Create<IRemoveChildItem>();
+            underlying
+                .Setup(u => u.RemoveChildItemParameters("child1"))
+                .Returns(parameters);
+
+            var node = this.ArrangeNode("name", underlying.Object);
+
+            // ACT
+            var result = node.RemoveChildItemParameters("child1");
+
+            // ASSERT
+            Assert.Same(parameters, result);
+        }
+
+        [Fact]
+        public void Invoke_RemoveItemParameters_defaults_to_null()
+        {
+            // ARRANGE
+            var node = this.ArrangeNode("name", new { });
+
+            // ACT
+            var result = node.RemoveChildItemParameters("child1");
+
+            // ASSERT
+            Assert.Null(result);
+        }
+
+        #endregion IRemoveItem
     }
 }

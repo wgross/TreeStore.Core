@@ -38,18 +38,28 @@ namespace PowerShellFilesystemProviderBase.Providers
             return true;
         }
 
-        protected bool TryGetNodeByPath<T>(string path, [NotNullWhen(returnValue: true)] out T? pathNodeWithCapability)
+        protected bool TryGetNodeByPath<T>(string path, [NotNullWhen(returnValue: true)] out ProviderNode? providerNode, [NotNullWhen(returnValue: true)] out T? providerNodeCapability) where T : class
+            => this.TryGetNodeByPath<T>(this.DriveInfo.RootNode, new PathTool().Split(path), out providerNode, out providerNodeCapability);
+
+        protected bool TryGetNodeByPath<T>(ProviderNode startNode, string[] path, [NotNullWhen(returnValue: true)] out ProviderNode? providerNode, [NotNullWhen(returnValue: true)] out T? providerNodeCapbility) where T : class
         {
-            if (this.TryGetNodeByPath(path, out var node))
+            providerNode = default;
+            providerNodeCapbility = default;
+
+            (bool exists, ProviderNode? node) cursor = (true, startNode);
+            foreach (var pathItem in path)
             {
-                if (node is T hasCapability)
+                cursor = cursor.node switch
                 {
-                    pathNodeWithCapability = hasCapability;
-                    return true;
-                }
+                    ContainerNode container => this.TryGetChildNode(container, pathItem),
+                    _ => (false, default)
+                };
+                if (!cursor.exists) return false;
             }
-            pathNodeWithCapability = default;
-            return false;
+
+            providerNode = cursor.node;
+            providerNodeCapbility = cursor.node as T;
+            return providerNodeCapbility is not null;
         }
 
         protected PSObject DecorateItem(string path, PSObject psobject)

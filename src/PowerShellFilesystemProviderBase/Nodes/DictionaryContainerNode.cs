@@ -1,21 +1,33 @@
 ﻿using PowerShellFilesystemProviderBase.Capabilities;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Management.Automation;
 
 namespace PowerShellFilesystemProviderBase.Nodes
 {
-    public record DictionaryContainerNode<T, V> : IItemContainer, IGetChildItems, IGetItem
-        where T : IDictionary<string, V>
+    /// <summary>
+    /// Adapt an <see cref="IDictionary{string, TValue}"/> as a container node.
+    /// It implements:
+    /// <list type="bollet">
+    /// <item><see cref="IGetChildItem"/>: converts all dictionary value which qualify as containers to child <see cref="ProviderNode"/></item>
+    /// <item><see cref="IGetItem"/>: converts all dictionary value which don't qualify as containers to <see cref="PSNoteProperty"/></item>
+    /// <item><see cref="IRemoveChildItem"/>: removes a dictionary item by name</item>
+    /// </list>
+    /// </summary>
+    /// <typeparam name="TUnderlying"></typeparam>
+    /// <typeparam name="V"></typeparam>
+    public record DictionaryContainerNode<TUnderlying, V> : IGetChildItems, IGetItem, IRemoveChildItem
+        where TUnderlying : IDictionary<string, V>
     {
-        public DictionaryContainerNode(T dictionary)
+        public DictionaryContainerNode(TUnderlying dictionary)
         {
-            this.Underlying = (IDictionary<string, V>)dictionary;
+            this.Underlying = dictionary;
         }
-        private IDictionary<string, V> Underlying { get; }
+        private TUnderlying Underlying { get; }
 
         /// <summary>
-        /// Fetches the name property if it exists. this is called only unce during
+        /// Fetches the name property if it exists. this is called only once during
         /// creation of the <see cref="ContainerNode"/>.
         /// </summary>
         public string? Name => this.Underlying.TryGetValue("Name", out var name) ? name?.ToString() : throw new ArgumentNullException(nameof(name));
@@ -35,6 +47,10 @@ namespace PowerShellFilesystemProviderBase.Nodes
 
         #region IGetChildItem
 
+        /// <inheritdoc/>
+        public bool HasChildItems() => this.GetChildItems().Any();
+
+        /// <inheritdoc/>
         public IEnumerable<ProviderNode> GetChildItems()
         {
             foreach (var item in this.Underlying)
@@ -53,6 +69,7 @@ namespace PowerShellFilesystemProviderBase.Nodes
 
         #region IGetItem
 
+        /// <inheritdoc/>
         public PSObject? GetItem()
         {
             var pso = new PSObject();
@@ -74,7 +91,17 @@ namespace PowerShellFilesystemProviderBase.Nodes
             }
             return pso;
         }
-    }
 
-    #endregion IGetItem
+        #endregion IGetItem
+
+        #region IRemoveChildItem
+
+        /// <inheritdoc/>
+        public void RemoveChildItem(string childName)
+        {
+            this.Underlying.Remove(childName);
+        }
+
+        #endregion IRemoveChildItem
+    }
 }

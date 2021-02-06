@@ -3,12 +3,11 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Management.Automation;
 using System.Reflection;
 
 namespace PowerShellFilesystemProviderBase.Nodes
 {
-    public class ContainerNode : ProviderNode, IGetChildItems
+    public class ContainerNode : ProviderNode, IGetChildItems, IRemoveChildItem
     {
         public ContainerNode(string? name, object? underlying)
             : base(name, underlying)
@@ -143,9 +142,39 @@ namespace PowerShellFilesystemProviderBase.Nodes
             {
                 return getChildItem.GetChildItemParameters();
             }
-            else return new RuntimeDefinedParameterDictionary();
+            else return null;
+        }
+
+        public bool HasChildItems()
+        {
+            if (this.Underlying is IGetChildItems getChildItem)
+            {
+                return getChildItem.HasChildItems();
+            }
+            else return false;
         }
 
         #endregion IGetChildItems
+
+        #region IRemoveChildItem
+
+        public void RemoveChildItem(string childName)
+        {
+            if (this.Underlying is IRemoveChildItem removeChildItem)
+            {
+                removeChildItem.RemoveChildItem(childName);
+            }
+        }
+
+        public object? RemoveChildItemParameters(string childName)
+        {
+            if (this.Underlying is IRemoveChildItem removeChildItem)
+            {
+                return removeChildItem.RemoveChildItemParameters(childName);
+            }
+            return null;
+        }
+
+        #endregion IRemoveChildItem
     }
 }

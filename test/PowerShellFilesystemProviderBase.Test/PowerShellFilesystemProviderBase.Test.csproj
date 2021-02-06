@@ -2,8 +2,22 @@
 
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
-
     <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <PropertyGroup Label="FineCodeCoverage">
+    <Enabled>True</Enabled>
+    <Exclude>
+      [Microsoft.*]*
+      [System.*]*
+      [TestFileSystem]*
+    </Exclude>
+    <Include>[*]*</Include>
+    <ExcludeByFile></ExcludeByFile>
+    <ExcludeByAttribute></ExcludeByAttribute>
+    <IncludeTestAssembly>
+      True
+    </IncludeTestAssembly>
   </PropertyGroup>
 
   <ItemGroup>

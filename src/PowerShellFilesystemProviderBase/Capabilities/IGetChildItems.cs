@@ -8,6 +8,8 @@ namespace PowerShellFilesystemProviderBase.Capabilities
     {
         object? GetChildItemParameters() => new RuntimeDefinedParameterDictionary();
 
+        bool HasChildItems();
+
         IEnumerable<ProviderNode> GetChildItems();
     }
 }
