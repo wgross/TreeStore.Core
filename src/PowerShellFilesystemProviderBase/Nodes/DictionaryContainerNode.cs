@@ -39,8 +39,6 @@ namespace PowerShellFilesystemProviderBase.Nodes
             if (this.Underlying.TryGetValue(childName, out var childData))
                 if (childData is not null)
                 {
-                    if (childData is IItemContainer itemContainer)
-                        return (true, ContainerNodeFactory.CreateFromIItemContainer(childName, itemContainer));
                     if (childData.GetType().IsDictionaryWithStringKey())
                         return (true, ContainerNodeFactory.CreateFromDictionary(childName, childData));
                 }
@@ -59,9 +57,7 @@ namespace PowerShellFilesystemProviderBase.Nodes
             {
                 if (item.Value is not null)
                 {
-                    if (item.Value is IItemContainer itemContainer)
-                        yield return ContainerNodeFactory.CreateFromIItemContainer(name: item.Key, itemContainer);
-                    else if (item.Value.GetType().IsDictionaryWithStringKey())
+                    if (item.Value.GetType().IsDictionaryWithStringKey())
                         yield return ContainerNodeFactory.CreateFromDictionary(name: item.Key, item.Value);
                 }
             }

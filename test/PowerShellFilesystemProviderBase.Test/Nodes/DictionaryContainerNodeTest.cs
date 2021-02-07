@@ -93,8 +93,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
             var underlying = new Dictionary<string, object>
             {
                 { "container1", new Dictionary<string, object> { { "leaf", new { } } } },
-                { "property" , "text" },
-                { "container2", Mock.Of<IItemContainer>() },
+                { "property" , "text" }
             };
 
             var node = this.ArrangeContainerNode("name", underlying);
@@ -103,8 +102,8 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
             var result = node.GetChildItems().ToArray();
 
             // ASSERT
-            Assert.Equal(2, result.Count());
-            Assert.Equal(new[] { "container1", "container2" }, result.Select(n => n.Name));
+            Assert.Single(result);
+            Assert.Equal(new[] { "container1" }, result.Select(n => n.Name));
             Assert.All(result, r => Assert.True(r.IsContainer));
         }
 

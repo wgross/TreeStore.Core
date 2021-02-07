@@ -1,5 +1,4 @@
-﻿using PowerShellFilesystemProviderBase.Capabilities;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -9,20 +8,6 @@ namespace PowerShellFilesystemProviderBase.Nodes
 {
     public class ContainerNodeFactory
     {
-        /// <summary>
-        /// Creates a <see cref="ContainerNode"/> from a <see cref="IItemContainer"/> and a name.
-        /// the <paramref name="underlying"/> isn't checked at runtome. It has to be suer at compile time
-        /// the instance of <typeparamref name="T"/> fullkfils the constraint.
-        /// </summary>
-        /// <param name="name"></param>
-        /// <param name="underlying"></param>
-        /// <returns></returns>
-        public static ContainerNode CreateFromIItemContainer<T>(string? name, T underlying)
-           where T : IItemContainer
-        {
-            return new ContainerNode(name, underlying);
-        }
-
         public static ContainerNode Create(string? name, object underlying)
         {
             if (underlying is null) throw new ArgumentNullException(nameof(underlying));

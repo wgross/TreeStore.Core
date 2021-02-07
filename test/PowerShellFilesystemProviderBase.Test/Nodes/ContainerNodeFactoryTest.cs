@@ -1,5 +1,4 @@
 ﻿using Moq;
-using PowerShellFilesystemProviderBase.Capabilities;
 using PowerShellFilesystemProviderBase.Nodes;
 using System;
 using System.Collections.Generic;
@@ -30,16 +29,6 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
             // ASSERT
             Assert.True(result.IsContainer);
             Assert.Equal("name", result.Name);
-            Assert.IsType<ContainerNode>(result);
-        }
-
-        [Fact]
-        public void Create_container_node_from_IGetChildItem()
-        {
-            // ACT
-            var result = ContainerNodeFactory.CreateFromIItemContainer("name", Mock.Of<IItemContainer>());
-
-            // ASSERT
             Assert.IsType<ContainerNode>(result);
         }
 

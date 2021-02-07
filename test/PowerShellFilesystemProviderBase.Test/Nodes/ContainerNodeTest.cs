@@ -97,29 +97,6 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
             Assert.Equal((false, default), result);
         }
 
-        public class ContainerData : IItemContainer
-        {
-            public (bool exists, ProviderNode node) TryGetChildNode(string name)
-            {
-                return (true, ProviderNodeFactory.Create(name, new { }));
-            }
-        }
-
-        [Fact(Skip = "TryGetChildNode is currently retired")]
-        public void ContainerNode_finds_child_leaf_data_by_name()
-        {
-            // ARRANGE
-            var node = ContainerNodeFactory.CreateFromIItemContainer("name", new ContainerData());
-
-            // ACT
-            var result = node.TryGetChildNode("child");
-
-            // ASSERT
-            Assert.True(result.exists);
-            Assert.Equal("child", result.node.Name);
-            Assert.False(result.node.IsContainer);
-        }
-
         #endregion IContainerItem
 
         #region IGetItem
