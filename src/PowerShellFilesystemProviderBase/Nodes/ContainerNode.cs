@@ -7,7 +7,7 @@ using System.Reflection;
 
 namespace PowerShellFilesystemProviderBase.Nodes
 {
-    public class ContainerNode : ProviderNode, IGetChildItems, IRemoveChildItem, INewChildItem
+    public class ContainerNode : ProviderNode, IGetChildItems, IRemoveChildItem, INewChildItem, IRenameChildItem
     {
         public ContainerNode(string? name, object? underlying)
             : base(name, underlying)
@@ -128,31 +128,13 @@ namespace PowerShellFilesystemProviderBase.Nodes
         #region IGetChildItems
 
         public IEnumerable<ProviderNode> GetChildItems()
-        {
-            if (this.Underlying is IGetChildItems getChildItem)
-            {
-                return getChildItem.GetChildItems();
-            }
-            return Enumerable.Empty<ProviderNode>();
-        }
+            => this.InvokeUnderlyingOrDefault<IGetChildItems>(getChildItems => getChildItems.GetChildItems());
 
         public object? GetChildItemParameters()
-        {
-            if (this.Underlying is IGetChildItems getChildItem)
-            {
-                return getChildItem.GetChildItemParameters();
-            }
-            else return null;
-        }
+                => this.InvokeUnderlyingOrDefault<IGetChildItems>(getChildItems => getChildItems.GetChildItemParameters());
 
         public bool HasChildItems()
-        {
-            if (this.Underlying is IGetChildItems getChildItem)
-            {
-                return getChildItem.HasChildItems();
-            }
-            else return false;
-        }
+            => this.InvokeUnderlyingOrDefault<IGetChildItems>(getChildItems => getChildItems.HasChildItems());
 
         #endregion IGetChildItems
 
@@ -160,23 +142,11 @@ namespace PowerShellFilesystemProviderBase.Nodes
 
         ///<inheritdoc/>
         public void RemoveChildItem(string childName)
-        {
-            if (this.Underlying is IRemoveChildItem removeChildItem)
-            {
-                removeChildItem.RemoveChildItem(childName);
-            }
-            else throw this.CapabilityNotSupported<IRemoveChildItem>();
-        }
+            => this.InvokeUnderlyingOrThrow<IRemoveChildItem>(removeChildItem => removeChildItem.RemoveChildItem(childName));
 
         ///<inheritdoc/>
         public object? RemoveChildItemParameters(string childName)
-        {
-            if (this.Underlying is IRemoveChildItem removeChildItem)
-            {
-                return removeChildItem.RemoveChildItemParameters(childName);
-            }
-            return null;
-        }
+            => this.InvokeUnderlyingOrDefault<IRemoveChildItem>(newChildItem => newChildItem.RemoveChildItemParameters(childName));
 
         #endregion IRemoveChildItem
 
@@ -184,24 +154,26 @@ namespace PowerShellFilesystemProviderBase.Nodes
 
         ///<inheritdoc/>
         public ProviderNode? NewChildItem(string childName, string itemTypeName, object value)
-        {
-            if (this.Underlying is INewChildItem removeChildItem)
-            {
-                return removeChildItem.NewChildItem(childName, "itemTypeName", value);
-            }
-            else throw this.CapabilityNotSupported<INewChildItem>();
-        }
+            => this.InvokeUnderlyingOrThrow<INewChildItem>(newChildItem => newChildItem.NewChildItem(childName, itemTypeName, value));
 
         ///<inheritdoc/>
         public object? NewChildItemParameters(string childName, string itemTypeName, object value)
-        {
-            if (this.Underlying is INewChildItem newChildItem)
-            {
-                return newChildItem.NewChildItemParameters(childName, itemTypeName, value);
-            }
-            return null;
-        }
+            => this.InvokeUnderlyingOrDefault<INewChildItem>(newChildItem => newChildItem.NewChildItemParameters(childName, itemTypeName, value));
 
         #endregion INewChildItem
+
+        #region IRenameChildItem
+
+        ///<inheritdoc/>
+        public void RenameChildItem(string childName, string newName)
+            => this.InvokeUnderlyingOrThrow<IRenameChildItem>(renameChildItem => renameChildItem.RenameChildItem(childName, newName));
+
+        public object? RenameChidlItemParameters(string childName, string newName)
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion IRenameChildItem
+
     }
 }

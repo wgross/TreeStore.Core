@@ -1,5 +1,7 @@
 ﻿using PowerShellFilesystemProviderBase.Capabilities;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Management.Automation;
 
 namespace PowerShellFilesystemProviderBase.Nodes
@@ -26,20 +28,65 @@ namespace PowerShellFilesystemProviderBase.Nodes
 
         public string Name => this.name;
 
+        #region Delegate to Underlying or ..
+
+        protected void InvokeUnderlyingOrThrow<T>(Action<T> invoke) where T : class
+        {
+            if (this.Underlying is T t)
+            {
+                invoke(t);
+            }
+            else throw this.CapabilityNotSupported<T>();
+        }
+
+        protected ProviderNode? InvokeUnderlyingOrThrow<T>(Func<T, ProviderNode?> invoke) where T : class
+        {
+            return this.Underlying switch
+            {
+                T t => invoke(t),
+                _ => throw this.CapabilityNotSupported<T>()
+            };
+        }
+
+        protected IEnumerable<ProviderNode> InvokeUnderlyingOrDefault<T>(Func<T, IEnumerable<ProviderNode>> invoke) where T : class
+        {
+            return this.Underlying switch
+            {
+                T t => invoke(t),
+                _ => Enumerable.Empty<ProviderNode>()
+            };
+        }
+
+        protected object? InvokeUnderlyingOrDefault<T>(Func<T, object?> invoke) where T : class
+        {
+            return this.Underlying switch
+            {
+                T t => invoke(t),
+                _ => null
+            };
+        }
+
+        protected bool InvokeUnderlyingOrDefault<T>(Func<T, bool> invoke, bool defaultValue = false) where T : class
+        {
+            return this.Underlying switch
+            {
+                T t => invoke(t),
+                _ => defaultValue
+            };
+        }
+
         protected Exception CapabilityNotSupported<T>()
             => new PSNotSupportedException($"Node(name='{this.Name}') doesn't provide an implementation of capability '{typeof(T).Name}'.");
 
+        #endregion Delegate to Underlying or ..
+
         #region IGetItem
 
+        /// <inheritdoc/>
         public object? GetItemParameters()
-        {
-            if (this.Underlying is IGetItem getItem)
-            {
-                return getItem.GetItemParameters();
-            }
-            else return new RuntimeDefinedParameterDictionary();
-        }
+            => this.InvokeUnderlyingOrDefault<IGetItem>(getItem => getItem.GetItemParameters());
 
+        /// <inheritdoc/>
         public PSObject? GetItem()
         {
             PSObject? pso = default;
@@ -62,89 +109,49 @@ namespace PowerShellFilesystemProviderBase.Nodes
 
         #region ISetItem
 
+        /// <inheritdoc/>
         public void SetItem(object value)
-        {
-            if (this.Underlying is ISetItem setItem)
-            {
-                setItem.SetItem(value);
-            }
-            else throw new PSNotSupportedException($"Item '{this.Name}' can't be set");
-        }
+            => this.InvokeUnderlyingOrThrow<ISetItem>(setItem => setItem.SetItem(value));
 
+        /// <inheritdoc/>
         public object? SetItemParameters()
-        {
-            if (this.Underlying is ISetItem setItem)
-            {
-                return setItem.SetItemParameters();
-            }
-            else return new RuntimeDefinedParameterDictionary();
-        }
+           => this.InvokeUnderlyingOrDefault<ISetItem>(setItem => setItem.SetItemParameters());
 
         #endregion ISetItem
 
         #region IClearItem
 
+        /// <inheritdoc/>
         public void ClearItem()
-        {
-            if (this.Underlying is IClearItem clearItem)
-            {
-                clearItem.ClearItem();
-            }
-            else throw new PSNotSupportedException($"Item '{this.Name}' can't be cleared");
-        }
+            => this.InvokeUnderlyingOrThrow<IClearItem>(clearItem => clearItem.ClearItem());
 
+        /// <inheritdoc/>
         public object? ClearItemParameters()
-        {
-            if (this.Underlying is IClearItem clearItem)
-            {
-                return clearItem.ClearItemParameters();
-            }
-            else return new RuntimeDefinedParameterDictionary();
-        }
+            => this.InvokeUnderlyingOrDefault<IClearItem>(clearItem => clearItem.ClearItemParameters());
 
         #endregion IClearItem
 
         #region IItemExists
 
+        /// <inheritdoc/>
         public bool ItemExists()
-        {
-            if (this.Underlying is IItemExists itemExists)
-            {
-                return itemExists.ItemExists();
-            }
-            return true;
-        }
+            => this.InvokeUnderlyingOrDefault<IItemExists>(itemExists => itemExists.ItemExists(), defaultValue: true);
 
+        /// <inheritdoc/>
         public object? ItemExistsParameters()
-        {
-            if (this.Underlying is IItemExists itemExists)
-            {
-                return itemExists.ItemExistsParameters();
-            }
-            else return new RuntimeDefinedParameterDictionary();
-        }
+            => this.InvokeUnderlyingOrDefault<IItemExists>(itemExists => itemExists.ItemExistsParameters());
 
         #endregion IItemExists
 
         #region IInvokeItem
 
+        /// <inheritdoc/>
         public void InvokeItem()
-        {
-            if (this.Underlying is IInvokeItem invokeItem)
-            {
-                invokeItem.InvokeItem();
-            }
-            else throw this.CapabilityNotSupported<IInvokeItem>();
-        }
+            => this.InvokeUnderlyingOrThrow<IInvokeItem>(invokeItem => invokeItem.InvokeItem());
 
+        /// <inheritdoc/>
         public object? InvokeItemParameters()
-        {
-            if (this.Underlying is IInvokeItem invokeItem)
-            {
-                return invokeItem.InvokeItemParameters();
-            }
-            else return new RuntimeDefinedParameterDictionary();
-        }
+            => this.InvokeUnderlyingOrDefault<IInvokeItem>(invokeItem => invokeItem.InvokeItemParameters());
 
         #endregion IInvokeItem
     }

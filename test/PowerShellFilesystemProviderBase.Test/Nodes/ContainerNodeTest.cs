@@ -161,7 +161,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         }
 
         [Fact]
-        public void Invoke_GetItemParameters_creates_empty_parameters()
+        public void Invoke_GetItemParameters_default_to_null()
         {
             // ARRANGE
             var node = this.ArrangeNode("name", new
@@ -173,7 +173,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
             var result = node.GetItemParameters();
 
             // ASSERT
-            Assert.Empty((RuntimeDefinedParameterDictionary)result);
+            Assert.Null(result);
         }
 
         [Fact]
@@ -243,7 +243,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
             var result = Assert.Throws<PSNotSupportedException>(() => node.SetItem(1));
 
             // ASSERT
-            Assert.Equal("Item 'name' can't be set", result.Message);
+            Assert.Equal($"Node(name='name') doesn't provide an implementation of capability 'ISetItem'.", result.Message);
         }
 
         #endregion ISetItem
@@ -293,11 +293,11 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
             var result = Assert.Throws<PSNotSupportedException>(() => node.ClearItem());
 
             // ASSERT
-            Assert.Equal("Item 'name' can't be cleared", result.Message);
+            Assert.Equal($"Node(name='name') doesn't provide an implementation of capability 'IClearItem'.", result.Message);
         }
 
         [Fact]
-        public void Invoke_ClearItemParameter_returns_empty_by_default()
+        public void Invoke_ClearItemParameter_defaults_to_null()
         {
             // ARRANGE
             var node = this.ArrangeNode("name", new { });
@@ -306,7 +306,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
             var result = node.ClearItemParameters();
 
             // ASSERT
-            Assert.Empty((RuntimeDefinedParameterDictionary)result);
+            Assert.Null(result);
         }
 
         #endregion IClearItem
@@ -367,7 +367,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         }
 
         [Fact]
-        public void Invoke_ItemExistsParameter_returns_empty_by_default()
+        public void Invoke_ItemExistsParameter_defaults_to_null()
         {
             // ARRANGE
             var node = this.ArrangeNode("name", new { });
@@ -376,7 +376,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
             var result = node.ItemExistsParameters();
 
             // ASSERT
-            Assert.Empty((RuntimeDefinedParameterDictionary)result);
+            Assert.Null(result);
         }
 
         #endregion IItemExists
@@ -430,7 +430,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         }
 
         [Fact]
-        public void Invoke_InvokeItemParameter_returns_empty_by_default()
+        public void Invoke_InvokeItemParameter_defaults_to_null()
         {
             // ARRANGE
             var node = this.ArrangeNode("name", new { });
@@ -439,7 +439,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
             var result = node.InvokeItemParameters();
 
             // ASSERT
-            Assert.Empty((RuntimeDefinedParameterDictionary)result);
+            Assert.Null(result);
         }
 
         #endregion IInvokeItem
@@ -548,10 +548,10 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
 
         #endregion IGetChildItems
 
-        #region IRemoveItem
+        #region IRemoveChildItem
 
         [Fact]
-        public void Invoke_RemoveItem_at_underlying()
+        public void Invoke_RemoveChildItem_at_underlying()
         {
             // ARRANGE
             var underlying = this.mocks.Create<IRemoveChildItem>();
@@ -565,7 +565,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         }
 
         [Fact]
-        public void Invoke_RemoveItem_defaults_to_exception()
+        public void Invoke_RemoveChildItem_defaults_to_exception()
         {
             // ARRANGE
             var node = this.ArrangeNode("name", new { });
@@ -578,7 +578,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         }
 
         [Fact]
-        public void Invoke_RemoveItemParameters_at_underlying()
+        public void Invoke_RemoveChildItemParameters_at_underlying()
         {
             // ARRANGE
             var parameters = new object();
@@ -597,7 +597,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         }
 
         [Fact]
-        public void Invoke_RemoveItemParameters_defaults_to_null()
+        public void Invoke_RemoveChildItemParameters_defaults_to_null()
         {
             // ARRANGE
             var node = this.ArrangeNode("name", new { });
@@ -609,12 +609,12 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
             Assert.Null(result);
         }
 
-        #endregion IRemoveItem
+        #endregion IRemoveChildItem
 
-        #region INewItem
+        #region INewChildItem
 
         [Fact]
-        public void Invoke_NewItem_at_underlying()
+        public void Invoke_NewChildItem_at_underlying()
         {
             // ARRANGE
             var underlying = this.mocks.Create<INewChildItem>();
@@ -630,7 +630,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         }
 
         [Fact]
-        public void Invoke_NewItem_defaults_to_exception()
+        public void Invoke_NewChildItem_defaults_to_exception()
         {
             // ARRANGE
             var node = this.ArrangeNode("name", new { });
@@ -643,7 +643,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         }
 
         [Fact]
-        public void Invoke_NewItemParameters_at_underlying()
+        public void Invoke_NewChildItemParameters_at_underlying()
         {
             // ARRANGE
             var parameters = new object();
@@ -662,7 +662,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         }
 
         [Fact]
-        public void Invoke_NewItemParameters_defaults_to_null()
+        public void Invoke_NewChildItemParameters_defaults_to_null()
         {
             // ARRANGE
             var node = this.ArrangeNode("name", new { });
@@ -674,6 +674,37 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
             Assert.Null(result);
         }
 
-        #endregion INewItem
+        #endregion INewChildItem
+
+        #region IRenameChildItem
+
+        [Fact]
+        public void Invoke_RenameChildItem_at_underlyling()
+        {
+            // ARRANGE
+            var underlying = this.mocks.Create<IRenameChildItem>();
+            underlying
+                .Setup(u => u.RenameChildItem("name", "newName"));
+
+            var node = this.ArrangeNode("name", underlying.Object);
+
+            // ACT
+            node.RenameChildItem("name", "newName");
+        }
+
+        [Fact]
+        public void Invoke_RenameChildItem_defaults_to_exception()
+        {
+            // ARRANGE
+            var node = this.ArrangeNode("name", new { });
+
+            // ACT
+            var result = Assert.Throws<PSNotSupportedException>(() => node.RenameChildItem("name", "newName"));
+
+            // ASSERT
+            Assert.Equal($"Node(name='name') doesn't provide an implementation of capability 'IRenameChildItem'.", result.Message);
+        }
+
+        #endregion IRenameChildItem
     }
 }

@@ -16,7 +16,7 @@ namespace PowerShellFilesystemProviderBase.Capabilities
         /// Creates a new child named <paramref name="childName"/>
         /// </summary>
         /// <param name="childName"></param>
-        /// <returns>the resultion <see cref="ProviderNode"/> or null</returns>
+        /// <returns>the resulting <see cref="ProviderNode"/> or null</returns>
         ProviderNode? NewChildItem(string childName, string itemTypeName, object newItemValue);
     }
 }

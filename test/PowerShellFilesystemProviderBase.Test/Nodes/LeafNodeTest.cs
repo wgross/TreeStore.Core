@@ -129,7 +129,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         }
 
         [Fact]
-        public void Invoke_GetItemParameters_creates_empty_parameters()
+        public void Invoke_GetItemParameters_defaults_to_null()
         {
             // ARRANGE
             var node = this.ArrangeNode("name", new
@@ -141,7 +141,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
             var result = node.GetItemParameters();
 
             // ASSERT
-            Assert.Empty((RuntimeDefinedParameterDictionary)result);
+            Assert.Null(result);
         }
 
         [Fact]

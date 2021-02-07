@@ -179,7 +179,10 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
             var node = this.ArrangeContainerNode("name", underlying);
 
             // ACT
-            var value = new Dictionary<string, object>();
+            var value = new Dictionary<string, object>()
+            {
+                { "Name", "container1" }
+            };
             var result = node.NewChildItem("container1", "itemTypeValue", value);
 
             // ASSERT
@@ -191,5 +194,9 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         }
 
         #endregion INewChildItem
+
+        #region IRenameChildItem
+        
+        #endregion 
     }
 }

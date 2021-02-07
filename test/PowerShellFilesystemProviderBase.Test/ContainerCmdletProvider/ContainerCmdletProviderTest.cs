@@ -11,7 +11,7 @@ namespace PowerShellFilesystemProviderBase.Test.ContainerCmdletProvider
     [Collection(nameof(PowerShell))]
     public class ContainerCmdletProviderTest : ItemCmdletProviderTestBase
     {
-        #region Get-ChildItem -Path
+        #region Get-ChildItem -Path -Recurse
 
         [Fact]
         public void Powershell_retrieves_roots_childnodes()
@@ -170,9 +170,9 @@ namespace PowerShellFilesystemProviderBase.Test.ContainerCmdletProvider
             Assert.Equal(@"TestFileSystem\TestFilesystem::test:\", psobject.Property<string>("PSParentPath"));
         }
 
-        #endregion Get-ChildItem -Path
+        #endregion Get-ChildItem -Path -Recurse
 
-        #region Remove-Item -Path
+        #region Remove-Item -Path -Recurse
 
         [Fact]
         public void Powershell_removes_root_child_node()
@@ -225,9 +225,9 @@ namespace PowerShellFilesystemProviderBase.Test.ContainerCmdletProvider
             Assert.Empty(root);
         }
 
-        #endregion Remove-Item -Path
+        #endregion Remove-Item -Path -Recurse
 
-        #region New-Item -Path
+        #region New-Item -Path -ItemType -Value
 
         [Fact]
         public void Powershell_creates_child_item()
@@ -264,6 +264,34 @@ namespace PowerShellFilesystemProviderBase.Test.ContainerCmdletProvider
             Assert.Same(child, added);
         }
 
-        #endregion New-Item -Path
+        #endregion New-Item -Path -ItemType -Value
+
+        #region Rename-Item -Path -NewName
+
+        [Fact]
+        public void Powershell_renames_childitem()
+        {
+            // ARRANGE
+            var root = new Dictionary<string, object>();
+            var child = new Dictionary<string, object>()
+            {
+                { "Name", "child1" }
+            };
+
+            this.ArrangeFileSystem(root);
+
+            // ACT
+            var result = this.PowerShell.AddCommand("Rename-Item")
+                .AddParameter("Path", @"test:\child1")
+                .AddParameter("NewName", "newName")
+                .Invoke()
+                .ToArray();
+
+            // ASSERT
+            Assert.False(this.PowerShell.HadErrors);
+            Assert.Equal("newName", child["Name"]);
+        }
+
+        #endregion Rename-Item -Path -NewName
     }
 }
