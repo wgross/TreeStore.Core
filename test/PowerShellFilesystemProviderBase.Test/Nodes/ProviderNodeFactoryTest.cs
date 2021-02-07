@@ -2,10 +2,12 @@
 using PowerShellFilesystemProviderBase.Nodes;
 using System;
 using System.Collections.Generic;
+using System.Management.Automation;
 using Xunit;
 
 namespace PowerShellFilesystemProviderBase.Test.Nodes
 {
+    [Collection(nameof(PowerShell))]
     public class ProviderNodeFactoryTest
     {
         [Fact]

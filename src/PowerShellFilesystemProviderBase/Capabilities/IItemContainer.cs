@@ -1,4 +1,5 @@
 ﻿using PowerShellFilesystemProviderBase.Nodes;
+using System;
 
 namespace PowerShellFilesystemProviderBase.Capabilities
 {
@@ -14,6 +15,7 @@ namespace PowerShellFilesystemProviderBase.Capabilities
         /// </summary>
         /// <param name="name">name of the node to retrieve</param>
         /// <returns></returns>
-        (bool exists, ProviderNode? node) TryGetChildNode(string name);
+        //[Obsolete("For now..")]
+        //(bool exists, ProviderNode? node) TryGetChildNode(string name);
     }
 }

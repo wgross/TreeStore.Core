@@ -18,6 +18,11 @@ namespace PowerShellFilesystemProviderBase
             return false;
         }
 
+        public static object GetValues(IDictionary <string, object> underlying)
+        {
+            throw new NotImplementedException();
+        }
+
         /// <summary>
         /// Verifies that the <paramref name="type"/> implements the <paramref name="genericInterfaceDefinition"/> and
         /// extracts the type combination in <paramref name="implementingType"/>.

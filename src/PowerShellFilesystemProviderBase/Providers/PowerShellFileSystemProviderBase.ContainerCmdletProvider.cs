@@ -1,4 +1,7 @@
-﻿using System.Management.Automation;
+﻿using PowerShellFilesystemProviderBase.Capabilities;
+using PowerShellFilesystemProviderBase.Nodes;
+using System.IO;
+using System.Management.Automation;
 
 namespace PowerShellFilesystemProviderBase.Providers
 {
@@ -26,12 +29,41 @@ namespace PowerShellFilesystemProviderBase.Providers
 
         protected override void GetChildItems(string path, bool recurse, uint depth)
         {
-            base.GetChildItems(path, recurse, depth);
+            if (this.TryGetNodeByPath<IGetChildItems>(path, out var providerNode, out var getChildItems))
+                this.GetChildItems(parentGetChildItems: getChildItems, path, recurse, depth);
         }
 
-        protected override object GetChildItemsDynamicParameters(string path, bool recurse)
+        private void GetChildItems(IGetChildItems parentGetChildItems, string path, bool recurse, uint depth)
         {
-            return base.GetChildItemsDynamicParameters(path, recurse);
+            foreach (var childGetItem in parentGetChildItems.GetChildItems())
+            {
+                var childItemPSObject = childGetItem.GetItem();
+                if (childItemPSObject is not null)
+                {
+                    var childItemPath = Path.Join(path, childGetItem.Name);
+                    this.WriteItemObject(
+                        item: this.DecorateItem(childItemPath, childItemPSObject),
+                        path: this.DecoratePath(childItemPath),
+                        isContainer: childGetItem.IsContainer);
+
+                    //TODO: recurse in cmdlet provider will be slow if the underlying model could optimize fetching of data.
+                    // alternatives:
+                    // - let first container pull in the whole operation -> change IGetChildItems to GetChildItems( bool recurse, uint depth)
+                    // - notify first container of incoming request so it can prepare the fetch: IPrepareGetChildItems: Prepare(bool recurse, uint depth) then resurce in provider
+                    //   General solution would be to introduce a call context to allow an impl. to inspect the original request.
+                    if (recurse && depth > 0 && childGetItem is IGetChildItems childGetChildItems)
+                        this.GetChildItems(childGetChildItems, childItemPath, recurse, depth - 1);
+                }
+            }
+        }
+
+        protected override object? GetChildItemsDynamicParameters(string path, bool recurse)
+        {
+            if (this.TryGetNodeByPath<IGetChildItems>(path, out var providerNode, out var getChildItems))
+            {
+                return getChildItems.GetChildItemParameters();
+            }
+            return null;
         }
 
         protected override void GetChildNames(string path, ReturnContainers returnContainers)
@@ -46,37 +78,82 @@ namespace PowerShellFilesystemProviderBase.Providers
 
         protected override bool HasChildItems(string path)
         {
-            return base.HasChildItems(path);
+            if (this.TryGetNodeByPath(path, out var node))
+            {
+                return node switch
+                {
+                    ContainerNode container => container.HasChildItems(),
+                    _ => false
+                };
+            }
+            return false;
         }
 
         protected override void RemoveItem(string path, bool recurse)
         {
-            base.RemoveItem(path, recurse);
+            var (parentPath, childName) = new PathTool().SplitParentPath(path);
+
+            if (this.TryGetNodeByPath<IRemoveChildItem>(this.DriveInfo.RootNode, parentPath, out var providerNode, out var removeChildItem))
+            {
+                removeChildItem.RemoveChildItem(childName);
+            }
         }
 
-        protected override object RemoveItemDynamicParameters(string path, bool recurse)
+        protected override object? RemoveItemDynamicParameters(string path, bool recurse)
         {
-            return base.RemoveItemDynamicParameters(path, recurse);
+            var (parentPath, childName) = new PathTool().SplitParentPath(path);
+
+            if (this.TryGetNodeByPath<IRemoveChildItem>(this.DriveInfo.RootNode, parentPath, out var providerNode, out var removeChildItem))
+            {
+                removeChildItem.RemoveChildItemParameters(childName);
+            }
+            return null;
         }
 
         protected override void NewItem(string path, string itemTypeName, object newItemValue)
         {
-            base.NewItem(path, itemTypeName, newItemValue);
+            var (parentPath, childName) = new PathTool().SplitParentPath(path);
+
+            if (this.TryGetNodeByPath<INewChildItem>(this.DriveInfo.RootNode, parentPath, out var providerNode, out var newChildItem))
+            {
+                var resultNode = newChildItem.NewChildItem(childName, itemTypeName, newItemValue);
+                if (resultNode is not null)
+                {
+                    this.WriteProviderNode(path, resultNode);
+                }
+            }
         }
 
-        protected override object NewItemDynamicParameters(string path, string itemTypeName, object newItemValue)
+        protected override object? NewItemDynamicParameters(string path, string itemTypeName, object newItemValue)
         {
-            return base.NewItemDynamicParameters(path, itemTypeName, newItemValue);
+            var (parentPath, childName) = new PathTool().SplitParentPath(path);
+
+            if (this.TryGetNodeByPath<INewChildItem>(this.DriveInfo.RootNode, parentPath, out var providerNode, out var removeChildItem))
+            {
+                removeChildItem.NewChildItemParameters(childName, itemTypeName, newItemValue);
+            }
+            return null;
         }
 
         protected override void RenameItem(string path, string newName)
         {
-            base.RenameItem(path, newName);
+            var (parentPath, childName) = new PathTool().SplitParentPath(path);
+
+            if (this.TryGetNodeByPath<IRenameChildItem>(this.DriveInfo.RootNode, parentPath, out var providerNode, out var renameChildItem))
+            {
+                renameChildItem.RenameChildItem(childName, newName);
+            }
         }
 
-        protected override object RenameItemDynamicParameters(string path, string newName)
+        protected override object? RenameItemDynamicParameters(string path, string newName)
         {
-            return base.RenameItemDynamicParameters(path, newName);
+            var (parentPath, childName) = new PathTool().SplitParentPath(path);
+
+            if (this.TryGetNodeByPath<IRenameChildItem>(this.DriveInfo.RootNode, parentPath, out var providerNode, out var renameChildItem))
+            {
+                renameChildItem.RenameChildItemParameters(childName, newName);
+            }
+            return null;
         }
     }
 }

@@ -1,14 +1,31 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
-
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 
+  <PropertyGroup Label="FineCodeCoverage">
+    <Enabled>True</Enabled>
+    <Exclude>
+      [Microsoft.*]*
+      [System.*]*
+      [TestFileSystem]*
+    </Exclude>
+    <Include>[*]*</Include>
+    <ExcludeByFile></ExcludeByFile>
+    <ExcludeByAttribute></ExcludeByAttribute>
+    <IncludeTestAssembly>
+      True
+    </IncludeTestAssembly>
+  </PropertyGroup>
+
   <ItemGroup>
+    <PackageReference Include="coverlet.msbuild" Version="3.0.2">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.7.1" />
-    <PackageReference Include="Microsoft.PowerShell.SDK" Version="7.1.1" />
     <PackageReference Include="Moq" Version="4.16.0" />
     <PackageReference Include="xunit" Version="2.4.1" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.3">
@@ -21,6 +38,12 @@
     </PackageReference>
   </ItemGroup>
 
+  <ItemGroup>
+    <!--<PackageReference Include="Microsoft.PowerShell.SDK" Version="7.1.1" />-->
+    <ProjectReference Include="..\..\submodules\PowerShell\src\Microsoft.PowerShell.Commands.Diagnostics\Microsoft.PowerShell.Commands.Diagnostics.csproj" />
+    <ProjectReference Include="..\..\submodules\PowerShell\src\Microsoft.PowerShell.SDK\Microsoft.PowerShell.SDK.csproj" />
+  </ItemGroup>
+  
   <ItemGroup>
     <ProjectReference Include="..\..\src\PowerShellFilesystemProviderBase\PowerShellFilesystemProviderBase.csproj" />
     <ProjectReference Include="..\TestFileSystem\TestFileSystem.csproj" />
