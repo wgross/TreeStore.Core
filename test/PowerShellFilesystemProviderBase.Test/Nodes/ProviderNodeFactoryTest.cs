@@ -10,31 +10,10 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
     public class ProviderNodeFactoryTest
     {
         [Fact]
-        public void Create_leaf_node_from_object_with_name_property()
+        public void Create_container_node_from_Dictionary_with_name()
         {
             // ACT
-            var result = ProviderNodeFactory.Create(new { Name = "name" });
-
-            // ASSERT
-            Assert.Equal("name", result.Name);
-            Assert.IsType<LeafNode>(result);
-        }
-
-        [Fact]
-        public void Creating_leaf_node_throws_on_missing_name_property()
-        {
-            // ACT
-            var result = Assert.Throws<ArgumentNullException>(() => ProviderNodeFactory.Create(new { }));
-
-            // ASSERT
-            Assert.Equal("name", result.ParamName);
-        }
-
-        [Fact]
-        public void Create_container_node_from_Dictionary_with_name_item()
-        {
-            // ACT
-            var result = ProviderNodeFactory.Create(new Dictionary<string, object>() { { "Name", "name" } });
+            var result = ProviderNodeFactory.Create("name", new Dictionary<string, object>());
 
             // ASSERT
             Assert.Equal("name", result.Name);
@@ -42,20 +21,10 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         }
 
         [Fact]
-        public void Creating_container_node_throws_on_missing_name_property()
+        public void Creating_container_node_throws_on_missing_name()
         {
             // ACT
-            var result = Assert.Throws<ArgumentNullException>(() => ProviderNodeFactory.Create(new Dictionary<string, object>()));
-
-            // ASSERT
-            Assert.Equal("name", result.ParamName);
-        }
-
-        [Fact]
-        public void Creating_container_node_throws_on_missing_name_property_value()
-        {
-            // ACT
-            var result = Assert.Throws<ArgumentNullException>(() => ProviderNodeFactory.Create(new Dictionary<string, object>() { { "Name", null } }));
+            var result = Assert.Throws<ArgumentNullException>(() => ProviderNodeFactory.Create(null, new Dictionary<string, object>()));
 
             // ASSERT
             Assert.Equal("name", result.ParamName);

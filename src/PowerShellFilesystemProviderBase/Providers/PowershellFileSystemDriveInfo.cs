@@ -14,7 +14,6 @@ namespace PowerShellFilesystemProviderBase.Providers
 
         private readonly Func<string, object> rootNodeProvider;
 
-        public ProviderNode RootNode => ProviderNodeFactory.Create(string.Empty, this.rootNodeProvider(this.Name));
-
+        public RootNode RootNode => ProviderNodeFactory.CreateRoot(this.rootNodeProvider(this.Name));
     }
 }

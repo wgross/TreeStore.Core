@@ -7,7 +7,13 @@ using System.Reflection;
 
 namespace PowerShellFilesystemProviderBase.Nodes
 {
-    public class ContainerNode : ProviderNode, IGetChildItems, IRemoveChildItem, INewChildItem, IRenameChildItem
+    public class ContainerNode :
+        // ItemCmdletProvider
+        ProviderNode,
+        // ContainerCmdletProvider
+        IGetChildItems, IRemoveChildItem, INewChildItem, IRenameChildItem, ICopyChildItem,
+        // NavigationCmdletProvider
+        IMoveChildItem
     {
         public ContainerNode(string? name, object? underlying)
             : base(name, underlying)
@@ -153,7 +159,7 @@ namespace PowerShellFilesystemProviderBase.Nodes
         #region INewChildItem
 
         ///<inheritdoc/>
-        public ProviderNode? NewChildItem(string childName, string itemTypeName, object value)
+        public ProviderNode? NewChildItem(string childName, string? itemTypeName, object? value)
             => this.InvokeUnderlyingOrThrow<INewChildItem>(newChildItem => newChildItem.NewChildItem(childName, itemTypeName, value));
 
         ///<inheritdoc/>
@@ -168,11 +174,27 @@ namespace PowerShellFilesystemProviderBase.Nodes
         public void RenameChildItem(string childName, string newName)
             => this.InvokeUnderlyingOrThrow<IRenameChildItem>(renameChildItem => renameChildItem.RenameChildItem(childName, newName));
 
-        public object? RenameChidlItemParameters(string childName, string newName)
-        {
-            throw new NotImplementedException();
-        }
+        /// <inheritdoc/>
+        public object? RenameChildItemParameters(string childName, string newName)
+            => this.InvokeUnderlyingOrDefault<IRenameChildItem>(renameChildItem => renameChildItem.RenameChildItemParameters(childName, newName));
 
         #endregion IRenameChildItem
+
+        #region ICopyChildItem
+
+        public void NewChildItemAsCopy(string childName, object newItemValue)
+            => this.InvokeUnderlyingOrThrow<ICopyChildItem>(copyChildItem => copyChildItem.NewChildItemAsCopy(childName, newItemValue));
+
+        public object? CopyChildItemParameters(string childName, string destination, bool recurse)
+            => this.InvokeUnderlyingOrDefault<ICopyChildItem>(copyChildItem => copyChildItem.CopyChildItemParameters(childName, destination, recurse));
+
+        #endregion ICopyChildItem
+
+        #region IMoveChildItem
+
+        public void MoveChildItem(ContainerNode parentOfNode, ProviderNode nodeToMove, string[] destination)
+            => this.InvokeUnderlyingOrThrow<IMoveChildItem>(moveChildItem => moveChildItem.MoveChildItem(parentOfNode, nodeToMove, destination));
+
+        #endregion IMoveChildItem
     }
 }

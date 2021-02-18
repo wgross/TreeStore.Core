@@ -6,6 +6,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Sprache" Version="2.3.1" />
+  </ItemGroup>
+
+  <ItemGroup>
     <!--<PackageReference Include="PowerShellStandard.Library" Version="5.1.0" />-->
     <ProjectReference Include="..\..\submodules\PowerShell\src\Microsoft.WSMan.Management\Microsoft.WSMan.Management.csproj" />
     <ProjectReference Include="..\..\submodules\PowerShell\src\System.Management.Automation\System.Management.Automation.csproj" />

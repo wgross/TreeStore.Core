@@ -1,15 +1,15 @@
 ﻿using Moq;
+using PowerShellFilesystemProviderBase;
 using PowerShellFilesystemProviderBase.Capabilities;
-using PowerShellFilesystemProviderBase.Test.ItemCmdletProvider;
 using System.Collections.Generic;
 using System.Linq;
 using System.Management.Automation;
 using Xunit;
 
-namespace PowerShellFilesystemProviderBase.Test.ContainerCmdletProvider
+namespace TreeStore.DictionaryFS.Test.ContainerCmdletProvider
 {
     [Collection(nameof(PowerShell))]
-    public class ContainerCmdletProviderTest : ItemCmdletProviderTestBase
+    public sealed class ContainerCmdletProviderTest : ContainerCmdletProviderTestBase
     {
         #region Get-ChildItem -Path -Recurse
 
@@ -19,9 +19,9 @@ namespace PowerShellFilesystemProviderBase.Test.ContainerCmdletProvider
             // ARRANGE
             var root = new Dictionary<string, object>
             {
-                { "child1", new Dictionary<string, object> { { "leaf", new { } } } },
-                { "property" , "text" }
-            }; ;
+                ["child1"] = new Dictionary<string, object> { },
+                ["property"] = "text"
+            };
 
             this.ArrangeFileSystem(root);
 
@@ -33,7 +33,7 @@ namespace PowerShellFilesystemProviderBase.Test.ContainerCmdletProvider
 
             // ASSERT
             Assert.False(this.PowerShell.HadErrors);
-            Assert.Equal(1, result.Count());
+            Assert.Single(result);
 
             var psobject = result.ElementAt(0);
 
@@ -49,11 +49,16 @@ namespace PowerShellFilesystemProviderBase.Test.ContainerCmdletProvider
         public void Powershell_retrieves_roots_childnodes_recursive()
         {
             // ARRANGE
-            var root = new Dictionary<string, object>
+            var root = new Dictionary<string, object?>
             {
-                { "child1", new Dictionary<string, object> { { "grandchild", new Dictionary<string, object>() } } },
-                { "property" , "text" }
-            }; ;
+                ["child1"] = new Dictionary<string, object?>
+                {
+                    ["grandchild"] = new Dictionary<string, object?>()
+                    {
+                        ["property"] = "text"
+                    }
+                }
+            };
 
             this.ArrangeFileSystem(root);
 
@@ -91,22 +96,18 @@ namespace PowerShellFilesystemProviderBase.Test.ContainerCmdletProvider
         public void Powershell_retrieves_roots_childnodes_recursive_upto_depth()
         {
             // ARRANGE
-            var root = new Dictionary<string, object>
+            var root = new Dictionary<string, object?>
             {
+                ["child1"] = new Dictionary<string, object?>
                 {
-                    "child1", new Dictionary<string, object>
+                    ["grandchild"] = new Dictionary<string, object?>()
                     {
-                        {
-                            "grandchild", new Dictionary<string, object>()
-                            {
-                                {"grandgrandchild", new Dictionary<string, object>() }
-                            }
-                        }
+                        ["grandgrandchild"] = new Dictionary<string, object?>()
                     }
                 },
-                { "property" , "text" },
-                { "child2", Mock.Of<IItemContainer>() },
-            }; ;
+                ["property"] = "text",
+                ["child2"] = Mock.Of<IItemContainer>()
+            };
 
             this.ArrangeFileSystem(root);
 
@@ -149,9 +150,9 @@ namespace PowerShellFilesystemProviderBase.Test.ContainerCmdletProvider
         public void Powershell_removes_root_child_node()
         {
             // ARRANGE
-            var root = new Dictionary<string, object>
+            var root = new Dictionary<string, object?>
             {
-                { "child1", new Dictionary<string, object>() },
+                ["child1"] = new Dictionary<string, object?>(),
             };
 
             this.ArrangeFileSystem(root);
@@ -171,14 +172,11 @@ namespace PowerShellFilesystemProviderBase.Test.ContainerCmdletProvider
         public void Powershell_removes_root_child_node_recursive()
         {
             // ARRANGE
-            var root = new Dictionary<string, object>
+            var root = new Dictionary<string, object?>
             {
+                ["child1"] = new Dictionary<string, object>
                 {
-                    "child1",
-                    new Dictionary<string, object>
-                    {
-                        { "grandchild1", new Dictionary<string,object>() }
-                    }
+                    ["grandchild1"] = new Dictionary<string, object?>()
                 }
             };
 
@@ -204,11 +202,8 @@ namespace PowerShellFilesystemProviderBase.Test.ContainerCmdletProvider
         public void Powershell_creates_child_item()
         {
             // ARRANGE
-            var root = new Dictionary<string, object>();
-            var child = new Dictionary<string, object>()
-            {
-                { "Name", "child1" }
-            };
+            var root = new Dictionary<string, object?>();
+            var child = new Dictionary<string, object?>();
 
             this.ArrangeFileSystem(root);
 
@@ -243,14 +238,10 @@ namespace PowerShellFilesystemProviderBase.Test.ContainerCmdletProvider
         public void Powershell_renames_childitem()
         {
             // ARRANGE
-
-            var child = new Dictionary<string, object>()
+            var child = new Dictionary<string, object?>();
+            var root = new Dictionary<string, object?>
             {
-                { "Name", "child1" }
-            };
-            var root = new Dictionary<string, object>
-            {
-                { "child1", child }
+                ["child1"] = child
             };
 
             this.ArrangeFileSystem(root);
@@ -266,9 +257,51 @@ namespace PowerShellFilesystemProviderBase.Test.ContainerCmdletProvider
             Assert.False(this.PowerShell.HadErrors);
             Assert.True(root.TryGetValue("newName", out var renamed));
             Assert.Same(child, renamed);
-            //TODO: // Assert.Equal("newName", child["Name"]);
         }
 
         #endregion Rename-Item -Path -NewName
+
+        #region Copy-Item -Path -Destination
+
+        [Fact(Skip = "Hard to test without a real implementation")]
+        public void Powershell_copy_childitem_invoke_underlying()
+        {
+            // ARRANGE
+            var child1 = new Dictionary<string, object>()
+            {
+                { "Name", "child1" }
+            };
+
+            var destination = this.Mocks.Create<ICopyChildItem>();
+            destination
+                .Setup(ci => ci.NewChildItemAsCopy("newname", child1));
+            destination
+                .Setup(ci => ci.CopyChildItemParameters("child1", @"test:\destination\newname", false))
+                .Returns(null);
+
+            var root = new Dictionary<string, object>
+            {
+                { "child1", child1 },
+                { "child2", destination }
+            };
+
+            this.ArrangeFileSystem(root);
+
+            // ACT
+            var result = this.PowerShell.AddCommand("Copy-Item")
+                .AddParameter("Path", @"test:\child1")
+                .AddParameter("Destination", @"test:\destination\newname")
+                .Invoke()
+                .ToArray();
+
+            // ASSERT
+            Assert.False(this.PowerShell.HadErrors);
+            Assert.True(child1.TryGetValue("newname", out var dest));
+            Assert.True(child1.TryGetValue("child1", out var src));
+            Assert.NotSame(child1, src);
+            Assert.NotSame(src, dest);
+        }
+
+        #endregion Copy-Item -Path -Destination
     }
 }

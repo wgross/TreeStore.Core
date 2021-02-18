@@ -1,6 +1,7 @@
 ﻿using PowerShellFilesystemProviderBase.Capabilities;
 using PowerShellFilesystemProviderBase.Nodes;
 using System.IO;
+using System.Linq;
 using System.Management.Automation;
 
 namespace PowerShellFilesystemProviderBase.Providers
@@ -12,14 +13,41 @@ namespace PowerShellFilesystemProviderBase.Providers
             return base.ConvertPath(path, filter, ref updatedPath, ref updatedFilter);
         }
 
-        protected override void CopyItem(string path, string copyPath, bool recurse)
+        /// <summary>
+        /// Implements the copying of a provider item.
+        /// The existence of the child ndoe <paramref name="path"/> has lready happend in <see cref="ItemExists(string)"/>.
+        /// th destination path <paramref name="destination"/> is completely unverified.
+        /// </summary>
+        /// <param name="path"></param>
+        /// <param name="destination"></param>
+        /// <param name="recurse"></param>
+        protected override void CopyItem(string path, string destination, bool recurse)
         {
-            base.CopyItem(path, copyPath, recurse);
+            var (parentPath, childName) = new PathTool().SplitParentPath(path);
+
+            if (this.TryGetNodeByPath<IGetChildItems>(this.DriveInfo.Root, out var sourceParentNode, out var getChildItem))
+            {
+                // TODO: name comparision is responsibility of the node -> TryGetChildItem(name)?!
+                var nodeToCopy = getChildItem.GetChildItems().Single(ci => ci.Name.Equals(childName));
+
+                var destinationAncestor = this.GetDeepestNodeByPath(destination, out var missingPath);
+                if (missingPath.Length == 1)
+                {
+                    // the parent exists, try to create a new child as a copy.
+                    if (!TryInvokeCapability<ICopyChildItem>(destinationAncestor, c => c.NewChildItemAsCopy(childName, newItemValue: nodeToCopy.Underlying)))
+                        base.CopyItem(path, destination, recurse);
+                }
+            }
+            else base.CopyItem(path, destination, recurse);
         }
 
-        protected override object CopyItemDynamicParameters(string path, string destination, bool recurse)
+        protected override object? CopyItemDynamicParameters(string path, string destination, bool recurse)
         {
-            return base.CopyItemDynamicParameters(path, destination, recurse);
+            if (this.TryGetNodeByPath<ICopyChildItem>(path, out var providerNode, out var getChildItems))
+            {
+                return getChildItems.CopyChildItemParameters(path, destination, recurse);
+            }
+            else return base.CopyItemDynamicParameters(path, destination, recurse);
         }
 
         protected override void GetChildItems(string path, bool recurse)
@@ -42,7 +70,7 @@ namespace PowerShellFilesystemProviderBase.Providers
                 {
                     var childItemPath = Path.Join(path, childGetItem.Name);
                     this.WriteItemObject(
-                        item: this.DecorateItem(childItemPath, childItemPSObject),
+                        item: childItemPSObject,
                         path: this.DecoratePath(childItemPath),
                         isContainer: childGetItem.IsContainer);
 
@@ -64,6 +92,11 @@ namespace PowerShellFilesystemProviderBase.Providers
                 return getChildItems.GetChildItemParameters();
             }
             return null;
+        }
+
+        protected override string GetChildName(string path)
+        {
+            return new PathTool().GetChildNameFromProviderPath(path);
         }
 
         protected override void GetChildNames(string path, ReturnContainers returnContainers)

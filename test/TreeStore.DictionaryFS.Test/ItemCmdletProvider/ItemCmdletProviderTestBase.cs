@@ -1,16 +1,24 @@
-﻿using TestFileSystem;
+﻿using PowerShellFilesystemProviderBase.Test;
+using System.Collections.Generic;
+using TestFileSystem;
+using TreeStore.DictionaryFS.Nodes;
 
-namespace PowerShellFilesystemProviderBase.Test.ItemCmdletProvider
+namespace TreeStore.DictionaryFS.Test.ItemCmdletProvider
 {
     public abstract class ItemCmdletProviderTestBase : PowershellTestBase
     {
-        private object rootNode;
+        private object rootData;
 
-        public void ArrangeFileSystem(object data)
+        public void ArrangeFileSystem(IDictionary<string, object?> data)
         {
-            this.rootNode = data;
-            TestFilesystemProvider.RootNodeProvider = _ => this.rootNode;
+            this.rootData = data;
+            TestFilesystemProvider.RootNodeProvider = _ => new DictionaryContainerAdapter(data);
 
+            this.ArrangeFileSystem();
+        }
+
+        protected void ArrangeFileSystem()
+        {
             this.PowerShell.AddCommand("Import-Module")
                 .AddArgument("./TestFileSystem.dll")
                 .Invoke();

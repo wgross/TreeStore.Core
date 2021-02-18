@@ -1,8 +1,10 @@
-﻿using System.Linq;
+﻿using PowerShellFilesystemProviderBase;
+using PowerShellFilesystemProviderBase.Test;
+using System.Linq;
 using System.Management.Automation;
 using Xunit;
 
-namespace PowerShellFilesystemProviderBase.Test.DriveCmdletProvider
+namespace TreeStore.DictionaryFS.Test.DriveCmdletProvider
 {
     public class DriveCmdletProviderTest : PowershellTestBase
     {

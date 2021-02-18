@@ -2,7 +2,6 @@
 using PowerShellFilesystemProviderBase.Capabilities;
 using PowerShellFilesystemProviderBase.Nodes;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Management.Automation;
 using Xunit;
@@ -63,43 +62,63 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
             Assert.True(result);
         }
 
-        [Fact(Skip = "TryGetChildNode is currently retired")]
-        public void ContainerNode_finds_child_IItemContainer_by_name()
-        {
-            // ARRANGE
-            var node = ContainerNodeFactory.Create("name", new Dictionary<string, object>
-            {
-                { "container", Mock.Of<IItemContainer>() }
-            });
+        //[Fact(Skip = "TryGetChildNode is currently retired")]
+        //public void ContainerNode_finds_child_IItemContainer_by_name()
+        //{
+        //    // ARRANGE
+        //    var node = ContainerNodeFactory.Create("name", new Dictionary<string, object>
+        //    {
+        //        { "container", Mock.Of<IItemContainer>() }
+        //    });
 
-            // ACT
-            var result = node.TryGetChildNode("container");
+        //    // ACT
+        //    var result = node.TryGetChildNode("container");
 
-            // ASSERT
-            Assert.True(result.exists);
-            Assert.Equal("container", result.node.Name);
-            Assert.True(result.node.IsContainer);
-        }
+        //    // ASSERT
+        //    Assert.True(result.exists);
+        //    Assert.Equal("container", result.node.Name);
+        //    Assert.True(result.node.IsContainer);
+        //}
 
-        [Fact]
-        public void ContainerNode_finding_unknown_child_item_by_name_returns_null()
-        {
-            // ARRANGE
-            var node = ContainerNodeFactory.Create("name", new Dictionary<string, object>
-            {
-                { "leaf", new { } }
-            });
+        //[Fact]
+        //public void ContainerNode_finding_unknown_child_item_by_name_returns_null()
+        //{
+        //    // ARRANGE
+        //    var node = ContainerNodeFactory.Create("name", new Dictionary<string, object>
+        //    {
+        //        { "leaf", new { } }
+        //    });
 
-            // ACT
-            var result = node.TryGetChildNode("unknown");
+        //    // ACT
+        //    var result = node.TryGetChildNode("unknown");
 
-            // ASSERT
-            Assert.Equal((false, default), result);
-        }
+        //    // ASSERT
+        //    Assert.Equal((false, default), result);
+        //}
 
         #endregion IContainerItem
 
         #region IGetItem
+
+        [Fact]
+        public void Invoke_GetItem_at_Underlying()
+        {
+            // ARRANGE
+            var psObject = new PSObject();
+            var getItem = this.mocks.Create<IGetItem>();
+            getItem
+                .Setup(gi => gi.GetItem())
+                .Returns(psObject);
+
+            var node = this.ArrangeNode("name", getItem.Object);
+
+            // ACT
+            var result = node.GetItem();
+
+            // ASSERT
+            Assert.Same(psObject, result);
+            Assert.Equal("name", psObject.Property<string>("PSChildName"));
+        }
 
         [Fact]
         public void Invoke_GetItem_default_to_PSObject_of_underlying()
@@ -138,7 +157,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         }
 
         [Fact]
-        public void Invoke_GetItemParameters_default_to_null()
+        public void Invoke_GetItemParameters_defaults_to_null()
         {
             // ARRANGE
             var node = this.ArrangeNode("name", new
@@ -151,26 +170,6 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
 
             // ASSERT
             Assert.Null(result);
-        }
-
-        [Fact]
-        public void Invoke_GetItem_at_Underlying()
-        {
-            // ARRANGE
-            var psObject = new PSObject();
-            var getItem = this.mocks.Create<IGetItem>();
-            getItem
-                .Setup(gi => gi.GetItem())
-                .Returns(psObject);
-
-            var node = this.ArrangeNode("name", getItem.Object);
-
-            // ACT
-            var result = node.GetItem();
-
-            // ASSERT
-            Assert.Same(psObject, result);
-            Assert.Equal("name", psObject.Property<string>("PSChildName"));
         }
 
         #endregion IGetItem
@@ -189,6 +188,19 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
 
             // ACT
             node.SetItem(1);
+        }
+
+        [Fact]
+        public void Invoking_SetItem_at_Underlying_defaults_to_exception()
+        {
+            // ARRANGE
+            var node = this.ArrangeNode("name", new { });
+
+            // ACT
+            var result = Assert.Throws<PSNotSupportedException>(() => node.SetItem(1));
+
+            // ASSERT
+            Assert.Equal($"Node(name='name') doesn't provide an implementation of capability 'ISetItem'.", result.Message);
         }
 
         [Fact]
@@ -211,16 +223,16 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         }
 
         [Fact]
-        public void Invoking_SetItem_at_Underlying_throws_if_not_supported()
+        public void Invoke_SetItemParameters_at_default_to_null()
         {
             // ARRANGE
             var node = this.ArrangeNode("name", new { });
 
             // ACT
-            var result = Assert.Throws<PSNotSupportedException>(() => node.SetItem(1));
+            var result = node.SetItemParameters();
 
             // ASSERT
-            Assert.Equal($"Node(name='name') doesn't provide an implementation of capability 'ISetItem'.", result.Message);
+            Assert.Null(result);
         }
 
         #endregion ISetItem
@@ -242,6 +254,19 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         }
 
         [Fact]
+        public void Invoking_ClearItem_at_Underlying_defaults_to_exception()
+        {
+            // ARRANGE
+            var node = this.ArrangeNode("name", new { });
+
+            // ACT
+            var result = Assert.Throws<PSNotSupportedException>(() => node.ClearItem());
+
+            // ASSERT
+            Assert.Equal($"Node(name='name') doesn't provide an implementation of capability 'IClearItem'.", result.Message);
+        }
+
+        [Fact]
         public void Invoke_ClearItemParameters_at_Underlying()
         {
             // ARRANGE
@@ -258,19 +283,6 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
 
             // ASSERT
             Assert.Same(parameters, result);
-        }
-
-        [Fact]
-        public void Invoking_ClearItem_at_Underlying_throws_if_not_supported()
-        {
-            // ARRANGE
-            var node = this.ArrangeNode("name", new { });
-
-            // ACT
-            var result = Assert.Throws<PSNotSupportedException>(() => node.ClearItem());
-
-            // ASSERT
-            Assert.Equal($"Node(name='name') doesn't provide an implementation of capability 'IClearItem'.", result.Message);
         }
 
         [Fact]
@@ -430,7 +442,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
             var childItems = new ProviderNode[]
             {
                 LeafNodeFactory.Create("child1", new { }),
-                ContainerNodeFactory.Create("child2", new Dictionary<string,object>())
+                //ContainerNodeFactory.Create("child2", new Dictionary<string,object>())
             };
 
             var underlying = this.mocks.Create<IGetChildItems>();
@@ -682,6 +694,138 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
             Assert.Equal($"Node(name='name') doesn't provide an implementation of capability 'IRenameChildItem'.", result.Message);
         }
 
+        [Fact]
+        public void Invoke_RenameChildItemParameters_at_underlyling()
+        {
+            // ARRANGE
+            var parameters = new object();
+            var underlying = this.mocks.Create<IRenameChildItem>();
+            underlying
+                .Setup(u => u.RenameChildItemParameters("name", "newName"))
+                .Returns(parameters);
+
+            var node = this.ArrangeNode("name", underlying.Object);
+
+            // ACT
+            var result = node.RenameChildItemParameters("name", "newName");
+
+            // ASSERT
+            Assert.Same(parameters, result);
+        }
+
+        [Fact]
+        public void Invoke_RenameChildItemParameters_defaults_to_null()
+        {
+            // ARRANGE
+
+            var node = this.ArrangeNode("name", new { });
+
+            // ACT
+            var result = node.RenameChildItemParameters("name", "newName");
+
+            // ASSERT
+            Assert.Null(result);
+        }
+
         #endregion IRenameChildItem
+
+        #region ICopyChildItem
+
+        [Fact]
+        public void Invoke_CopyChildItem_at_underlying()
+        {
+            // ARRANGE
+            var underlying = this.mocks.Create<ICopyChildItem>();
+            underlying
+                .Setup(u => u.NewChildItemAsCopy("name", "newName"));
+
+            var node = this.ArrangeNode("name", underlying.Object);
+
+            // ACT
+            node.NewChildItemAsCopy(childName: "name", newItemValue: "newName");
+        }
+
+        [Fact]
+        public void Invoke_CopyChildItem_defaults_to_exception()
+        {
+            // ARRANGE
+            var node = this.ArrangeNode("name", new { });
+
+            // ACT
+            var result = Assert.Throws<PSNotSupportedException>(() => node.NewChildItemAsCopy(childName: "name", newItemValue: "newName"));
+
+            // ASSERT
+            Assert.Equal($"Node(name='name') doesn't provide an implementation of capability 'ICopyChildItem'.", result.Message);
+        }
+
+        [Fact]
+        public void Invoke_CopyItemParameters_at_underlying()
+        {
+            // ARRANGE
+            var parameters = new object();
+            var underlying = this.mocks.Create<ICopyChildItem>();
+            underlying
+                .Setup(u => u.CopyChildItemParameters("name", "destination", true))
+                .Returns(parameters);
+
+            var node = this.ArrangeNode("name", underlying.Object);
+
+            // ACT
+            var result = node.CopyChildItemParameters(childName: "name", destination: "destination", recurse: true);
+
+            // ASSERT
+            Assert.Same(parameters, result);
+        }
+
+        [Fact]
+        public void Invoke_CopyItemParameters_defaults_to_null()
+        {
+            // ARRANGE
+            var node = this.ArrangeNode("name", new { });
+
+            // ACT
+            var result = node.CopyChildItemParameters(childName: "name", destination: "destination", recurse: true);
+
+            // ASSERT
+            Assert.Null(result);
+        }
+
+        #endregion ICopyChildItem
+
+        #region IMoveChildItem
+
+        [Fact]
+        public void Invoke_MoveChildItem_at_underlying()
+        {
+            // ARRANGE
+            var parentOfNode = new ContainerNode("Name", new { });
+            var nodeToMove = new LeafNode("name", new { });
+
+            var underlying = this.mocks.Create<IMoveChildItem>();
+            underlying
+                .Setup(u => u.MoveChildItem(parentOfNode, nodeToMove, new string[0]));
+
+            var node = this.ArrangeNode("name", underlying.Object);
+
+            // ACT
+            node.MoveChildItem(parentOfNode, nodeToMove, destination: new string[0]);
+        }
+
+        [Fact]
+        public void Invoke_MoveChildItem_defaults_to_exception()
+        {
+            // ARRANGE
+            var parentOfNode = new ContainerNode("Name", new { });
+            var nodeToMove = new LeafNode("name", new { });
+            var node = this.ArrangeNode("name", new { });
+
+            // ACT
+            var result = Assert.Throws<PSNotSupportedException>(() => node.MoveChildItem(parentOfNode, nodeToMove, destination: new string[0]));
+
+            // ASSERT
+            Assert.Equal($"Node(name='name') doesn't provide an implementation of capability 'IMoveChildItem'.", result.Message);
+        }
+
+        #endregion IMoveChildItem
     }
 }
