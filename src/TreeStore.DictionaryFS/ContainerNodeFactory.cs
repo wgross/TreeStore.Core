@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Reflection;
-using System.Runtime.ExceptionServices;
 using TreeStore.DictionaryFS.Nodes;
 
 namespace PowerShellFilesystemProviderBase.Nodes
@@ -28,19 +26,6 @@ namespace PowerShellFilesystemProviderBase.Nodes
         internal static ContainerNode CreateFromDictionary(string? name, IDictionary<string, object> underlying)
         {
             return new ContainerNode(name, new DictionaryContainerAdapter(underlying!));
-        }
-
-        private static string? GetName(object underlying)
-        {
-            try
-            {
-                return underlying.GetType().GetProperty("Name")?.GetValue(underlying, null) as string;
-            }
-            catch (TargetInvocationException ex) when (ex.InnerException is ArgumentNullException)
-            {
-                ExceptionDispatchInfo.Capture(ex.InnerException).Throw();
-                throw; // never executed. Compiler doesn't know that Throw() throws.
-            }
         }
     }
 }

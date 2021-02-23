@@ -1,7 +1,7 @@
 ﻿using PowerShellFilesystemProviderBase.Capabilities;
 using PowerShellFilesystemProviderBase.Nodes;
+using System;
 using System.IO;
-using System.Linq;
 using System.Management.Automation;
 
 namespace PowerShellFilesystemProviderBase.Providers
@@ -25,45 +25,44 @@ namespace PowerShellFilesystemProviderBase.Providers
         {
             var (parentPath, childName) = new PathTool().SplitParentPath(path);
 
-            if (this.TryGetNodeByPath<IGetChildItems>(this.DriveInfo.Root, out var sourceParentNode, out var getChildItem))
-            {
-                // TODO: name comparision is responsibility of the node -> TryGetChildItem(name)?!
-                var nodeToCopy = getChildItem.GetChildItems().Single(ci => ci.Name.Equals(childName));
-
-                var destinationAncestor = this.GetDeepestNodeByPath(destination, out var missingPath);
-                if (missingPath.Length == 1)
+            this.InvokeContainerNodeOrDefault(
+                path: parentPath,
+                invoke: sourceParentNode =>
                 {
-                    // the parent exists, try to create a new child as a copy.
-                    if (!TryInvokeCapability<ICopyChildItem>(destinationAncestor, c => c.NewChildItemAsCopy(childName, newItemValue: nodeToCopy.Underlying)))
-                        base.CopyItem(path, destination, recurse);
-                }
-            }
-            else base.CopyItem(path, destination, recurse);
+                    if (!sourceParentNode.TryGetChildNode(childName, out var nodeToCopy))
+                        throw new InvalidOperationException($"Item '{path}' doesn't exist");
+
+                    // find the deepest ancestor which serves as a destination to copy to
+                    var destinationAncestor = this.GetDeepestNodeByPath(destination, out var missingPath);
+
+                    if (destinationAncestor is ContainerNode destinationAncestorContainer)
+                    {
+                        // destination ancestor is a container and might accept the copy
+                        destinationAncestorContainer.CopyChildItem(nodeToCopy, destination: missingPath, recurse);
+                    }
+                    else base.CopyItem(path, destination, recurse);
+                },
+                fallback: () => base.CopyItem(path, destination, recurse));
         }
 
-        protected override object? CopyItemDynamicParameters(string path, string destination, bool recurse)
-        {
-            if (this.TryGetNodeByPath<ICopyChildItem>(path, out var providerNode, out var getChildItems))
-            {
-                return getChildItems.CopyChildItemParameters(path, destination, recurse);
-            }
-            else return base.CopyItemDynamicParameters(path, destination, recurse);
-        }
+        protected override object? CopyItemDynamicParameters(string path, string destination, bool recurse) => this.InvokeContainerNodeOrDefault(
+            path: new PathTool().SplitProviderPath(path).path.items,
+            invoke: c => c.CopyChildItemParameters(path, destination, recurse),
+            fallback: () => base.CopyItemDynamicParameters(path, destination, recurse));
 
         protected override void GetChildItems(string path, bool recurse)
         {
             base.GetChildItems(path, recurse);
         }
 
-        protected override void GetChildItems(string path, bool recurse, uint depth)
-        {
-            if (this.TryGetNodeByPath<IGetChildItems>(path, out var providerNode, out var getChildItems))
-                this.GetChildItems(parentGetChildItems: getChildItems, path, recurse, depth);
-        }
+        protected override void GetChildItems(string path, bool recurse, uint depth) => this.InvokeContainerNodeOrDefault(
+            path: new PathTool().SplitProviderPath(path).path.items,
+            invoke: c => this.GetChildItems(parentContainer: c, path, recurse, depth),
+            fallback: () => base.GetChildItems(path, recurse, depth));
 
-        private void GetChildItems(IGetChildItems parentGetChildItems, string path, bool recurse, uint depth)
+        private void GetChildItems(ContainerNode parentContainer, string path, bool recurse, uint depth)
         {
-            foreach (var childGetItem in parentGetChildItems.GetChildItems())
+            foreach (var childGetItem in parentContainer.GetChildItems())
             {
                 var childItemPSObject = childGetItem.GetItem();
                 if (childItemPSObject is not null)
@@ -72,27 +71,23 @@ namespace PowerShellFilesystemProviderBase.Providers
                     this.WriteItemObject(
                         item: childItemPSObject,
                         path: this.DecoratePath(childItemPath),
-                        isContainer: childGetItem.IsContainer);
+                        isContainer: childGetItem is ContainerNode);
 
                     //TODO: recurse in cmdlet provider will be slow if the underlying model could optimize fetching of data.
                     // alternatives:
                     // - let first container pull in the whole operation -> change IGetChildItems to GetChildItems( bool recurse, uint depth)
                     // - notify first container of incoming request so it can prepare the fetch: IPrepareGetChildItems: Prepare(bool recurse, uint depth) then resurce in provider
                     //   General solution would be to introduce a call context to allow an impl. to inspect the original request.
-                    if (recurse && depth > 0 && childGetItem is IGetChildItems childGetChildItems)
-                        this.GetChildItems(childGetChildItems, childItemPath, recurse, depth - 1);
+                    if (recurse && depth > 0 && childGetItem is ContainerNode childContainer)
+                        this.GetChildItems(childContainer, childItemPath, recurse, depth - 1);
                 }
             }
         }
 
-        protected override object? GetChildItemsDynamicParameters(string path, bool recurse)
-        {
-            if (this.TryGetNodeByPath<IGetChildItems>(path, out var providerNode, out var getChildItems))
-            {
-                return getChildItems.GetChildItemParameters();
-            }
-            return null;
-        }
+        protected override object? GetChildItemsDynamicParameters(string path, bool recurse) => this.InvokeContainerNodeOrDefault(
+            path: new PathTool().SplitProviderPath(path).path.items,
+            invoke: c => c.GetChildItemParameters(path, recurse),
+            fallback: () => base.GetChildItemsDynamicParameters(path, recurse));
 
         protected override string GetChildName(string path)
         {
@@ -109,38 +104,28 @@ namespace PowerShellFilesystemProviderBase.Providers
             return base.GetChildNamesDynamicParameters(path);
         }
 
-        protected override bool HasChildItems(string path)
-        {
-            if (this.TryGetNodeByPath(path, out var node))
-            {
-                return node switch
-                {
-                    ContainerNode container => container.HasChildItems(),
-                    _ => false
-                };
-            }
-            return false;
-        }
+        protected override bool HasChildItems(string path) => this.InvokeContainerNodeOrDefault(
+            path: new PathTool().SplitProviderPath(path).path.items,
+            invoke: c => c.HasChildItems(),
+            fallback: () => this.HasChildItems(path));
 
         protected override void RemoveItem(string path, bool recurse)
         {
-            var (parentPath, childName) = new PathTool().SplitParentPath(path);
+            var (parentPath, childName) = new PathTool().SplitParentPathAndChildName(path);
 
-            if (this.TryGetNodeByPath<IRemoveChildItem>(this.DriveInfo.RootNode, parentPath, out var providerNode, out var removeChildItem))
-            {
-                removeChildItem.RemoveChildItem(childName);
-            }
+            this.InvokeContainerNodeOrDefault(
+                path: parentPath,
+                invoke: c => c.RemoveChildItem(childName!),
+                fallback: () => base.RemoveItem(path, recurse));
         }
 
         protected override object? RemoveItemDynamicParameters(string path, bool recurse)
         {
             var (parentPath, childName) = new PathTool().SplitParentPath(path);
 
-            if (this.TryGetNodeByPath<IRemoveChildItem>(this.DriveInfo.RootNode, parentPath, out var providerNode, out var removeChildItem))
-            {
-                removeChildItem.RemoveChildItemParameters(childName);
-            }
-            return null;
+            return this.InvokeContainerNodeOrDefault(parentPath,
+               invoke: c => c.RemoveChildItemParameters(childName, recurse),
+               fallback: () => base.RemoveItemDynamicParameters(path, recurse));
         }
 
         protected override void NewItem(string path, string itemTypeName, object newItemValue)
@@ -161,11 +146,9 @@ namespace PowerShellFilesystemProviderBase.Providers
         {
             var (parentPath, childName) = new PathTool().SplitParentPath(path);
 
-            if (this.TryGetNodeByPath<INewChildItem>(this.DriveInfo.RootNode, parentPath, out var providerNode, out var removeChildItem))
-            {
-                removeChildItem.NewChildItemParameters(childName, itemTypeName, newItemValue);
-            }
-            return null;
+            return this.InvokeContainerNodeOrDefault(parentPath,
+                invoke: c => c.NewChildItemParameters(childName, itemTypeName, newItemValue),
+                fallback: () => base.NewItemDynamicParameters(path, itemTypeName, newItemValue));
         }
 
         protected override void RenameItem(string path, string newName)
@@ -182,11 +165,9 @@ namespace PowerShellFilesystemProviderBase.Providers
         {
             var (parentPath, childName) = new PathTool().SplitParentPath(path);
 
-            if (this.TryGetNodeByPath<IRenameChildItem>(this.DriveInfo.RootNode, parentPath, out var providerNode, out var renameChildItem))
-            {
-                renameChildItem.RenameChildItemParameters(childName, newName);
-            }
-            return null;
+            return this.InvokeContainerNodeOrDefault(parentPath,
+                invoke: c => c.RenameChildItemParameters(childName, newName),
+                fallback: () => base.RenameItemDynamicParameters(path, newName));
         }
     }
 }

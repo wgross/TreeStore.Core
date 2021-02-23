@@ -6,7 +6,7 @@ namespace PowerShellFilesystemProviderBase.Capabilities
 {
     public interface IGetChildItems : IItemContainer
     {
-        object? GetChildItemParameters() => new RuntimeDefinedParameterDictionary();
+        object? GetChildItemParameters(string path, bool recurse) => new RuntimeDefinedParameterDictionary();
 
         bool HasChildItems();
 

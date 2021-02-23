@@ -1,4 +1,5 @@
-﻿using System.Management.Automation;
+﻿using PowerShellFilesystemProviderBase.Nodes;
+using System.Management.Automation;
 
 namespace PowerShellFilesystemProviderBase.Capabilities
 {
@@ -12,11 +13,24 @@ namespace PowerShellFilesystemProviderBase.Capabilities
         object? CopyChildItemParameters(string childName, string destination, bool recurse) => new RuntimeDefinedParameterDictionary();
 
         /// <summary>
-        /// Creata a noew child item as a copy of an existing child item from the same provider.
+        /// Creates a new child node at <paramref name="destination"/> from the given <paramref name="nodeToCopy"/>
         /// </summary>
-        /// <param name="childName"></param>
-        /// <param name="itemTypeName"></param>
-        /// <param name="newItemValue"></param>
-        void NewChildItemAsCopy(string childName, object newItemValue);
+        /// <param name="nodeToCopy"></param>
+        /// <param name="destination"></param>
+        ProviderNode CopyChildItem(ProviderNode nodeToCopy, string[] destination);
+    }
+
+    /// <summary>
+    /// Extends an underlying of a <see cref="ContainerNode"/> to process a recursive copy of a given node.
+    /// </summary>
+    public interface ICopyChildItemRecursive : ICopyChildItem
+    {
+        /// <summary>
+        /// Creates a new child node at <paramref name="destination"/> from the given <paramref name="nodeToCopy"/>
+        /// as a recursive copy
+        /// </summary>
+        /// <param name="nodeToCopy"></param>
+        /// <param name="destination"></param>
+        ProviderNode CopyChildItemRecursive(ProviderNode nodeToCopy, string[] destination);
     }
 }

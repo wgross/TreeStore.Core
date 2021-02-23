@@ -24,8 +24,6 @@ namespace PowerShellFilesystemProviderBase.Nodes
 
         public object Underlying => this.underlying;
 
-        public bool IsContainer => this.Underlying is IItemContainer;
-
         public string Name => this.name;
 
         #region Delegate to Underlying or ..

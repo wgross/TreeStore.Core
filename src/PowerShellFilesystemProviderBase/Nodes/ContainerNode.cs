@@ -7,13 +7,7 @@ using System.Reflection;
 
 namespace PowerShellFilesystemProviderBase.Nodes
 {
-    public class ContainerNode :
-        // ItemCmdletProvider
-        ProviderNode,
-        // ContainerCmdletProvider
-        IGetChildItems, IRemoveChildItem, INewChildItem, IRenameChildItem, ICopyChildItem,
-        // NavigationCmdletProvider
-        IMoveChildItem
+    public class ContainerNode : ProviderNode
     {
         public ContainerNode(string? name, object? underlying)
             : base(name, underlying)
@@ -100,44 +94,19 @@ namespace PowerShellFilesystemProviderBase.Nodes
 
         #endregion Node converter
 
-        #region IItemContainer
-
-        /// <summary>
-        /// Override this method to provide children under the root.
-        /// </summary>
-        /// <remarks>
-        /// if not overriode in the payload a child node is always a container node.
-        /// The payloads properties are considers as ItemProperies if ther aren't enumerable.
-        /// </remarks>
-        /// <param name="pathItem"></param>
-        /// <returns></returns>
-        [Obsolete("For now..")]
-        public (bool exists, ProviderNode? node) TryGetChildNode(string childName)
+        public bool TryGetChildNode(string childName, [NotNullWhen(true)] out ProviderNode? childNode)
         {
-            //if (this.Underlying is IItemContainer itemContainer)
-            //{
-            //    /// this is also true for <see cref="DictionaryContainerNode{T, V}"/>
-            //    /// wrapping a <see cref="IDictionary{TKey, TValue}"/>.
-            //    return itemContainer.TryGetChildNode(childName);
-            //}
-
-            //var node = this.GetDictionaryProperties()
-            //    .Where(p => p.Name.Equals(childName))
-            //    .Select(pi => AsContainerNode(childName, pi))
-            //    .FirstOrDefault();
-
-            return (false, default);
+            childNode = this.GetChildItems().FirstOrDefault(n => n.Name.Equals(childName, StringComparison.OrdinalIgnoreCase));
+            return (childNode is not null);
         }
-
-        #endregion IItemContainer
 
         #region IGetChildItems
 
         public IEnumerable<ProviderNode> GetChildItems()
             => this.InvokeUnderlyingOrDefault<IGetChildItems>(getChildItems => getChildItems.GetChildItems());
 
-        public object? GetChildItemParameters()
-                => this.InvokeUnderlyingOrDefault<IGetChildItems>(getChildItems => getChildItems.GetChildItemParameters());
+        public object? GetChildItemParameters(string path, bool recurse)
+            => this.InvokeUnderlyingOrDefault<IGetChildItems>(getChildItems => getChildItems.GetChildItemParameters(path, recurse));
 
         public bool HasChildItems()
             => this.InvokeUnderlyingOrDefault<IGetChildItems>(getChildItems => getChildItems.HasChildItems());
@@ -151,8 +120,8 @@ namespace PowerShellFilesystemProviderBase.Nodes
             => this.InvokeUnderlyingOrThrow<IRemoveChildItem>(removeChildItem => removeChildItem.RemoveChildItem(childName));
 
         ///<inheritdoc/>
-        public object? RemoveChildItemParameters(string childName)
-            => this.InvokeUnderlyingOrDefault<IRemoveChildItem>(newChildItem => newChildItem.RemoveChildItemParameters(childName));
+        public object? RemoveChildItemParameters(string childName, bool recurse)
+            => this.InvokeUnderlyingOrDefault<IRemoveChildItem>(newChildItem => newChildItem.RemoveChildItemParameters(childName, recurse));
 
         #endregion IRemoveChildItem
 
@@ -180,15 +149,36 @@ namespace PowerShellFilesystemProviderBase.Nodes
 
         #endregion IRenameChildItem
 
-        #region ICopyChildItem
+        #region ICopyChildItemRecursive
 
-        public void NewChildItemAsCopy(string childName, object newItemValue)
-            => this.InvokeUnderlyingOrThrow<ICopyChildItem>(copyChildItem => copyChildItem.NewChildItemAsCopy(childName, newItemValue));
+        public void CopyChildItem(ProviderNode nodeToCopy, string[] destination, bool recurse)
+        {
+            if (recurse && this.Underlying is ICopyChildItemRecursive)
+            {
+                this.InvokeUnderlyingOrThrow<ICopyChildItemRecursive>(copyChildItem => copyChildItem.CopyChildItemRecursive(nodeToCopy, destination));
+            }
+            else if (recurse && this.Underlying is ICopyChildItem && nodeToCopy is ContainerNode containerToCopy)
+            {
+                // copy the source root
+                var copiedNode = this.InvokeUnderlyingOrThrow<ICopyChildItem>(copyChildItem => copyChildItem.CopyChildItem(containerToCopy, destination));
+
+                if (copiedNode is ContainerNode copiedContainerNode)
+                {
+                    // copy the sources roots children
+                    foreach (var containerToCopyChild in containerToCopy.GetChildItems())
+                    {
+                        copiedContainerNode.CopyChildItem(containerToCopyChild, new[] { containerToCopyChild.Name }, recurse);
+                    }
+                }
+                else this.InvokeUnderlyingOrThrow<ICopyChildItem>(copyChildItem => copyChildItem.CopyChildItem(nodeToCopy, destination));
+            }
+            else this.InvokeUnderlyingOrThrow<ICopyChildItem>(copyChildItem => copyChildItem.CopyChildItem(nodeToCopy, destination));
+        }
 
         public object? CopyChildItemParameters(string childName, string destination, bool recurse)
             => this.InvokeUnderlyingOrDefault<ICopyChildItem>(copyChildItem => copyChildItem.CopyChildItemParameters(childName, destination, recurse));
 
-        #endregion ICopyChildItem
+        #endregion ICopyChildItemRecursive
 
         #region IMoveChildItem
 

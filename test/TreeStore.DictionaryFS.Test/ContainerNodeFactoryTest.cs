@@ -15,7 +15,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
             var result = ContainerNodeFactory.Create("name", new Dictionary<string, object>());
 
             // ASSERT
-            Assert.True(result.IsContainer);
+            Assert.True(result is ContainerNode);
             Assert.Equal("name", result.Name);
             Assert.IsType<ContainerNode>(result);
         }
@@ -27,7 +27,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
             var result = ContainerNodeFactory.Create("name", Mock.Of<IDictionary<string, object>>());
 
             // ASSERT
-            Assert.True(result.IsContainer);
+            Assert.True(result is ContainerNode);
             Assert.Equal("name", result.Name);
             Assert.IsType<ContainerNode>(result);
         }

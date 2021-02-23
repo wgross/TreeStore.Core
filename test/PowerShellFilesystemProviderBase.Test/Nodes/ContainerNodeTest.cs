@@ -47,132 +47,45 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
 
         #endregion Name
 
-        #region IContainerItem
-
-        [Fact]
-        public void ContainerNode_is_container()
+        [Theory]
+        [InlineData("NAME")]
+        [InlineData("name")]
+        public void ContainerNode_finds_child_by_name(string name)
         {
             // ARRANGE
-            var node = this.ArrangeNode("name", Mock.Of<IItemContainer>());
+            var getChildItem = this.mocks.Create<IGetChildItems>();
+            getChildItem
+                .Setup(gci => gci.GetChildItems())
+                .Returns(new[] { this.ArrangeNode("name", new { }) });
+
+            var node = ArrangeNode("", getChildItem.Object);
 
             // ACT
-            var result = node.IsContainer;
+            var result = node.TryGetChildNode(name, out var childNode);
 
             // ASSERT
             Assert.True(result);
-        }
-
-        //[Fact(Skip = "TryGetChildNode is currently retired")]
-        //public void ContainerNode_finds_child_IItemContainer_by_name()
-        //{
-        //    // ARRANGE
-        //    var node = ContainerNodeFactory.Create("name", new Dictionary<string, object>
-        //    {
-        //        { "container", Mock.Of<IItemContainer>() }
-        //    });
-
-        //    // ACT
-        //    var result = node.TryGetChildNode("container");
-
-        //    // ASSERT
-        //    Assert.True(result.exists);
-        //    Assert.Equal("container", result.node.Name);
-        //    Assert.True(result.node.IsContainer);
-        //}
-
-        //[Fact]
-        //public void ContainerNode_finding_unknown_child_item_by_name_returns_null()
-        //{
-        //    // ARRANGE
-        //    var node = ContainerNodeFactory.Create("name", new Dictionary<string, object>
-        //    {
-        //        { "leaf", new { } }
-        //    });
-
-        //    // ACT
-        //    var result = node.TryGetChildNode("unknown");
-
-        //    // ASSERT
-        //    Assert.Equal((false, default), result);
-        //}
-
-        #endregion IContainerItem
-
-        #region IGetItem
-
-        [Fact]
-        public void Invoke_GetItem_at_Underlying()
-        {
-            // ARRANGE
-            var psObject = new PSObject();
-            var getItem = this.mocks.Create<IGetItem>();
-            getItem
-                .Setup(gi => gi.GetItem())
-                .Returns(psObject);
-
-            var node = this.ArrangeNode("name", getItem.Object);
-
-            // ACT
-            var result = node.GetItem();
-
-            // ASSERT
-            Assert.Same(psObject, result);
-            Assert.Equal("name", psObject.Property<string>("PSChildName"));
+            Assert.NotNull(childNode);
         }
 
         [Fact]
-        public void Invoke_GetItem_default_to_PSObject_of_underlying()
+        public void ContainerNode_finding_unknown_child_item_by_name_returns_null()
         {
             // ARRANGE
-            var node = this.ArrangeNode("name", new
-            {
-                Data = "data"
-            });
+            var getChildItem = this.mocks.Create<IGetChildItems>();
+            getChildItem
+                .Setup(gci => gci.GetChildItems())
+                .Returns(new[] { this.ArrangeNode("unkown", new { }) });
+
+            var node = ArrangeNode("", getChildItem.Object);
 
             // ACT
-            var result = node.GetItem();
+            var result = node.TryGetChildNode("name", out var childNode);
 
             // ASSERT
-            Assert.Equal("name", result.Property<string>("PSChildName"));
-            Assert.Equal("data", result.Property<string>("Data"));
+            Assert.False(result);
+            Assert.Null(childNode);
         }
-
-        [Fact]
-        public void Invoke_GetItemParameters_at_Underlying()
-        {
-            // ARRANGE
-            var parameters = new object();
-            var getItem = this.mocks.Create<IGetItem>();
-            getItem
-                .Setup(gi => gi.GetItemParameters())
-                .Returns(parameters);
-
-            var node = this.ArrangeNode("name", getItem.Object);
-
-            // ACT
-            var result = node.GetItemParameters();
-
-            // ASSERT
-            Assert.Same(parameters, result);
-        }
-
-        [Fact]
-        public void Invoke_GetItemParameters_defaults_to_null()
-        {
-            // ARRANGE
-            var node = this.ArrangeNode("name", new
-            {
-                Data = "data"
-            });
-
-            // ACT
-            var result = node.GetItemParameters();
-
-            // ASSERT
-            Assert.Null(result);
-        }
-
-        #endregion IGetItem
 
         #region ISetItem
 
@@ -479,13 +392,13 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
             var parameters = new object();
             var underlying = this.mocks.Create<IGetChildItems>();
             underlying
-                .Setup(u => u.GetChildItemParameters())
+                .Setup(u => u.GetChildItemParameters("path", true))
                 .Returns(parameters);
 
             var node = this.ArrangeNode("name", underlying.Object);
 
             // ACT
-            var result = node.GetChildItemParameters();
+            var result = node.GetChildItemParameters("path", recurse: true);
 
             // ASSERT
             Assert.Same(parameters, result);
@@ -498,7 +411,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
             var node = this.ArrangeNode("name", new { });
 
             // ACT
-            var result = node.GetChildItemParameters();
+            var result = node.GetChildItemParameters("path", true);
 
             // ASSERT
             Assert.Null(result);
@@ -573,13 +486,13 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
             var parameters = new object();
             var underlying = this.mocks.Create<IRemoveChildItem>();
             underlying
-                .Setup(u => u.RemoveChildItemParameters("child1"))
+                .Setup(u => u.RemoveChildItemParameters("child1", true))
                 .Returns(parameters);
 
             var node = this.ArrangeNode("name", underlying.Object);
 
             // ACT
-            var result = node.RemoveChildItemParameters("child1");
+            var result = node.RemoveChildItemParameters("child1", true);
 
             // ASSERT
             Assert.Same(parameters, result);
@@ -592,7 +505,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
             var node = this.ArrangeNode("name", new { });
 
             // ACT
-            var result = node.RemoveChildItemParameters("child1");
+            var result = node.RemoveChildItemParameters("child1", true);
 
             // ASSERT
             Assert.Null(result);
@@ -729,30 +642,46 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
 
         #endregion IRenameChildItem
 
-        #region ICopyChildItem
+        #region ICopyChildItemRecursive
 
         [Fact]
-        public void Invoke_CopyChildItem_at_underlying()
+        public void Invoke_CopyChildItemRecursive_at_underlying()
         {
             // ARRANGE
-            var underlying = this.mocks.Create<ICopyChildItem>();
+            var underlying = this.mocks.Create<ICopyChildItemRecursive>();
             underlying
-                .Setup(u => u.NewChildItemAsCopy("name", "newName"));
+                .Setup(u => u.CopyChildItemRecursive(It.IsAny<ProviderNode>(), new[] { "child", "grandchild" }))
+                .Returns(new ContainerNode("name", new { }));
 
             var node = this.ArrangeNode("name", underlying.Object);
 
             // ACT
-            node.NewChildItemAsCopy(childName: "name", newItemValue: "newName");
+            node.CopyChildItem(new ContainerNode("name", new { }), new[] { "child", "grandchild" }, true);
         }
 
         [Fact]
-        public void Invoke_CopyChildItem_defaults_to_exception()
+        public void Invoke_CopyChildItem_at_underlying_if_non_recursive()
+        {
+            // ARRANGE
+            var underlying = this.mocks.Create<ICopyChildItem>();
+            underlying
+                .Setup(u => u.CopyChildItem(It.IsAny<ProviderNode>(), new[] { "child", "grandchild" }))
+                .Returns(new ContainerNode("name", new { }));
+
+            var node = this.ArrangeNode("name", underlying.Object);
+
+            // ACT
+            node.CopyChildItem(new ContainerNode("name", new { }), new[] { "child", "grandchild" }, false);
+        }
+
+        [Fact]
+        public void Invoke_CopyChildItemRecursive_defaults_to_exception()
         {
             // ARRANGE
             var node = this.ArrangeNode("name", new { });
 
             // ACT
-            var result = Assert.Throws<PSNotSupportedException>(() => node.NewChildItemAsCopy(childName: "name", newItemValue: "newName"));
+            var result = Assert.Throws<PSNotSupportedException>(() => node.CopyChildItem(new ContainerNode("name", new { }), new[] { "child", "grandchild" }, false));
 
             // ASSERT
             Assert.Equal($"Node(name='name') doesn't provide an implementation of capability 'ICopyChildItem'.", result.Message);
@@ -790,7 +719,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
             Assert.Null(result);
         }
 
-        #endregion ICopyChildItem
+        #endregion ICopyChildItemRecursive
 
         #region IMoveChildItem
 

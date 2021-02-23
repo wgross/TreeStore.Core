@@ -1,6 +1,5 @@
-﻿using PowerShellFilesystemProviderBase.Capabilities;
-using PowerShellFilesystemProviderBase.Nodes;
-using System.Linq;
+﻿using PowerShellFilesystemProviderBase.Nodes;
+using System;
 
 namespace PowerShellFilesystemProviderBase.Providers
 {
@@ -36,18 +35,24 @@ namespace PowerShellFilesystemProviderBase.Providers
         {
             var (parentPath, childName) = new PathTool().SplitParentPathAndChildName(path);
 
-            if (this.TryGetNodeByPath<IGetChildItems>(this.DriveInfo.Root, out var sourceParentNode, out var getChildItem))
-            {
-                // TODO: name comparision is responsibility of the node -> TryGetChildItem(name)?!
-                var nodeToMove = getChildItem.GetChildItems().Single(ci => ci.Name.Equals(childName));
+            this.InvokeContainerNodeOrDefault(
+                path: parentPath,
+                invoke: sourceParentNode =>
+                {
+                    if (!sourceParentNode.TryGetChildNode(childName!, out var nodeToMove))
+                        throw new InvalidOperationException($"Item '{path}' doesn't exist");
 
-                var destinationAncestor = this.GetDeepestNodeByPath(destination, out var missingPath);
+                    // find the deepest ancestor which serves as a destination to copy to
+                    var destinationAncestor = this.GetDeepestNodeByPath(destination, out var missingPath);
 
-                // the parent exists, try to create a new child as a copy.
-                if (TryInvokeCapability<IMoveChildItem>(destinationAncestor, c => c.MoveChildItem((ContainerNode)sourceParentNode, nodeToMove, missingPath)))
-                    return;
-            }
-            else base.MoveItem(path, destination); // fallback: NotSupported
+                    if (destinationAncestor is ContainerNode destinationAncestorContainer)
+                    {
+                        // destination ancestor is a container and might accept the move operation
+                        destinationAncestorContainer.MoveChildItem(sourceParentNode, nodeToMove, destination: missingPath);
+                    }
+                    else base.MoveItem(path, destination);
+                },
+                fallback: () => base.MoveItem(path, destination));
         }
 
         protected override object MoveItemDynamicParameters(string path, string destination)

@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Management.Automation;
+using IUnderlyingDictionary = System.Collections.Generic.IDictionary<string, object?>;
 
 namespace TreeStore.DictionaryFS.Nodes
 {
@@ -23,7 +24,7 @@ namespace TreeStore.DictionaryFS.Nodes
         // ItemCmdletProvider
         IGetItem, ISetItem, IClearItem,
         // ContainerCmdletProvider
-        IGetChildItems, IRemoveChildItem, INewChildItem, IRenameChildItem,
+        IGetChildItems, IRemoveChildItem, INewChildItem, IRenameChildItem, ICopyChildItem,
         // NavigationCmdletProvider
         IMoveChildItem
     {
@@ -32,13 +33,7 @@ namespace TreeStore.DictionaryFS.Nodes
             this.Underlying = dictionary;
         }
 
-        public IDictionary<string, object?> Underlying { get; }
-
-        /// <summary>
-        /// Fetches the name property if it exists. this is called only once during
-        /// creation of the <see cref="ContainerNode"/>.
-        /// </summary>
-        public string? Name => this.Underlying.TryGetValue("Name", out var name) ? name?.ToString() : throw new ArgumentNullException(nameof(name));
+        public IUnderlyingDictionary Underlying { get; }
 
         public (bool exists, ProviderNode? node) TryGetChildNode(string childName)
         {
@@ -49,6 +44,8 @@ namespace TreeStore.DictionaryFS.Nodes
 
             return (false, default);
         }
+
+        public ProviderNode ToProviderNode(string name, IUnderlyingDictionary dict) => new ContainerNode(name, new DictionaryContainerAdapter(dict));
 
         #region IGetChildItem
 
@@ -144,13 +141,7 @@ namespace TreeStore.DictionaryFS.Nodes
 
         #endregion INewChildItem
 
-        #region ICopyChildItem
-
-        public void NewChildItemAsCopy(string childName, object copyItemValue)
-        {
-            if (copyItemValue is IDictionary<string, object> valueDict)
-                this.Underlying[childName] = valueDict.ToDictionary(kv => kv.Key, kv => kv.Value);
-        }
+        #region IMoveChildItem
 
         public void MoveChildItem(ContainerNode parentOfNodeToMove, ProviderNode nodeToMove, string[] destination)
         {
@@ -185,6 +176,43 @@ namespace TreeStore.DictionaryFS.Nodes
             else throw new NotImplementedException();
         }
 
-        #endregion ICopyChildItem
+        #endregion IMoveChildItem
+
+        #region ICopyChildITem
+
+        public ProviderNode? CopyChildItem(ProviderNode nodeToCopy, string[] destination)
+        {
+            if (nodeToCopy.Underlying is DictionaryContainerAdapter underlyingDict)
+            {
+                switch (destination.Length)
+                {
+                    case 0:
+                        // put node directly under this node
+                        if (this.Underlying.TryAdd(nodeToCopy.Name, underlyingDict.Underlying.CloneShallow()))
+                            return ToProviderNode(nodeToCopy.Name, (IUnderlyingDictionary)this.Underlying[nodeToCopy.Name]!);
+                        return null;
+
+                    case 1:
+                        // put node directly under this node with new name
+                        if (this.Underlying.TryAdd(destination[0], underlyingDict.Underlying.CloneShallow()))
+                            return ToProviderNode(destination[0], (IUnderlyingDictionary)this.Underlying[destination[0]]!);
+                        return null;
+
+                    default:
+                        // put node directly under the new node in between
+                        var newDict = new Dictionary<string, object?>();
+                        if (this.Underlying.TryAdd(destination[0], newDict))
+                        {
+                            // delegate the copy operation recursively
+                            var container = new DictionaryContainerAdapter(newDict);
+                            return container.CopyChildItem(nodeToCopy, destination[1..]);
+                        }
+                        return null;
+                }
+            }
+            return null;
+        }
+
+        #endregion ICopyChildITem
     }
 }

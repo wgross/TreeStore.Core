@@ -2,7 +2,6 @@
 using PowerShellFilesystemProviderBase.Capabilities;
 using PowerShellFilesystemProviderBase.Nodes;
 using System;
-using System.Collections.Generic;
 using System.Management.Automation;
 using Xunit;
 
@@ -46,49 +45,6 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         }
 
         #endregion Name
-
-        #region IContainerItem
-
-        [Fact]
-        public void LeafNode_isnt_container()
-        {
-            // ARRANGE
-            var node = this.ArrangeNode("name", new { });
-
-            // ACT
-            var result = node.IsContainer;
-
-            // ASSERT
-            Assert.False(result);
-        }
-
-        [Fact]
-        public void LeafNode_isnt_container_if_underlying_is_IDictionary()
-        {
-            // ARRANGE
-            var node = this.ArrangeNode("name", new Dictionary<string, object> { { "Child", new { } } });
-
-            // ACT
-            var result = node.IsContainer;
-
-            // ASSERT
-            Assert.False(result);
-        }
-
-        [Fact(Skip = "IItemCOntainer is recognized as a Container. How to force a Leaf?")]
-        public void LeafNode_isnt_container_if_underlying_IItemContainer()
-        {
-            // ARRANGE
-            var node = this.ArrangeNode("name", this.mocks.Create<IItemContainer>().Object);
-
-            // ACT
-            var result = node.IsContainer;
-
-            // ASSERT
-            Assert.False(result);
-        }
-
-        #endregion IContainerItem
 
         #region IGetItem
 

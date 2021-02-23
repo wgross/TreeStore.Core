@@ -13,7 +13,6 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
             var result = LeafNodeFactory.Create("name", new { });
 
             // ASSERT
-            Assert.False(result.IsContainer);
             Assert.Equal("name", result.Name);
             Assert.IsType<LeafNode>(result);
         }

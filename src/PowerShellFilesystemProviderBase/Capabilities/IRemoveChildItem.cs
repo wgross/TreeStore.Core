@@ -9,7 +9,7 @@ namespace PowerShellFilesystemProviderBase.Capabilities
         /// </summary>
         /// <param name="childName"></param>
         /// <returns>empty <see cref="RuntimeDefinedParameterDictionary"/> by default</returns>
-        object? RemoveChildItemParameters(string childName) => new RuntimeDefinedParameterDictionary();
+        object? RemoveChildItemParameters(string childName, bool recurse) => new RuntimeDefinedParameterDictionary();
 
         /// <summary>
         /// removes the cild item specify by <paramref name="childName"/>
