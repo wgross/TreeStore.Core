@@ -17,7 +17,7 @@ namespace PowerShellFilesystemProviderBase.Capabilities
         /// </summary>
         /// <param name="nodeToCopy"></param>
         /// <param name="destination"></param>
-        ProviderNode CopyChildItem(ProviderNode nodeToCopy, string[] destination);
+        ProviderNode? CopyChildItem(ProviderNode nodeToCopy, string[] destination);
     }
 
     /// <summary>
@@ -31,6 +31,6 @@ namespace PowerShellFilesystemProviderBase.Capabilities
         /// </summary>
         /// <param name="nodeToCopy"></param>
         /// <param name="destination"></param>
-        ProviderNode CopyChildItemRecursive(ProviderNode nodeToCopy, string[] destination);
+        ProviderNode? CopyChildItemRecursive(ProviderNode nodeToCopy, string[] destination);
     }
 }

@@ -26,7 +26,11 @@ namespace TreeStore.DictionaryFS.Nodes
         // ContainerCmdletProvider
         IGetChildItems, IRemoveChildItem, INewChildItem, IRenameChildItem, ICopyChildItem,
         // NavigationCmdletProvider
-        IMoveChildItem
+        IMoveChildItem,
+        // ItemPropertyCmdletAdapter
+        IClearItemProperty, ISetItemProperty,
+        // ItemDynamicPropertyCmdletAdapter
+        ICopyItemProperty, IRemoveItemProperty, IMoveItemProperty, INewItemProperty, IRenameItemProperty
     {
         public DictionaryContainerAdapter(IDictionary<string, object?> dictionary)
         {
@@ -214,5 +218,79 @@ namespace TreeStore.DictionaryFS.Nodes
         }
 
         #endregion ICopyChildITem
+
+        #region IClearItemProperty
+
+        public void ClearItemProperty(IEnumerable<string> name)
+        {
+            foreach (var n in name)
+            {
+                if (this.Underlying.TryGetValue(n, out var value))
+                    if (value is IDictionary<string, object>)
+                        continue;
+                this.Underlying[n] = null;
+            }
+        }
+
+        #endregion IClearItemProperty
+
+        #region ISetItemProperty
+
+        public void SetItemProperty(PSObject psObject)
+        {
+            foreach (var property in psObject.Properties)
+            {
+                if (this.Underlying.TryGetValue(property.Name, out var value))
+                    if (value is IDictionary<string, object>)
+                        continue;
+
+                this.Underlying[property.Name] = property.Value;
+            }
+        }
+
+        public void CopyItemProperty(ProviderNode sourceNode, string sourcePropertyName, string destinationPropertyName)
+        {
+            if (sourceNode.Underlying is DictionaryContainerAdapter underlyingDict)
+            {
+                this.Underlying[destinationPropertyName] = underlyingDict.Underlying[sourcePropertyName];
+            }
+        }
+
+        #endregion ISetItemProperty
+
+        #region IRemoveItemProperty
+
+        public void RemoveItemProperty(string propertyName) => this.Underlying.Remove(propertyName);
+
+        #endregion IRemoveItemProperty
+
+        #region IMoveItemProperty
+
+        public void MoveItemProperty(ProviderNode sourceNode, string sourceProperty, string destinationProperty)
+        {
+            if (sourceNode.Underlying is DictionaryContainerAdapter underlyingDict)
+            {
+                var sourceValue = underlyingDict.Underlying[sourceProperty];
+                if (underlyingDict.Underlying.Remove(sourceProperty))
+                    this.Underlying[destinationProperty] = sourceValue;
+            }
+        }
+
+        #endregion IMoveItemProperty
+
+        #region INewItemProperty
+
+        public void NewItemProperty(string propertyName, string? propertyTypeName, object? value) => this.Underlying.Add(propertyName, value);
+
+        #endregion INewItemProperty
+
+        #region IRenameItemProperty
+
+        public void RenameItemProperty(string sourceProperty, string destinationProperty)
+        {
+            this.Underlying.Add(destinationProperty, this.Underlying[sourceProperty]);
+        }
+
+        #endregion IRenameItemProperty
     }
 }

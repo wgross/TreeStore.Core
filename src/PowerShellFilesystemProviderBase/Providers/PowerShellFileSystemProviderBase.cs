@@ -178,6 +178,24 @@ namespace PowerShellFilesystemProviderBase.Providers
             else throw new ItemNotFoundException($"Can't find path '{string.Join(this.ItemSeparator, path)}'");
         }
 
+        protected void InvokeProviderNodeOrDefault(string[] path, Action<ProviderNode> invoke, Action fallback)
+        {
+            if (this.TryGetNodeByPath(path, out var node))
+            {
+                invoke(node);
+            }
+            else fallback();
+        }
+
+        protected T InvokeProviderNodeOrDefault<T>(string[] path, Func<ProviderNode, T> invoke, Func<T> fallback)
+        {
+            if (this.TryGetNodeByPath(path, out var node))
+            {
+                return invoke(node);
+            }
+            else return fallback();
+        }
+
         #endregion Invoke a node capability
     }
 }

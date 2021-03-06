@@ -185,6 +185,11 @@ namespace PowerShellFilesystemProviderBase.Nodes
         public void MoveChildItem(ContainerNode parentOfNode, ProviderNode nodeToMove, string[] destination)
             => this.InvokeUnderlyingOrThrow<IMoveChildItem>(moveChildItem => moveChildItem.MoveChildItem(parentOfNode, nodeToMove, destination));
 
+        public object? MoveChildItemParameter(string name, string destination, bool recurse)
+            => this.InvokeUnderlyingOrDefault<IMoveChildItem>(moveChildItem => moveChildItem.MoveChildItemParameters(name, destination, recurse));
+
         #endregion IMoveChildItem
+
+       
     }
 }

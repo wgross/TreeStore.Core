@@ -5,6 +5,7 @@ using PowerShellFilesystemProviderBase.Nodes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Management.Automation;
 using TreeStore.DictionaryFS.Nodes;
 using Xunit;
 using IUnderlyingDictionary = System.Collections.Generic.IDictionary<string, object?>;
@@ -488,5 +489,274 @@ namespace TreeStore.DictionaryFS.Test.Nodes
         }
 
         #endregion ICopyChildItem
+
+        #region IClearItemProperty
+
+        [Fact]
+        public void ClearItemProperty_nullifys_dictionary_value()
+        {
+            // ARRANGE
+            var root = new UnderlyingDictionary
+            {
+                ["data1"] = "text",
+                ["data2"] = 1
+            };
+            var rootNode = this.ArrangeContainerAdapter(root);
+
+            // ACT
+            rootNode.ClearItemProperty(new[] { "data1", "data2" });
+
+            // ASSERT
+
+            Assert.True(root.TryGetValue("data1", out var v1));
+            Assert.Null(v1);
+            Assert.True(root.TryGetValue("data2", out var v2));
+            Assert.Null(v2);
+        }
+
+        [Fact]
+        public void ClearItemProperty_ignores_unknown_property()
+        {
+            // ARRANGE
+            var root = new UnderlyingDictionary
+            {
+                ["data"] = "text"
+            };
+            var rootNode = this.ArrangeContainerAdapter(root);
+
+            // ACT
+            rootNode.ClearItemProperty(new[] { "unkown" });
+
+            // ASSERT
+
+            Assert.False(root.TryGetValue("unknown", out var _));
+            Assert.True(root.TryGetValue("data", out var value));
+            Assert.Equal("text", value);
+        }
+
+        [Fact]
+        public void ClearItemProperty_ignores_child_node()
+        {
+            // ARRANGE
+            var root = new UnderlyingDictionary
+            {
+                ["data"] = new UnderlyingDictionary()
+            };
+            var rootNode = this.ArrangeContainerAdapter(root);
+
+            // ACT
+            rootNode.ClearItemProperty(new[] { "data" });
+
+            // ASSERT
+
+            Assert.True(root.TryGetValue("data", out var value));
+            Assert.IsType<UnderlyingDictionary>(value);
+        }
+
+        #endregion IClearItemProperty
+
+        #region ISetItemProperty
+
+        [Fact]
+        public void SetItemProperty_sets_dictionary_value()
+        {
+            // ARRANGE
+            var root = new UnderlyingDictionary
+            {
+                ["data1"] = "text",
+                ["data2"] = 1
+            };
+            var rootNode = this.ArrangeContainerAdapter(root);
+
+            // ACT
+            rootNode.SetItemProperty(new PSObject(new
+            {
+                data1 = "changed",
+                data2 = 3
+            }));
+
+            // ASSERT
+            Assert.True(root.TryGetValue("data1", out var v1));
+            Assert.Equal("changed", v1);
+            Assert.True(root.TryGetValue("data2", out var v2));
+            Assert.Equal(3, v2);
+        }
+
+        [Fact]
+        public void SetItemProperty_ignores_child_nodes()
+        {
+            // ARRANGE
+            var root = new UnderlyingDictionary
+            {
+                ["data1"] = "text",
+                ["data2"] = new UnderlyingDictionary
+                {
+                    ["data3"] = "data3"
+                }
+            };
+            var rootNode = this.ArrangeContainerAdapter(root);
+
+            // ACT
+            rootNode.SetItemProperty(new PSObject(new
+            {
+                data1 = "changed",
+                data2 = 3
+            }));
+
+            // ASSERT
+            Assert.True(root.TryGetValue("data1", out var v1));
+            Assert.Equal("changed", v1);
+            Assert.True(root.TryGetValue("data2", out var v2));
+            Assert.IsType<UnderlyingDictionary>(v2);
+        }
+
+        [Fact]
+        public void SetItemProperty_gnores_unknown_property()
+        {
+            // ARRANGE
+            var root = new UnderlyingDictionary
+            {
+                ["data1"] = "text",
+            };
+            var rootNode = this.ArrangeContainerAdapter(root);
+
+            // ACT
+            rootNode.SetItemProperty(new PSObject(new
+            {
+                unkown = "changed",
+            }));
+
+            // ASSERT
+            Assert.True(root.TryGetValue("data1", out var v1));
+            Assert.Equal("text", v1);
+            Assert.False(root.TryGetValue("unknown", out var _));
+        }
+
+        #endregion ISetItemProperty
+
+        #region ICopyItemProperty
+
+        [Fact]
+        public void CopyItemProperty_set_new_properties_value()
+        {
+            // ARRANGE
+            var child = new UnderlyingDictionary
+            {
+            };
+            var childAdapter = this.ArrangeContainerAdapter(child);
+            var childNode = new LeafNode("child1", childAdapter);
+
+            var root = new UnderlyingDictionary
+            {
+                ["data1"] = "text",
+                ["child"] = child
+            };
+            var rootNode = new RootNode(this.ArrangeContainerAdapter(root));
+
+            // ACT
+            childNode.CopyItemProperty(rootNode, "data1", "data1");
+
+            // ASSERT
+            Assert.True(child.TryGetValue("data1", out var value));
+            Assert.Equal("text", value);
+        }
+
+        #endregion ICopyItemProperty
+
+        #region IRemoveItemProperty
+
+        [Fact]
+        public void RemoveItemProperty_removes_data_property()
+        {
+            // ARRANGE
+            var root = new UnderlyingDictionary
+            {
+                ["data1"] = "text",
+            };
+            var rootAdapter = this.ArrangeContainerAdapter(root);
+
+            // ACT
+            rootAdapter.RemoveItemProperty("data1");
+
+            // ASSERT
+            Assert.False(root.TryGetValue("data1", out var value));
+        }
+
+        #endregion IRemoveItemProperty
+
+        #region IMoveItemProperty
+
+        [Fact]
+        public void MoveItemProperty_moves_property_value()
+        {
+            // ARRANGE
+            var child = new UnderlyingDictionary
+            {
+            };
+            var childAdapter = this.ArrangeContainerAdapter(child);
+            var childNode = new LeafNode("child1", childAdapter);
+
+            var root = new UnderlyingDictionary
+            {
+                ["data1"] = "text",
+                ["child"] = child
+            };
+            var rootNode = new RootNode(this.ArrangeContainerAdapter(root));
+
+            // ACT
+            childNode.MoveItemProperty(rootNode, "data1", "data1");
+
+            // ASSERT
+            Assert.False(root.TryGetValue("data1", out var _));
+            Assert.True(child.TryGetValue("data1", out var value));
+            Assert.Equal("text", value);
+        }
+
+        #endregion IMoveItemProperty
+
+        #region INewItemProperty
+
+        [Fact]
+        public void NewItemProperty_creates_data_property()
+        {
+            // ARRANGE
+            var root = new UnderlyingDictionary
+            {
+            };
+            var rootAdapter = this.ArrangeContainerAdapter(root);
+
+            // ACT
+            rootAdapter.NewItemProperty("data1", null, 1);
+
+            // ASSERT
+            Assert.True(root.TryGetValue("data1", out var value));
+            Assert.Equal(1, value);
+        }
+
+        #endregion INewItemProperty
+
+        #region IRenameItemProperty
+
+        [Fact]
+        public void RenameItemProperty_renames_data_property()
+        {
+            // ARRANGE
+            var data = "text";
+            var root = new UnderlyingDictionary
+            {
+                ["data"] = data,
+            };
+
+            var rootAdapter = this.ArrangeContainerAdapter(root);
+
+            // ACT
+            rootAdapter.RenameItemProperty("data", "newname");
+
+            // ASSERT
+            Assert.True(root.TryGetValue("newname", out var value));
+            Assert.Same(data, value);
+        }
+
+        #endregion IRenameItemProperty
     }
 }
