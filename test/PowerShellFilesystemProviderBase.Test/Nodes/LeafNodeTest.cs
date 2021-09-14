@@ -241,8 +241,9 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
             var result = node.GetItemProperty(null);
 
             // ASSERT
-            Assert.Equal(1, result.Properties.ElementAt(0).Value);
-            Assert.Equal("text", result.Properties.ElementAt(1).Value);
+            Assert.Equal("name", result.Properties.ElementAt(0).Value);
+            Assert.Equal(1, result.Properties.ElementAt(1).Value);
+            Assert.Equal("text", result.Properties.ElementAt(2).Value);
         }
 
         [Fact]

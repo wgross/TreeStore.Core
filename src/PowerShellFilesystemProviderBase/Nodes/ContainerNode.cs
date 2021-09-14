@@ -153,24 +153,27 @@ namespace PowerShellFilesystemProviderBase.Nodes
 
         public void CopyChildItem(ProviderNode nodeToCopy, string[] destination, bool recurse)
         {
-            if (recurse && this.Underlying is ICopyChildItemRecursive)
+            if (recurse)
             {
-                this.InvokeUnderlyingOrThrow<ICopyChildItemRecursive>(copyChildItem => copyChildItem.CopyChildItemRecursive(nodeToCopy, destination));
-            }
-            else if (recurse && this.Underlying is ICopyChildItem && nodeToCopy is ContainerNode containerToCopy)
-            {
-                // copy the source root
-                var copiedNode = this.InvokeUnderlyingOrThrow<ICopyChildItem>(copyChildItem => copyChildItem.CopyChildItem(containerToCopy, destination));
-
-                if (copiedNode is ContainerNode copiedContainerNode)
+                if (this.Underlying is ICopyChildItemRecursive)
                 {
-                    // copy the sources roots children
-                    foreach (var containerToCopyChild in containerToCopy.GetChildItems())
-                    {
-                        copiedContainerNode.CopyChildItem(containerToCopyChild, new[] { containerToCopyChild.Name }, recurse);
-                    }
+                    this.InvokeUnderlyingOrThrow<ICopyChildItemRecursive>(copyChildItem => copyChildItem.CopyChildItemRecursive(nodeToCopy, destination));
                 }
-                else this.InvokeUnderlyingOrThrow<ICopyChildItem>(copyChildItem => copyChildItem.CopyChildItem(nodeToCopy, destination));
+                else if (this.Underlying is ICopyChildItem && nodeToCopy is ContainerNode containerToCopy)
+                {
+                    // copy the source root
+                    var copiedNode = this.InvokeUnderlyingOrThrow<ICopyChildItem>(copyChildItem => copyChildItem.CopyChildItem(containerToCopy, destination));
+
+                    if (copiedNode is ContainerNode copiedContainerNode)
+                    {
+                        // copy the sources roots children
+                        foreach (var containerToCopyChild in containerToCopy.GetChildItems())
+                        {
+                            copiedContainerNode.CopyChildItem(containerToCopyChild, new[] { containerToCopyChild.Name }, recurse);
+                        }
+                    }
+                    else this.InvokeUnderlyingOrThrow<ICopyChildItem>(copyChildItem => copyChildItem.CopyChildItem(nodeToCopy, destination));
+                }
             }
             else this.InvokeUnderlyingOrThrow<ICopyChildItem>(copyChildItem => copyChildItem.CopyChildItem(nodeToCopy, destination));
         }
@@ -189,7 +192,5 @@ namespace PowerShellFilesystemProviderBase.Nodes
             => this.InvokeUnderlyingOrDefault<IMoveChildItem>(moveChildItem => moveChildItem.MoveChildItemParameters(name, destination, recurse));
 
         #endregion IMoveChildItem
-
-       
     }
 }

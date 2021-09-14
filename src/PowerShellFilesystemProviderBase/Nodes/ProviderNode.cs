@@ -97,7 +97,7 @@ namespace PowerShellFilesystemProviderBase.Nodes
 
             if (pso is null) return null;
 
-            //pso.Properties.Add(new PSNoteProperty("PSChildName", this.Name));
+            pso.Properties.Add(new PSNoteProperty("PSChildName", this.Name));
             return pso;
         }
 
