@@ -119,7 +119,7 @@ namespace PowerShellFilesystemProviderBase.Providers
         protected void WriteProviderNode(string path, ProviderNode node)
         {
             // PowerShell would wrap the underlying with a PSObject itself
-            // but taling the PSObject from the node allows to provide additionel properties
+            // but taking the PSObject from the node allows to provide additional properties
             var psobject = node.GetItem();
             if (psobject is null)
                 return;

@@ -26,7 +26,11 @@ namespace PowerShellFilesystemProviderBase.Providers
             if (this.TryGetNodeByPath(path, out var providerNode))
             {
                 var pso = providerNode.GetItemProperty(providerSpecificPickList);
-                this.WriteItemObject(pso, path, isContainer: providerNode is ContainerNode);
+
+                this.WriteItemObject(
+                    item: pso,
+                    path: this.DecoratePath(path),
+                    isContainer: providerNode is ContainerNode);
             }
         }
 

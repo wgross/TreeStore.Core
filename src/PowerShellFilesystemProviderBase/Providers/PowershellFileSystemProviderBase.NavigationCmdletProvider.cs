@@ -14,12 +14,22 @@ namespace PowerShellFilesystemProviderBase.Providers
 
             if (splittedProviderPath.path.isRooted)
             {
-                parentPath = $"{splittedProviderPath.drive}:\\{parentPath}";
+                if (splittedProviderPath.path.items.Length > 0)
+                {
+                    parentPath = $"{splittedProviderPath.drive}:\\{parentPath}";
+                }
+                else
+                {
+                    // the root node has no parent
+                    return string.Empty;
+                }
             }
+
             if (!string.IsNullOrEmpty(splittedProviderPath.module))
             {
                 parentPath = $"{splittedProviderPath.module}\\{splittedProviderPath.provider}::{parentPath}";
             }
+
             return parentPath;
         }
 
