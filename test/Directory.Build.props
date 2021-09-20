@@ -1,0 +1,11 @@
+<Project>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.2" />
+  </ItemGroup>
+  
+  <ItemGroup>
+        <!-- path must be relative to the projects that will use the file-->
+        <Compile Include="..\TestData\PowerShellFilesystemProviderTestData.cs" Link="TestData\PowerShellFilesystemProviderTestData.cs" />
+  </ItemGroup>
+
+</Project>

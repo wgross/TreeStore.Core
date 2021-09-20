@@ -78,7 +78,7 @@ namespace TreeStore.DictionaryFS.Test.Nodes
             });
 
             // ACT
-            var result = node.GetItem();
+            var result = ((IGetItem)node).GetItem();
 
             // ASSERT
             Assert.Same(data, result!.Property<object>("data"));
@@ -105,7 +105,7 @@ namespace TreeStore.DictionaryFS.Test.Nodes
             };
 
             // ACT
-            node.SetItem(newData);
+            ((ISetItem)node).SetItem(newData);
 
             // ASSERT
             Assert.Equal(newData.Values, node.Underlying.Values);
@@ -123,7 +123,7 @@ namespace TreeStore.DictionaryFS.Test.Nodes
             });
 
             // ACT
-            var result = Assert.Throws<InvalidOperationException>(() => node.SetItem(new object()));
+            var result = Assert.Throws<InvalidOperationException>(() => ((ISetItem)node).SetItem(new object()));
 
             // ASSERT
             Assert.Equal("Data of type 'System.Object' can't be assigned", result.Message);
@@ -139,7 +139,7 @@ namespace TreeStore.DictionaryFS.Test.Nodes
             });
 
             // ACT
-            var result = Assert.Throws<ArgumentNullException>(() => node.SetItem(null));
+            var result = Assert.Throws<ArgumentNullException>(() => ((ISetItem)node).SetItem(null));
 
             // ASSERT
             Assert.Equal("value", result.ParamName);
@@ -159,7 +159,7 @@ namespace TreeStore.DictionaryFS.Test.Nodes
             });
 
             // ACT
-            node.ClearItem();
+            ((IClearItem)node).ClearItem();
 
             // ASSERT
             Assert.Empty(node.Underlying);
@@ -185,7 +185,7 @@ namespace TreeStore.DictionaryFS.Test.Nodes
             var node = this.ArrangeContainerAdapter(underlying);
 
             // ACT
-            var result = node.GetChildItems().ToArray();
+            var result = ((IGetChildItems)node).GetChildItems().ToArray();
 
             // ASSERT
             Assert.Single(result);
@@ -201,7 +201,7 @@ namespace TreeStore.DictionaryFS.Test.Nodes
             var node = this.ArrangeContainerAdapter(underlying);
 
             // ACT
-            var result = node.GetChildItems().ToArray();
+            var result = ((IGetChildItems)node).GetChildItems().ToArray();
 
             // ASSERT
             Assert.Empty(result);
@@ -217,7 +217,7 @@ namespace TreeStore.DictionaryFS.Test.Nodes
             });
 
             // ACT
-            var result = node.HasChildItems();
+            var result = ((IGetChildItems)node).HasChildItems();
 
             // ASSERT
             Assert.True(result);
@@ -241,7 +241,7 @@ namespace TreeStore.DictionaryFS.Test.Nodes
             var node = this.ArrangeContainerAdapter(underlying);
 
             // ACT
-            node.RemoveChildItem("container1");
+            ((IRemoveChildItem)node).RemoveChildItem("container1");
 
             // ASSERT
             Assert.False(underlying.TryGetValue("container1", out var _));
@@ -268,7 +268,7 @@ namespace TreeStore.DictionaryFS.Test.Nodes
             {
                 { "Name", "container1" }
             };
-            var result = node.NewChildItem("container1", "itemTypeValue", value);
+            var result = ((INewChildItem)node).NewChildItem("container1", "itemTypeValue", value);
 
             // ASSERT
             Assert.NotNull(result);
@@ -292,7 +292,7 @@ namespace TreeStore.DictionaryFS.Test.Nodes
 
             // ACT
             var value = new UnderlyingDictionary();
-            var result = node.NewChildItem("container1", "itemTypeValue", value);
+            var result = ((INewChildItem)node).NewChildItem("container1", "itemTypeValue", value);
 
             // ASSERT
             Assert.NotNull(result);
@@ -317,7 +317,7 @@ namespace TreeStore.DictionaryFS.Test.Nodes
             var node = this.ArrangeContainerAdapter(underlying);
 
             // ACT
-            node.RenameChildItem("container1", "newname");
+            ((IRenameChildItem)node).RenameChildItem("container1", "newname");
 
             // ASSERT
             Assert.True(underlying.TryGetValue("newname", out var _));
@@ -343,7 +343,7 @@ namespace TreeStore.DictionaryFS.Test.Nodes
 
             // ACT
             // move child1 under child2 as child1
-            dst.MoveChildItem(rootNode, rootNode.GetChildItems().Single(n => n.Name == "child1"), destination: new string[0]);
+            ((IMoveChildItem)dst).MoveChildItem(rootNode, rootNode.GetChildItems().Single(n => n.Name == "child1"), destination: new string[0]);
 
             // ASSERT
             Assert.Same(nodetoMove, root.AsDictionary("child2").AsDictionary("child1"));
@@ -365,7 +365,7 @@ namespace TreeStore.DictionaryFS.Test.Nodes
 
             // ACT
             // move child1 under child2 as newname
-            dst.MoveChildItem(rootNode, rootNode.GetChildItems().Single(n => n.Name == "child1"), destination: new string[] { "newname" });
+            ((IMoveChildItem)dst).MoveChildItem(rootNode, rootNode.GetChildItems().Single(n => n.Name == "child1"), destination: new string[] { "newname" });
 
             // ASSERT
             Assert.Same(nodetoMove, root.AsDictionary("child2").AsDictionary("newname"));
@@ -387,7 +387,7 @@ namespace TreeStore.DictionaryFS.Test.Nodes
 
             // ACT
             // move child1 under child2 as newparent/newname
-            dst.MoveChildItem(rootNode, rootNode.GetChildItems().Single(n => n.Name == "child1"), destination: new string[] { "newparent", "newname" });
+            ((IMoveChildItem)dst).MoveChildItem(rootNode, rootNode.GetChildItems().Single(n => n.Name == "child1"), destination: new string[] { "newparent", "newname" });
 
             // ASSERT
             Assert.Same(nodetoMove, root.AsDictionary("child2").AsDictionary("newparent").AsDictionary("newname"));
@@ -417,7 +417,7 @@ namespace TreeStore.DictionaryFS.Test.Nodes
 
             // ACT
             // copy child1 under child2 as 'child1'
-            var result = dst.CopyChildItem(rootNode.GetChildItems().Single(n => n.Name == "child1"), destination: new string[0]);
+            var result = ((ICopyChildItem)dst).CopyChildItem(rootNode.GetChildItems().Single(n => n.Name == "child1"), destination: new string[0]);
 
             // ASSERT
             Assert.IsType<ContainerNode>(result);
@@ -448,7 +448,7 @@ namespace TreeStore.DictionaryFS.Test.Nodes
 
             // ACT
             // copy child1 under child2 as 'newname'
-            var result = dst.CopyChildItem(rootNode.GetChildItems().Single(n => n.Name == "child1"), destination: new string[] { "newname" });
+            var result = ((ICopyChildItem)dst).CopyChildItem(rootNode.GetChildItems().Single(n => n.Name == "child1"), destination: new string[] { "newname" });
 
             // ASSERT
             Assert.NotNull(root.AsDictionary("child2").AsDictionary("newname"));
@@ -477,7 +477,7 @@ namespace TreeStore.DictionaryFS.Test.Nodes
 
             // ACT
             // copy child1 under child2 as 'child1'
-            var result = dst.CopyChildItem(rootNode.GetChildItems().Single(n => n.Name == "child1"), destination: new string[] { "newparent", "newname" });
+            var result = ((ICopyChildItem)dst).CopyChildItem(rootNode.GetChildItems().Single(n => n.Name == "child1"), destination: new string[] { "newparent", "newname" });
 
             // ASSERT
             Assert.NotNull(root.AsDictionary("child2").AsDictionary("newparent").AsDictionary("newname"));
@@ -504,7 +504,7 @@ namespace TreeStore.DictionaryFS.Test.Nodes
             var rootNode = this.ArrangeContainerAdapter(root);
 
             // ACT
-            rootNode.ClearItemProperty(new[] { "data1", "data2" });
+            ((IClearItemProperty)rootNode).ClearItemProperty(new[] { "data1", "data2" });
 
             // ASSERT
 
@@ -525,7 +525,7 @@ namespace TreeStore.DictionaryFS.Test.Nodes
             var rootNode = this.ArrangeContainerAdapter(root);
 
             // ACT
-            rootNode.ClearItemProperty(new[] { "unkown" });
+            ((IClearItemProperty)rootNode).ClearItemProperty(new[] { "unkown" });
 
             // ASSERT
 
@@ -545,7 +545,7 @@ namespace TreeStore.DictionaryFS.Test.Nodes
             var rootNode = this.ArrangeContainerAdapter(root);
 
             // ACT
-            rootNode.ClearItemProperty(new[] { "data" });
+            ((IClearItemProperty)rootNode).ClearItemProperty(new[] { "data" });
 
             // ASSERT
 
@@ -569,7 +569,7 @@ namespace TreeStore.DictionaryFS.Test.Nodes
             var rootNode = this.ArrangeContainerAdapter(root);
 
             // ACT
-            rootNode.SetItemProperty(new PSObject(new
+            ((ISetItemProperty)rootNode).SetItemProperty(new PSObject(new
             {
                 data1 = "changed",
                 data2 = 3
@@ -597,7 +597,7 @@ namespace TreeStore.DictionaryFS.Test.Nodes
             var rootNode = this.ArrangeContainerAdapter(root);
 
             // ACT
-            rootNode.SetItemProperty(new PSObject(new
+            ((ISetItemProperty)rootNode).SetItemProperty(new PSObject(new
             {
                 data1 = "changed",
                 data2 = 3
@@ -621,7 +621,7 @@ namespace TreeStore.DictionaryFS.Test.Nodes
             var rootNode = this.ArrangeContainerAdapter(root);
 
             // ACT
-            rootNode.SetItemProperty(new PSObject(new
+            ((ISetItemProperty)rootNode).SetItemProperty(new PSObject(new
             {
                 unkown = "changed",
             }));
@@ -676,7 +676,7 @@ namespace TreeStore.DictionaryFS.Test.Nodes
             var rootAdapter = this.ArrangeContainerAdapter(root);
 
             // ACT
-            rootAdapter.RemoveItemProperty("data1");
+            ((IRemoveItemProperty)rootAdapter).RemoveItemProperty("data1");
 
             // ASSERT
             Assert.False(root.TryGetValue("data1", out var value));
@@ -726,7 +726,7 @@ namespace TreeStore.DictionaryFS.Test.Nodes
             var rootAdapter = this.ArrangeContainerAdapter(root);
 
             // ACT
-            rootAdapter.NewItemProperty("data1", null, 1);
+            ((INewItemProperty)rootAdapter).NewItemProperty("data1", null, 1);
 
             // ASSERT
             Assert.True(root.TryGetValue("data1", out var value));
@@ -750,7 +750,7 @@ namespace TreeStore.DictionaryFS.Test.Nodes
             var rootAdapter = this.ArrangeContainerAdapter(root);
 
             // ACT
-            rootAdapter.RenameItemProperty("data", "newname");
+            ((IRenameItemProperty)rootAdapter).RenameItemProperty("data", "newname");
 
             // ASSERT
             Assert.True(root.TryGetValue("newname", out var value));

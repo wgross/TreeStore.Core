@@ -1,10 +1,12 @@
-﻿using Moq;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Moq;
 using PowerShellFilesystemProviderBase.Capabilities;
 using PowerShellFilesystemProviderBase.Nodes;
 using System;
 using System.Linq;
 using System.Management.Automation;
 using Xunit;
+using static PowerShellFilesystemProviderBase.Test.TestData;
 
 namespace PowerShellFilesystemProviderBase.Test.Nodes
 {
@@ -14,13 +16,11 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
 
         public void Dispose() => this.mocks.VerifyAll();
 
-        private LeafNode ArrangeNode(string name, object data) => LeafNodeFactory.Create(name, data);
-
         [Fact]
         public void LeafNode_rejects_null_data()
         {
             // ACT & ASSERT
-            var node = Assert.Throws<ArgumentNullException>(() => this.ArrangeNode("name", null));
+            var node = Assert.Throws<ArgumentNullException>(() => ArrangeLeafNode("name", null));
         }
 
         #region Name
@@ -29,14 +29,14 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         public void LeafNode_rejects_null_name()
         {
             // ACT & ASSERT
-            var node = Assert.Throws<ArgumentNullException>(() => this.ArrangeNode(null, new { }));
+            var node = Assert.Throws<ArgumentNullException>(() => ArrangeLeafNode(null, ServiceProvider()));
         }
 
         [Fact]
         public void LeafNode_provides_name()
         {
             // ARRANGE
-            var node = new LeafNode(name: "name", new { });
+            var node = new LeafNode(name: "name", ServiceProvider());
 
             // ACT
             var result = node.Name;
@@ -49,14 +49,18 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
 
         #region IGetItem
 
+        private class GetItemData : IServiceProvider
+        {
+            public string Data => "data";
+
+            public object GetService(Type serviceType) => null;
+        }
+
         [Fact]
         public void Invoke_GetItem_creates_PSObject_of_underlying()
         {
             // ARRANGE
-            var node = this.ArrangeNode("name", new
-            {
-                Data = "data"
-            });
+            var node = ArrangeLeafNode("name", new GetItemData());
 
             // ACT
             var result = node.GetItem();
@@ -76,7 +80,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
                 .Setup(gi => gi.GetItemParameters())
                 .Returns(parameters);
 
-            var node = this.ArrangeNode("name", getItem.Object);
+            var node = ArrangeLeafNode("name", ServiceProvider(With<IGetItem>(getItem)));
 
             // ACT
             var result = node.GetItemParameters();
@@ -89,10 +93,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         public void Invoke_GetItemParameters_defaults_to_null()
         {
             // ARRANGE
-            var node = this.ArrangeNode("name", new
-            {
-                Data = "data"
-            });
+            var node = ArrangeLeafNode("name", ServiceProvider());
 
             // ACT
             var result = node.GetItemParameters();
@@ -112,7 +113,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
                 .Setup(gi => gi.GetItem())
                 .Returns(psObject);
 
-            var node = this.ArrangeNode("name", getItem.Object);
+            var node = ArrangeLeafNode("name", ServiceProvider(With<IGetItem>(getItem)));
 
             // ACT
             var result = node.GetItem();
@@ -132,7 +133,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
                 .Setup(gi => gi.GetItem())
                 .Returns(psObject);
 
-            var node = this.ArrangeNode("name", getItem.Object);
+            var node = ArrangeLeafNode("name", ServiceProvider(With<IGetItem>(getItem)));
 
             // ACT
             var result = node.GetItem();
@@ -154,7 +155,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
             clearItemProperty
                 .Setup(cip => cip.ClearItemProperty(new[] { "property" }));
 
-            var node = new ContainerNode("name", clearItemProperty.Object);
+            var node = ContainerNode("name", sp => sp.AddSingleton(clearItemProperty.Object));
 
             // ACT
             node.ClearItemProperty(new[] { "property" });
@@ -164,7 +165,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         public void Invoke_ClearItemProperty_defaults_to_exception()
         {
             // ARRANGE
-            var node = new ContainerNode("name", new { });
+            var node = ContainerNode("name");
 
             // ACT
             var result = Assert.Throws<PSNotSupportedException>(() => node.ClearItemProperty(new[] { "property" }));
@@ -183,7 +184,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
                 .Setup(cip => cip.ClearItemPropertyParameters(new[] { "property" }))
                 .Returns(parameters);
 
-            var node = new ContainerNode("name", clearItemProperty.Object);
+            var node = ContainerNode("name", With<IClearItemProperty>(clearItemProperty));
 
             // ACT
             var result = node.ClearItemPropertyParameters(new[] { "property" });
@@ -196,7 +197,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         public void Invoke_ClearItemPropertyParameters_defaults_to_null()
         {
             // ARRANGE
-            var node = new ContainerNode("name", new { });
+            var node = ContainerNode("name");
 
             // ACT
             var result = node.ClearItemPropertyParameters(new[] { "property" });
@@ -209,35 +210,43 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
 
         #region IGetItemProperty
 
+        public class GetItemPropertyData : IServiceProvider
+        {
+            public int Property => 1;
+
+            public string SecondProperty = "text";
+
+            public object GetService(Type serviceType) => null;
+        }
+
         [Fact]
         public void Invoke_GetItemProperty_projects_GetItem()
         {
             // ARRANGE
-            var node = new LeafNode("name", new
-            {
-                Property = 1,
-                SecondProperty = "text"
-            });
+            var pso = new PSObject();
+            pso.Properties.Add(new PSNoteProperty("property", 1));
+
+            var getItemProperty = this.mocks.Create<IGetItemProperty>();
+            getItemProperty
+                .Setup(gi => gi.GetItemProperty(new[] { "property" }))
+                .Returns(pso);
+
+            var node = LeafNode("name", With<IGetItemProperty>(getItemProperty));
 
             // ACT
             var result = node.GetItemProperty(new[] { "property" });
 
             // ASSERT
-            Assert.Equal(1, result.Properties.Single(p => p.Name.Equals("Property")).Value);
+            Assert.Equal(1, result.Properties.Single(p => p.Name.Equals("property")).Value);
         }
 
         [Fact]
-        public void Invoke_GetItemProperty_without_picklist_return_complete_object()
+        public void Invoke_GetItemProperty_at_PSObject_without_picklist_returns_complete_object()
         {
             // ARRANGE
-            var node = new LeafNode("name", new
-            {
-                Property = 1,
-                SecondProperty = "text"
-            });
+            var node = new LeafNode("name", new GetItemPropertyData());
 
             // ACT
-
             var result = node.GetItemProperty(null);
 
             // ASSERT
@@ -247,17 +256,12 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         }
 
         [Fact]
-        public void Invoke_GetItemProperty_ignores_unkown_properties()
+        public void Invoke_GetItemProperty_at_PSObject_ignores_unkown_properties()
         {
             // ARRANGE
-            var node = new LeafNode("name", new
-            {
-                Property = 1,
-                SecondProperty = "text"
-            });
+            var node = new LeafNode("name", new GetItemPropertyData());
 
             // ACT
-
             var result = node.GetItemProperty(new[] { "property", "unknown" });
 
             // ASSERT
@@ -273,7 +277,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
                 .Setup(gip => gip.GetItemProperty(new[] { "property" }))
                 .Returns(new PSObject());
 
-            var node = new LeafNode("name", getItemProperty.Object);
+            var node = new LeafNode("name", ServiceProvider(With<IGetItemProperty>(getItemProperty)));
 
             // ACT
             var result = node.GetItemProperty(new[] { "property" });
@@ -289,7 +293,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
                 .Setup(gip => gip.GetItemPropertyParameters(new[] { "property" }))
                 .Returns(parameters);
 
-            var node = new LeafNode("name", getItemProperty.Object);
+            var node = new LeafNode("name", ServiceProvider(With<IGetItemProperty>(getItemProperty)));
 
             // ACT
             var result = node.GetItemPropertyParameters(new[] { "property" });
@@ -302,7 +306,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         public void Invoke_GetItemPropertyParameters_defaults_to_null()
         {
             // ARRANGE
-            var node = new LeafNode("name", new { });
+            var node = new LeafNode("name", ServiceProvider());
 
             // ACT
             var result = node.GetItemPropertyParameters(new[] { "property" });
@@ -324,7 +328,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
             setItemProperty
                 .Setup(sip => sip.SetItemProperty(pso));
 
-            var node = new LeafNode("name", setItemProperty.Object);
+            var node = new LeafNode("name", ServiceProvider(With<ISetItemProperty>(setItemProperty)));
 
             // ACT
             node.SetItemProperty(pso);
@@ -335,7 +339,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         {
             // ARRANGE
             var pso = new PSObject();
-            var node = new LeafNode("name", new { });
+            var node = new LeafNode("name", ServiceProvider());
 
             // ACT
             var result = Assert.Throws<PSNotSupportedException>(() => node.SetItemProperty(pso));
@@ -355,7 +359,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
                 .Setup(sip => sip.SetItemPropertyParameters(pso))
                 .Returns(parameters);
 
-            var node = new LeafNode("name", setItemProperty.Object);
+            var node = new LeafNode("name", ServiceProvider(With<ISetItemProperty>(setItemProperty)));
 
             // ACT
             var result = node.SetItemPropertyParameters(pso);
@@ -372,13 +376,13 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         public void CopyItemProperty_invokes_underlying()
         {
             // ARRANGE
-            var sourceNode = new LeafNode("name", new { });
-            var pso = new PSObject();
+            var sourceNode = new LeafNode("name", ServiceProvider());
+
             var copyItemProperty = this.mocks.Create<ICopyItemProperty>();
             copyItemProperty
                 .Setup(sip => sip.CopyItemProperty(sourceNode, "sourceProperty", "destinationProperty"));
 
-            var destinationNode = new LeafNode("name", copyItemProperty.Object);
+            var destinationNode = new LeafNode("name", ServiceProvider(With<ICopyItemProperty>(copyItemProperty)));
 
             // ACT
             destinationNode.CopyItemProperty(sourceNode, "sourceProperty", "destinationProperty");
@@ -388,9 +392,8 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         public void CopyItemProperty_defaults_to_exception()
         {
             // ARRANGE
-            var sourceNode = new LeafNode("name", new { });
-            var pso = new PSObject();
-            var destinationNode = new LeafNode("name", new { });
+            var sourceNode = new LeafNode("name", ServiceProvider());
+            var destinationNode = new LeafNode("name", ServiceProvider());
 
             // ACT
             var result = Assert.Throws<PSNotSupportedException>(() => destinationNode.CopyItemProperty(sourceNode, "sourceProperty", "destinationProperty"));
@@ -409,7 +412,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
                 .Setup(sip => sip.CopyItemPropertyParameters("sourcePath", "sourceProperty", "destinationPath", "destinationProperty"))
                 .Returns(parameters);
 
-            var destinationNode = new LeafNode("name", copyItemProperty.Object);
+            var destinationNode = new LeafNode("name", ServiceProvider(With<ICopyItemProperty>(copyItemProperty)));
 
             // ACT
             var result = destinationNode.CopyItemPropertyParameters("sourcePath", "sourceProperty", "destinationPath", "destinationProperty");
@@ -422,7 +425,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         public void CopyItemPropertyParameters_defaults_to_null()
         {
             // ARRANGE
-            var destinationNode = new LeafNode("name", new { });
+            var destinationNode = new LeafNode("name", ServiceProvider());
 
             // ACT
             var result = destinationNode.CopyItemPropertyParameters("sourcePath", "sourceProperty", "destinationPath", "destinationProperty");
@@ -443,7 +446,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
             removeItemProperty
                 .Setup(sip => sip.RemoveItemProperty("propertyName"));
 
-            var node = new LeafNode("name", removeItemProperty.Object);
+            var node = new LeafNode("name", ServiceProvider(With<IRemoveItemProperty>(removeItemProperty)));
 
             // ACT
             node.RemoveItemProperty("propertyName");
@@ -453,7 +456,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         public void RemoveItemProperty_defaults_to_exception()
         {
             // ARRANGE
-            var node = new LeafNode("name", new { });
+            var node = new LeafNode("name", ServiceProvider());
 
             // ACT
             var result = Assert.Throws<PSNotSupportedException>(() => node.RemoveItemProperty("propertyName"));
@@ -472,7 +475,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
                 .Setup(sip => sip.RemoveItemPropertyParameters("propertyName"))
                 .Returns(parameters);
 
-            var node = new LeafNode("name", removeItemProperty.Object);
+            var node = new LeafNode("name", ServiceProvider(With<IRemoveItemProperty>(removeItemProperty)));
 
             // ACT
             var result = node.RemoveItemPropertyParameters("propertyName");
@@ -485,7 +488,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         public void RemoveItemPropertyParameters_defaults_to_null()
         {
             // ARRANGE
-            var node = new LeafNode("name", new { });
+            var node = new LeafNode("name", ServiceProvider());
 
             // ACT
             var result = node.RemoveItemPropertyParameters("propertyName");
@@ -502,13 +505,13 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         public void MoveItemProperty_invokes_underlying()
         {
             // ARRANGE
-            var sourceNode = new LeafNode("name", new { });
-            var pso = new PSObject();
+            var sourceNode = new LeafNode("name", ServiceProvider());
+
             var moveItemProperty = this.mocks.Create<IMoveItemProperty>();
             moveItemProperty
                 .Setup(sip => sip.MoveItemProperty(sourceNode, "sourceProperty", "destinationProperty"));
 
-            var destinationNode = new LeafNode("name", moveItemProperty.Object);
+            var destinationNode = new LeafNode("name", ServiceProvider(With<IMoveItemProperty>(moveItemProperty)));
 
             // ACT
             destinationNode.MoveItemProperty(sourceNode, "sourceProperty", "destinationProperty");
@@ -518,8 +521,8 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         public void MoveItemProperty_defaults_to_exception()
         {
             // ARRANGE
-            var sourceNode = new LeafNode("name", new { });
-            var destinationNode = new LeafNode("name", new { });
+            var sourceNode = new LeafNode("name", ServiceProvider());
+            var destinationNode = new LeafNode("name", ServiceProvider());
 
             // ACT
             var result = Assert.Throws<PSNotSupportedException>(() => destinationNode.MoveItemProperty(sourceNode, "sourceProperty", "destinationProperty"));
@@ -532,14 +535,14 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         public void MoveItemPropertyParameters_invokes_underlying()
         {
             // ARRANGE
-            var sourceNode = new LeafNode("name", new { });
+            var sourceNode = new LeafNode("name", ServiceProvider());
             var parameters = new object();
             var moveItemProperty = this.mocks.Create<IMoveItemProperty>();
             moveItemProperty
                 .Setup(sip => sip.MoveItemPropertyParameters("sourcePath", "sourceProperty", "destinationPath", "destinationProperty"))
                 .Returns(parameters);
 
-            var destinationNode = new LeafNode("name", moveItemProperty.Object);
+            var destinationNode = new LeafNode("name", ServiceProvider(With<IMoveItemProperty>(moveItemProperty)));
 
             // ACT
             var result = destinationNode.MoveItemPropertyParameters("sourcePath", "sourceProperty", "destinationPath", "destinationProperty");
@@ -552,8 +555,8 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         public void MoveItemPropertyParameters_defaults_to_null()
         {
             // ARRANGE
-            var sourceNode = new LeafNode("name", new { });
-            var destinationNode = new LeafNode("name", new { });
+            var sourceNode = new LeafNode("name", ServiceProvider());
+            var destinationNode = new LeafNode("name", ServiceProvider());
 
             // ACT
             var result = destinationNode.MoveItemPropertyParameters("sourcePath", "sourceProperty", "destinationPath", "destinationProperty");
@@ -574,7 +577,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
             newItemProperty
                 .Setup(sip => sip.NewItemProperty("propertyName", "propertyTypeName", "value"));
 
-            var node = new LeafNode("name", newItemProperty.Object);
+            var node = new LeafNode("name", ServiceProvider(With<INewItemProperty>(newItemProperty)));
 
             // ACT
             node.NewItemProperty("propertyName", "propertyTypeName", "value");
@@ -584,7 +587,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         public void NewItemProperty_defaults_to_exception()
         {
             // ARRANGE
-            var node = new LeafNode("name", new { });
+            var node = new LeafNode("name", ServiceProvider());
 
             // ACT
             var result = Assert.Throws<PSNotSupportedException>(() => node.NewItemProperty("propertyName", "properytTypeName", "value"));
@@ -603,7 +606,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
                 .Setup(sip => sip.NewItemPropertyParameters("propertyName", "propertyTypeName", "value"))
                 .Returns(parameters);
 
-            var node = new LeafNode("name", newItemProperty.Object);
+            var node = new LeafNode("name", ServiceProvider(With<INewItemProperty>(newItemProperty)));
 
             // ACT
             var result = node.NewItemPropertyParameter("propertyName", "propertyTypeName", "value");
@@ -622,7 +625,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
                 .Setup(sip => sip.NewItemPropertyParameters("propertyName", "propertyTypeName", "value"))
                 .Returns(parameters);
 
-            var node = new LeafNode("name", newItemProperty.Object);
+            var node = new LeafNode("name", ServiceProvider(With<INewItemProperty>(newItemProperty)));
 
             // ACT
             var result = node.NewItemPropertyParameter("propertyName", "propertyTypeName", "value");
@@ -639,11 +642,11 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         public void RanmeItemProperty_invokes_underlying()
         {
             // ARRANGE
-            var newItemProperty = this.mocks.Create<IRenameItemProperty>();
-            newItemProperty
+            var renameItemProperty = this.mocks.Create<IRenameItemProperty>();
+            renameItemProperty
                 .Setup(sip => sip.RenameItemProperty("propertyName", "newPropertyName"));
 
-            var node = new LeafNode("name", newItemProperty.Object);
+            var node = new LeafNode("name", ServiceProvider(With<IRenameItemProperty>(renameItemProperty)));
 
             // ACT
             node.RenameItemProperty("propertyName", "newPropertyName");
@@ -653,7 +656,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         public void RanmeItemProperty_defaults_to_exception()
         {
             // ARRANGE
-            var node = new LeafNode("name", new { });
+            var node = new LeafNode("name", ServiceProvider());
 
             // ACT
             var result = Assert.Throws<PSNotSupportedException>(() => node.RenameItemProperty("propertyName", "newPropertyName"));
@@ -667,12 +670,12 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         {
             // ARRANGE
             var parameters = new object();
-            var newItemProperty = this.mocks.Create<IRenameItemProperty>();
-            newItemProperty
+            var renameItemProperty = this.mocks.Create<IRenameItemProperty>();
+            renameItemProperty
                 .Setup(sip => sip.RenameItemPropertyParameters("propertyName", "newPropertyName"))
                 .Returns(parameters);
 
-            var node = new LeafNode("name", newItemProperty.Object);
+            var node = new LeafNode("name", ServiceProvider(With<IRenameItemProperty>(renameItemProperty)));
 
             // ACT
             var result = node.RenameItemPropertyParameters("propertyName", "newPropertyName");
@@ -685,7 +688,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         public void RanmeItemPropertyParameters_default_to_null()
         {
             // ARRANGE
-            var node = new LeafNode("name", new { });
+            var node = new LeafNode("name", ServiceProvider());
 
             // ACT
             var result = node.RenameItemPropertyParameters("propertyName", "newPropertyName");

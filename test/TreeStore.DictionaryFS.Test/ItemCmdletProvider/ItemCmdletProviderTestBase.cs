@@ -12,7 +12,7 @@ namespace TreeStore.DictionaryFS.Test.ItemCmdletProvider
         public void ArrangeFileSystem(IDictionary<string, object?> data)
         {
             this.rootData = data;
-            TestFilesystemProvider.RootNodeProvider = _ => new DictionaryContainerAdapter(data);
+            DictionaryFilesystemProvider.RootNodeProvider = _ => new DictionaryContainerAdapter(data);
 
             this.ArrangeFileSystem();
         }

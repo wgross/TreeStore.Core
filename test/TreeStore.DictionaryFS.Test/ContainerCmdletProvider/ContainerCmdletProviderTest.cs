@@ -255,6 +255,46 @@ namespace TreeStore.DictionaryFS.Test.ContainerCmdletProvider
             Assert.Same(child, added);
         }
 
+        [Fact]
+        public void Powershell_creating_child_fails_with_null_value()
+        {
+            // ARRANGE
+            var root = new UnderlyingDictionary();
+            var child = new UnderlyingDictionary();
+
+            this.ArrangeFileSystem(root);
+
+            // ACT
+            var result = Assert.Throws<CmdletProviderInvocationException>(() => this.PowerShell.AddCommand("New-Item")
+                .AddParameter("Path", @"test:\child1")
+                .AddParameter("Value", null)
+                .Invoke());
+
+            // ASSERT
+            Assert.True(this.PowerShell.HadErrors);
+            Assert.Equal("Value cannot be null. (Parameter 'value')", result.Message);
+        }
+
+        [Fact]
+        public void Powershell_creating_child_fails_with_non_dictionary()
+        {
+            // ARRANGE
+            var root = new UnderlyingDictionary();
+            var child = new UnderlyingDictionary();
+
+            this.ArrangeFileSystem(root);
+
+            // ACT
+            var result = Assert.Throws<CmdletProviderInvocationException>(() => this.PowerShell.AddCommand("New-Item")
+                .AddParameter("Path", @"test:\child1")
+                .AddParameter("Value", new { })
+                .Invoke());
+
+            // ASSERT
+            Assert.True(this.PowerShell.HadErrors);
+            Assert.Equal("<>f__AnonymousType0 must implement IDictionary<string,object> (Parameter 'value')", result.Message);
+        }
+
         #endregion New-Item -Path -ItemType -Value
 
         #region Rename-Item -Path -NewName

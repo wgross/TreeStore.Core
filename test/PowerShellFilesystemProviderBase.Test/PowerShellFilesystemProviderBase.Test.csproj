@@ -46,7 +46,6 @@
   
   <ItemGroup>
     <ProjectReference Include="..\..\src\PowerShellFilesystemProviderBase\PowerShellFilesystemProviderBase.csproj" />
-    <ProjectReference Include="..\TestFileSystem\TestFileSystem.csproj" />
   </ItemGroup>
 
 </Project>

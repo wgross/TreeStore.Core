@@ -1,17 +1,19 @@
-﻿using PowerShellFilesystemProviderBase.Capabilities;
+﻿using Microsoft.Extensions.DependencyInjection;
+using PowerShellFilesystemProviderBase.Capabilities;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Management.Automation;
 
 namespace PowerShellFilesystemProviderBase.Nodes
 {
-    public abstract class ProviderNode
+    public abstract record ProviderNode
     {
         private readonly string name;
-        private readonly object underlying;
+        private readonly IServiceProvider underlying;
 
-        protected ProviderNode(string? name, object? underlying)
+        protected ProviderNode(string? name, IServiceProvider underlying)
         {
             if (name is null) throw new ArgumentNullException(nameof(name));
             if (underlying is null) throw new ArgumentNullException(nameof(underlying));
@@ -20,55 +22,73 @@ namespace PowerShellFilesystemProviderBase.Nodes
             this.underlying = underlying;
         }
 
-        public object Underlying => this.underlying;
+        public IServiceProvider Underlying => this.underlying;
 
         public string Name => this.name;
 
         #region Delegate to Underlying or ..
 
+        protected bool TryGetUnderlyingService<T>([NotNullWhen(true)] out T? service)
+        {
+            service = this.Underlying.GetService<T>();
+            return (service is not null);
+        }
+
+        protected void GetUnderlyingServiceOrThrow<T>(out T service)
+        {
+            service = this.Underlying.GetService<T>() ?? throw this.CapabilityNotSupported<T>();
+        }
+
         protected void InvokeUnderlyingOrThrow<T>(Action<T> invoke) where T : class
         {
-            if (this.Underlying is T t)
-            {
-                invoke(t);
-            }
+            if (this.TryGetUnderlyingService<T>(out var service))
+                invoke(service);
             else throw this.CapabilityNotSupported<T>();
         }
 
         protected ProviderNode? InvokeUnderlyingOrThrow<T>(Func<T, ProviderNode?> invoke) where T : class
         {
-            return this.Underlying switch
-            {
-                T t => invoke(t),
-                _ => throw this.CapabilityNotSupported<T>()
-            };
+            this.GetUnderlyingServiceOrThrow<T>(out var service);
+
+            return invoke(service);
         }
 
         protected IEnumerable<ProviderNode> InvokeUnderlyingOrDefault<T>(Func<T, IEnumerable<ProviderNode>> invoke) where T : class
         {
-            return this.Underlying switch
+            return (this.TryGetUnderlyingService<T>(out var service))
+                ? invoke(service)
+                : Enumerable.Empty<ProviderNode>();
+        }
+
+        protected bool TryInvokeUnderlyingOrDefault<T>(Func<T, object?> invoke, out object? result) where T : class
+        {
+            result = default;
+
+            if (this.TryGetUnderlyingService<T>(out var service))
             {
-                T t => invoke(t),
-                _ => Enumerable.Empty<ProviderNode>()
-            };
+                result = invoke(service);
+                return true;
+            }
+
+            return false;
         }
 
         protected object? InvokeUnderlyingOrDefault<T>(Func<T, object?> invoke) where T : class
         {
-            return this.Underlying switch
-            {
-                T t => invoke(t),
-                _ => null
-            };
+            var service = this.Underlying.GetService<T>();
+            if (service is null)
+                return null;
+
+            return invoke(service);
         }
 
         protected bool InvokeUnderlyingOrDefault<T>(Func<T, bool> invoke, bool defaultValue = false) where T : class
         {
-            return this.Underlying switch
-            {
-                T t => invoke(t),
-                _ => defaultValue
-            };
+            var service = this.Underlying.GetService<T>();
+            if (service is null)
+                return defaultValue;
+
+            return invoke(service);
         }
 
         protected Exception CapabilityNotSupported<T>()
@@ -85,15 +105,7 @@ namespace PowerShellFilesystemProviderBase.Nodes
         /// <inheritdoc/>
         public PSObject? GetItem()
         {
-            PSObject? pso = default;
-            if (this.Underlying is IGetItem getItem)
-            {
-                pso = getItem.GetItem();
-            }
-            else
-            {
-                pso = PSObject.AsPSObject(this.underlying);
-            }
+            PSObject? pso = (PSObject?)this.InvokeUnderlyingOrDefault<IGetItem>(gi => gi.GetItem()) ?? PSObject.AsPSObject(this.Underlying);
 
             if (pso is null) return null;
 
@@ -165,9 +177,9 @@ namespace PowerShellFilesystemProviderBase.Nodes
 
         public PSObject? GetItemProperty(IEnumerable<string> providerSpecificPickList)
         {
-            if (this.Underlying is IGetItemProperty getItemProperty)
+            if (this.TryInvokeUnderlyingOrDefault<IGetItemProperty>(getItemProperty => getItemProperty.GetItemProperty(providerSpecificPickList), out var result))
             {
-                return getItemProperty.GetItemProperty(providerSpecificPickList);
+                return (PSObject?)result;
             }
             else
             {
@@ -191,13 +203,7 @@ namespace PowerShellFilesystemProviderBase.Nodes
         }
 
         public object? GetItemPropertyParameters(IEnumerable<string> providerSpecificPickList)
-        {
-            if (this.Underlying is IGetItemProperty getItemProperty)
-            {
-                return getItemProperty.GetItemPropertyParameters(providerSpecificPickList);
-            }
-            else return null;
-        }
+            => this.InvokeUnderlyingOrDefault<IGetItemProperty>(getItemItemProperty => getItemItemProperty.GetItemPropertyParameters(providerSpecificPickList));
 
         #endregion IGetItemProperty
 

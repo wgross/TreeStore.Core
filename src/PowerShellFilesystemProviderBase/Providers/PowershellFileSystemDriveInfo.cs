@@ -6,14 +6,14 @@ namespace PowerShellFilesystemProviderBase.Providers
 {
     public abstract class PowershellFileSystemDriveInfo : PSDriveInfo
     {
-        protected PowershellFileSystemDriveInfo(PSDriveInfo driveInfo, Func<string, object> rootNodeProvider)
+        protected PowershellFileSystemDriveInfo(PSDriveInfo driveInfo, Func<string, IServiceProvider> rootNodeProvider)
             : base(driveInfo)
         {
             this.rootNodeProvider = rootNodeProvider;
         }
 
-        private readonly Func<string, object> rootNodeProvider;
+        private readonly Func<string, IServiceProvider> rootNodeProvider;
 
-        public RootNode RootNode => ProviderNodeFactory.CreateRoot(this.rootNodeProvider(this.Name));
+        public RootNode RootNode => new RootNode(this.rootNodeProvider(this.Name));
     }
 }

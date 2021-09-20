@@ -7,9 +7,9 @@ using System.Reflection;
 
 namespace PowerShellFilesystemProviderBase.Nodes
 {
-    public class ContainerNode : ProviderNode
+    public record ContainerNode : ProviderNode
     {
-        public ContainerNode(string? name, object? underlying)
+        public ContainerNode(string? name, IServiceProvider underlying)
             : base(name, underlying)
         { }
 
@@ -85,15 +85,6 @@ namespace PowerShellFilesystemProviderBase.Nodes
 
         #endregion Reflection Queries
 
-        #region Node converter
-
-        private ContainerNode AsContainerNode(string? name, PropertyInfo property)
-        {
-            return new ContainerNode(name, property.GetValue(this.Underlying, null));
-        }
-
-        #endregion Node converter
-
         public bool TryGetChildNode(string childName, [NotNullWhen(true)] out ProviderNode? childNode)
         {
             childNode = this.GetChildItems().FirstOrDefault(n => n.Name.Equals(childName, StringComparison.OrdinalIgnoreCase));
@@ -155,27 +146,45 @@ namespace PowerShellFilesystemProviderBase.Nodes
         {
             if (recurse)
             {
-                if (this.Underlying is ICopyChildItemRecursive)
+                if (this.TryGetUnderlyingService<ICopyChildItemRecursive>(out var copyChildItemRecursive))
                 {
-                    this.InvokeUnderlyingOrThrow<ICopyChildItemRecursive>(copyChildItem => copyChildItem.CopyChildItemRecursive(nodeToCopy, destination));
+                    // the underlying handles the operation istself.
+
+                    copyChildItemRecursive.CopyChildItemRecursive(nodeToCopy, destination);
                 }
-                else if (this.Underlying is ICopyChildItem && nodeToCopy is ContainerNode containerToCopy)
+                else if (this.TryGetUnderlyingService<ICopyChildItem>(out var copyChildItem) && nodeToCopy is ContainerNode containerToCopy)
                 {
-                    // copy the source root
-                    var copiedNode = this.InvokeUnderlyingOrThrow<ICopyChildItem>(copyChildItem => copyChildItem.CopyChildItem(containerToCopy, destination));
+                    // the underlying can only handle coping without recursion.
+                    // copy the source root, than invoke 'CopyChildItem(recurse:true)' on the child nodes.
+
+                    var copiedNode = copyChildItem.CopyChildItem(containerToCopy, destination);
 
                     if (copiedNode is ContainerNode copiedContainerNode)
                     {
                         // copy the sources roots children
+
                         foreach (var containerToCopyChild in containerToCopy.GetChildItems())
                         {
                             copiedContainerNode.CopyChildItem(containerToCopyChild, new[] { containerToCopyChild.Name }, recurse);
                         }
                     }
-                    else this.InvokeUnderlyingOrThrow<ICopyChildItem>(copyChildItem => copyChildItem.CopyChildItem(nodeToCopy, destination));
+                    else
+                    {
+                        // the child isn't a container. use single copy operation than w/o recursion.
+
+                        this.GetUnderlyingServiceOrThrow<ICopyChildItem>(out copyChildItem);
+
+                        copyChildItem.CopyChildItem(nodeToCopy, destination);
+                    }
                 }
             }
-            else this.InvokeUnderlyingOrThrow<ICopyChildItem>(copyChildItem => copyChildItem.CopyChildItem(nodeToCopy, destination));
+            else
+            {
+                // the copy isn't recursive. Just call the simple copy operation at the source root.
+                this.GetUnderlyingServiceOrThrow<ICopyChildItem>(out var copyChildItem);
+
+                copyChildItem.CopyChildItem(nodeToCopy, destination);
+            }
         }
 
         public object? CopyChildItemParameters(string childName, string destination, bool recurse)

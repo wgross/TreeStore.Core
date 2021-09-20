@@ -1,5 +1,6 @@
 ﻿using PowerShellFilesystemProviderBase.Nodes;
 using Xunit;
+using static PowerShellFilesystemProviderBase.Test.TestData;
 
 namespace PowerShellFilesystemProviderBase.Test.Nodes
 {
@@ -9,7 +10,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         public void RootNode_has_empty_Name()
         {
             // ACT
-            var node = new RootNode(new { });
+            var node = new RootNode(ServiceProvider());
 
             // ASSERT
             Assert.Equal(string.Empty, node.Name);

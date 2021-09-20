@@ -5,12 +5,10 @@ namespace PowerShellFilesystemProviderBase.Nodes
     /// <summary>
     /// Representa a <see cref="ProvioderNode"/> with child nodes.
     /// </summary>
-    public class LeafNode : ProviderNode
+    public sealed record LeafNode : ProviderNode
     {
-        public LeafNode(string? name, object? underlyingProperties)
+        public LeafNode(string? name, IServiceProvider underlyingProperties)
             : base(name, underlyingProperties)
         { }
-
-        
     }
 }

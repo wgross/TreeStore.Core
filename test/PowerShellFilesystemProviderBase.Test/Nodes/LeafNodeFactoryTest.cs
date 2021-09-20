@@ -1,6 +1,7 @@
 ﻿using PowerShellFilesystemProviderBase.Nodes;
 using System;
 using Xunit;
+using static PowerShellFilesystemProviderBase.Test.TestData;
 
 namespace PowerShellFilesystemProviderBase.Test.Nodes
 {
@@ -10,7 +11,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         public void Create_leaf_node_from_object()
         {
             // ACT
-            var result = LeafNodeFactory.Create("name", new { });
+            var result = new LeafNode("name", ServiceProvider());
 
             // ASSERT
             Assert.Equal("name", result.Name);
@@ -21,7 +22,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         public void Creating_leaf_node_from_object_throws_on_null_name()
         {
             // ACT
-            var result = Assert.Throws<ArgumentNullException>(() => LeafNodeFactory.Create(null, new { }));
+            var result = Assert.Throws<ArgumentNullException>(() => new LeafNode(null, ServiceProvider()));
 
             // ASSERT
             Assert.Equal("name", result.ParamName);
@@ -31,7 +32,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         public void Creating_leaf_node_from_object_throws_on_null_underlying()
         {
             // ACT
-            var result = Assert.Throws<ArgumentNullException>(() => LeafNodeFactory.Create("name", null));
+            var result = Assert.Throws<ArgumentNullException>(() => new LeafNode("name", null));
 
             // ASSERT
             Assert.Equal("underlying", result.ParamName);

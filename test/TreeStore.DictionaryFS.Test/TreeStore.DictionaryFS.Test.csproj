@@ -21,6 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\TestFileSystem\TestFileSystem.csproj" />
     <ProjectReference Include="..\..\src\TreeStore.DictionaryFS\TreeStore.DictionaryFS.csproj" />
     <ProjectReference Include="..\PowerShellFilesystemProviderBase.Test\PowerShellFilesystemProviderBase.Test.csproj" />
   </ItemGroup>

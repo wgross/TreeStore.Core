@@ -1,8 +1,10 @@
-﻿namespace PowerShellFilesystemProviderBase.Nodes
+﻿using System;
+
+namespace PowerShellFilesystemProviderBase.Nodes
 {
-    public class RootNode : ContainerNode
+    public sealed record RootNode : ContainerNode
     {
-        public RootNode(object? data)
+        public RootNode(IServiceProvider data)
             : base(name: string.Empty, data)
         {
         }
