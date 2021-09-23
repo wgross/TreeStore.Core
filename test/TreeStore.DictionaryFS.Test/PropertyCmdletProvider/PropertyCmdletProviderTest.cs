@@ -6,6 +6,7 @@ using UnderlyingDictionary = System.Collections.Generic.Dictionary<string, objec
 
 namespace TreeStore.DictionaryFS.Test.PropertyCmdletProvider
 {
+    [Collection(nameof(PowerShell))]
     public class PropertyCmdletProviderTest : DynamicPropertyCmdletProviderTestBase
     {
         [Fact]
@@ -79,8 +80,8 @@ namespace TreeStore.DictionaryFS.Test.PropertyCmdletProvider
             Assert.Equal(1, result.Single().Property<int>("data"));
             Assert.True(result.Single().Property<bool>("PSIsContainer"));
             Assert.Equal("test", result.Single().Property<PSDriveInfo>("PSDrive").Name);
-            Assert.Equal("TestFilesystem", result.Single().Property<ProviderInfo>("PSProvider").Name);
-            Assert.Equal(@"TestFileSystem\TestFilesystem::test:\", result.Single().Property<string>("PSPath"));
+            Assert.Equal("DictionaryFS", result.Single().Property<ProviderInfo>("PSProvider").Name);
+            Assert.Equal(@"TreeStore.DictionaryFS\DictionaryFS::test:\", result.Single().Property<string>("PSPath"));
             Assert.Equal(@"", result.Single().Property<string>("PSParentPath"));
         }
 

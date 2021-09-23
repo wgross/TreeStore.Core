@@ -1,7 +1,9 @@
 ﻿using PowerShellFilesystemProviderBase;
 using PowerShellFilesystemProviderBase.Test;
+using System.Collections.Generic;
 using System.Linq;
 using System.Management.Automation;
+using TreeStore.DictionaryFS.Nodes;
 using Xunit;
 
 namespace TreeStore.DictionaryFS.Test.DriveCmdletProvider
@@ -10,7 +12,9 @@ namespace TreeStore.DictionaryFS.Test.DriveCmdletProvider
     {
         public DriveCmdletProviderTest()
         {
-            this.PowerShell.AddCommand("Import-Module").AddArgument("./TestFileSystem.dll").Invoke();
+            DictionaryFilesystemProvider.RootNodeProvider = _ => new DictionaryContainerAdapter(new Dictionary<string, object?>());
+
+            this.PowerShell.AddCommand("Import-Module").AddArgument("./TreeStore.DictionaryFS.dll").Invoke();
             this.PowerShell.Commands.Clear();
         }
 
@@ -19,7 +23,7 @@ namespace TreeStore.DictionaryFS.Test.DriveCmdletProvider
         {
             // ACT
             var result = this.PowerShell.AddCommand("New-PSDrive")
-              .AddParameter("PSProvider", "TestFileSystem")
+              .AddParameter("PSProvider", "DictionaryFS")
               .AddParameter("Name", "test")
               .AddParameter("Root", "")
               .Invoke()

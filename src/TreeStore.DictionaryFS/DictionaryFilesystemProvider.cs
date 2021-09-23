@@ -7,7 +7,7 @@ namespace TreeStore.DictionaryFS
     [CmdletProvider(DictionaryFilesystemProvider.Id, ProviderCapabilities.None)]
     public class DictionaryFilesystemProvider : global::PowerShellFilesystemProviderBase.Providers.PowerShellFileSystemProviderBase
     {
-        public const string Id = "TestFilesystem";
+        public const string Id = "DictionaryFS";
 
         /// <summary>
         /// Creates the root node. The inout string ois the drive name.

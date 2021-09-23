@@ -4,6 +4,7 @@ using UnderlyingDictionary = System.Collections.Generic.Dictionary<string, objec
 
 namespace TreeStore.DictionaryFS.Test.DynamicPropertyCmdletProvider
 {
+    [Collection(nameof(PowerShell))]
     public class DynamicPropertyCmdletProviderTest : DynamicPropertyCmdletProviderTestBase
     {
         #region Copy-Item -Path -Destination -Name

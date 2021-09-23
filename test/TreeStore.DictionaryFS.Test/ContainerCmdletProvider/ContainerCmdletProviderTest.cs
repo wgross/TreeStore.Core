@@ -41,9 +41,9 @@ namespace TreeStore.DictionaryFS.Test.ContainerCmdletProvider
             Assert.Equal("child1", psobject.Property<string>("PSChildName"));
             Assert.True(psobject.Property<bool>("PSIsContainer"));
             Assert.Equal("test", psobject.Property<PSDriveInfo>("PSDrive").Name);
-            Assert.Equal("TestFilesystem", psobject.Property<ProviderInfo>("PSProvider").Name);
-            Assert.Equal(@"TestFileSystem\TestFilesystem::test:\child1", psobject.Property<string>("PSPath"));
-            Assert.Equal(@"TestFileSystem\TestFilesystem::test:\", psobject.Property<string>("PSParentPath"));
+            Assert.Equal("DictionaryFS", psobject.Property<ProviderInfo>("PSProvider").Name);
+            Assert.Equal(@"TreeStore.DictionaryFS\DictionaryFS::test:\child1", psobject.Property<string>("PSPath"));
+            Assert.Equal(@"TreeStore.DictionaryFS\DictionaryFS::test:\", psobject.Property<string>("PSParentPath"));
         }
 
         [Fact]
@@ -79,18 +79,18 @@ namespace TreeStore.DictionaryFS.Test.ContainerCmdletProvider
             Assert.Equal("child1", psobject.Property<string>("PSChildName"));
             Assert.True(psobject.Property<bool>("PSIsContainer"));
             Assert.Equal("test", psobject.Property<PSDriveInfo>("PSDrive").Name);
-            Assert.Equal("TestFilesystem", psobject.Property<ProviderInfo>("PSProvider").Name);
-            Assert.Equal(@"TestFileSystem\TestFilesystem::test:\child1", psobject.Property<string>("PSPath"));
-            Assert.Equal(@"TestFileSystem\TestFilesystem::test:\", psobject.Property<string>("PSParentPath"));
+            Assert.Equal("DictionaryFS", psobject.Property<ProviderInfo>("PSProvider").Name);
+            Assert.Equal(@"TreeStore.DictionaryFS\DictionaryFS::test:\child1", psobject.Property<string>("PSPath"));
+            Assert.Equal(@"TreeStore.DictionaryFS\DictionaryFS::test:\", psobject.Property<string>("PSParentPath"));
 
             psobject = result.ElementAt(1);
 
             Assert.Equal("grandchild", psobject.Property<string>("PSChildName"));
             Assert.True(psobject.Property<bool>("PSIsContainer"));
             Assert.Equal("test", psobject.Property<PSDriveInfo>("PSDrive").Name);
-            Assert.Equal("TestFilesystem", psobject.Property<ProviderInfo>("PSProvider").Name);
-            Assert.Equal(@"TestFileSystem\TestFilesystem::test:\child1\grandchild", psobject.Property<string>("PSPath"));
-            Assert.Equal(@"TestFileSystem\TestFilesystem::test:\child1", psobject.Property<string>("PSParentPath"));
+            Assert.Equal("DictionaryFS", psobject.Property<ProviderInfo>("PSProvider").Name);
+            Assert.Equal(@"TreeStore.DictionaryFS\DictionaryFS::test:\child1\grandchild", psobject.Property<string>("PSPath"));
+            Assert.Equal(@"TreeStore.DictionaryFS\DictionaryFS::test:\child1", psobject.Property<string>("PSParentPath"));
         }
 
         [Fact]
@@ -129,18 +129,18 @@ namespace TreeStore.DictionaryFS.Test.ContainerCmdletProvider
             Assert.Equal("child1", psobject.Property<string>("PSChildName"));
             Assert.True(psobject.Property<bool>("PSIsContainer"));
             Assert.Equal("test", psobject.Property<PSDriveInfo>("PSDrive").Name);
-            Assert.Equal("TestFilesystem", psobject.Property<ProviderInfo>("PSProvider").Name);
-            Assert.Equal(@"TestFileSystem\TestFilesystem::test:\child1", psobject.Property<string>("PSPath"));
-            Assert.Equal(@"TestFileSystem\TestFilesystem::test:\", psobject.Property<string>("PSParentPath"));
+            Assert.Equal("DictionaryFS", psobject.Property<ProviderInfo>("PSProvider").Name);
+            Assert.Equal(@"TreeStore.DictionaryFS\DictionaryFS::test:\child1", psobject.Property<string>("PSPath"));
+            Assert.Equal(@"TreeStore.DictionaryFS\DictionaryFS::test:\", psobject.Property<string>("PSParentPath"));
 
             psobject = result.ElementAt(1);
 
             Assert.Equal("grandchild", psobject.Property<string>("PSChildName"));
             Assert.True(psobject.Property<bool>("PSIsContainer"));
             Assert.Equal("test", psobject.Property<PSDriveInfo>("PSDrive").Name);
-            Assert.Equal("TestFilesystem", psobject.Property<ProviderInfo>("PSProvider").Name);
-            Assert.Equal(@"TestFileSystem\TestFilesystem::test:\child1\grandchild", psobject.Property<string>("PSPath"));
-            Assert.Equal(@"TestFileSystem\TestFilesystem::test:\child1", psobject.Property<string>("PSParentPath"));
+            Assert.Equal("DictionaryFS", psobject.Property<ProviderInfo>("PSProvider").Name);
+            Assert.Equal(@"TreeStore.DictionaryFS\DictionaryFS::test:\child1\grandchild", psobject.Property<string>("PSPath"));
+            Assert.Equal(@"TreeStore.DictionaryFS\DictionaryFS::test:\child1", psobject.Property<string>("PSParentPath"));
         }
 
         #endregion Get-ChildItem -Path -Recurse
@@ -247,9 +247,9 @@ namespace TreeStore.DictionaryFS.Test.ContainerCmdletProvider
             Assert.Equal("child1", psobject.Property<string>("PSChildName"));
             Assert.True(psobject.Property<bool>("PSIsContainer"));
             Assert.Equal("test", psobject.Property<PSDriveInfo>("PSDrive").Name);
-            Assert.Equal("TestFilesystem", psobject.Property<ProviderInfo>("PSProvider").Name);
-            Assert.Equal(@"TestFileSystem\TestFilesystem::test:\child1", psobject.Property<string>("PSPath"));
-            Assert.Equal(@"TestFileSystem\TestFilesystem::test:\", psobject.Property<string>("PSParentPath"));
+            Assert.Equal("DictionaryFS", psobject.Property<ProviderInfo>("PSProvider").Name);
+            Assert.Equal(@"TreeStore.DictionaryFS\DictionaryFS::test:\child1", psobject.Property<string>("PSPath"));
+            Assert.Equal(@"TreeStore.DictionaryFS\DictionaryFS::test:\", psobject.Property<string>("PSParentPath"));
 
             Assert.True(root.TryGetValue("child1", out var added));
             Assert.Same(child, added);

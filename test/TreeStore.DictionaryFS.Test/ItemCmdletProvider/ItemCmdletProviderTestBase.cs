@@ -1,6 +1,5 @@
 ﻿using PowerShellFilesystemProviderBase.Test;
 using System.Collections.Generic;
-using TestFileSystem;
 using TreeStore.DictionaryFS.Nodes;
 
 namespace TreeStore.DictionaryFS.Test.ItemCmdletProvider
@@ -20,11 +19,11 @@ namespace TreeStore.DictionaryFS.Test.ItemCmdletProvider
         protected void ArrangeFileSystem()
         {
             this.PowerShell.AddCommand("Import-Module")
-                .AddArgument("./TestFileSystem.dll")
+                .AddArgument("./TreeStore.DictionaryFS.dll")
                 .Invoke();
             this.PowerShell.Commands.Clear();
             this.PowerShell.AddCommand("New-PSDrive")
-                .AddParameter("PSProvider", "TestFileSystem")
+                .AddParameter("PSProvider", "DictionaryFS")
                 .AddParameter("Name", "test")
                 .AddParameter("Root", "")
                 .Invoke();
