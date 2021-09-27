@@ -115,7 +115,7 @@ namespace PowerShellFilesystemProviderBase.Providers
 
             this.InvokeContainerNodeOrDefault(
                 path: parentPath,
-                invoke: c => c.RemoveChildItem(childName!),
+                invoke: c => c.RemoveChildItem(childName!, recurse),
                 fallback: () => base.RemoveItem(path, recurse));
         }
 

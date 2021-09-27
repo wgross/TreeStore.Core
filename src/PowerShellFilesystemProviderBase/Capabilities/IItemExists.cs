@@ -6,6 +6,6 @@ namespace PowerShellFilesystemProviderBase.Capabilities
     {
         object? ItemExistsParameters() => new RuntimeDefinedParameterDictionary();
 
-        bool ItemExists();
+        bool ItemExists() => true;
     }
 }

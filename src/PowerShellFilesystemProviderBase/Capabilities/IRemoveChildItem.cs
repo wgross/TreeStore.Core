@@ -2,7 +2,7 @@
 
 namespace PowerShellFilesystemProviderBase.Capabilities
 {
-    public interface IRemoveChildItem
+    public interface IRemoveChildItem : IItemExists
     {
         /// <summary>
         /// Returns custom parameters to be applied for the removal of the child node <paramref name="childName"/>
@@ -15,6 +15,6 @@ namespace PowerShellFilesystemProviderBase.Capabilities
         /// removes the cild item specify by <paramref name="childName"/>
         /// </summary>
         /// <param name="childName"></param>
-        void RemoveChildItem(string childName);
+        void RemoveChildItem(string childName, bool recurse);
     }
 }

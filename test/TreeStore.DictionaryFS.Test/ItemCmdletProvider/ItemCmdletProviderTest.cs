@@ -1,8 +1,8 @@
 ﻿using PowerShellFilesystemProviderBase;
-using System.Collections.Generic;
 using System.Linq;
 using System.Management.Automation;
 using Xunit;
+using UnderlyingDictionary = System.Collections.Generic.Dictionary<string, object?>;
 
 namespace TreeStore.DictionaryFS.Test.ItemCmdletProvider
 {
@@ -12,10 +12,10 @@ namespace TreeStore.DictionaryFS.Test.ItemCmdletProvider
         #region Get-Item -Path
 
         [Fact]
-        public void Powershell_retrieves_root_node()
+        public void Powershell_reads_root_node()
         {
             // ARRANGE
-            this.ArrangeFileSystem(new Dictionary<string, object?>());
+            this.ArrangeFileSystem(new UnderlyingDictionary());
 
             // ACT
             var result = this.PowerShell.AddCommand("Get-Item")
@@ -37,12 +37,12 @@ namespace TreeStore.DictionaryFS.Test.ItemCmdletProvider
         }
 
         [Fact]
-        public void Powershell_retrieves_child_node()
+        public void Powershell_reads_root_child_node()
         {
             // ARRANGE
-            var root = new Dictionary<string, object?>
+            var root = new UnderlyingDictionary
             {
-                ["item"] = new Dictionary<string, object>()
+                ["item"] = new UnderlyingDictionary()
             };
 
             this.ArrangeFileSystem(root);
@@ -66,6 +66,39 @@ namespace TreeStore.DictionaryFS.Test.ItemCmdletProvider
             Assert.Equal(@"TreeStore.DictionaryFS\DictionaryFS::test:\", psobject.Property<string>("PSParentPath"));
         }
 
+        [Fact]
+        public void Powershell_reads_root_grandchild_node()
+        {
+            // ARRANGE
+            var root = new UnderlyingDictionary
+            {
+                ["item"] = new UnderlyingDictionary
+                {
+                    ["item"] = new UnderlyingDictionary()
+                }
+            };
+
+            this.ArrangeFileSystem(root);
+
+            // ACT
+            var result = this.PowerShell.AddCommand("Get-Item")
+                .AddParameter("Path", @"test:\item\item")
+                .Invoke()
+                .ToArray();
+
+            // ASSERT
+            Assert.False(this.PowerShell.HadErrors);
+
+            var psobject = result.Single();
+
+            Assert.Equal("item", psobject.Property<string>("PSChildName"));
+            Assert.True(psobject.Property<bool>("PSIsContainer"));
+            Assert.Equal("test", psobject.Property<PSDriveInfo>("PSDrive").Name);
+            Assert.Equal("DictionaryFS", psobject.Property<ProviderInfo>("PSProvider").Name);
+            Assert.Equal(@"TreeStore.DictionaryFS\DictionaryFS::test:\item\item", psobject.Property<string>("PSPath"));
+            Assert.Equal(@"TreeStore.DictionaryFS\DictionaryFS::test:\item", psobject.Property<string>("PSParentPath"));
+        }
+
         #endregion Get-Item -Path
 
         #region Set-Item -Path
@@ -74,13 +107,13 @@ namespace TreeStore.DictionaryFS.Test.ItemCmdletProvider
         public void Powershell_sets_item_value()
         {
             // ARRANGE
-            var root = new Dictionary<string, object?>
+            var root = new UnderlyingDictionary
             {
-                ["child"] = new Dictionary<string, object?>()
+                ["child"] = new UnderlyingDictionary()
             };
 
             this.ArrangeFileSystem(root);
-            var newValue = new Dictionary<string, object?>
+            var newValue = new UnderlyingDictionary
             {
                 ["data"] = new object()
             };
@@ -96,7 +129,7 @@ namespace TreeStore.DictionaryFS.Test.ItemCmdletProvider
             Assert.False(this.PowerShell.HadErrors);
             Assert.Empty(result);
             Assert.NotSame(newValue, root["child"]);
-            Assert.Same(newValue["data"], ((IDictionary<string, object>)root["child"]!)["data"]);
+            Assert.Same(newValue["data"], ((UnderlyingDictionary)root["child"]!)["data"]);
         }
 
         #endregion Set-Item -Path
@@ -107,7 +140,7 @@ namespace TreeStore.DictionaryFS.Test.ItemCmdletProvider
         public void Powershell_clears_item_value()
         {
             // ARRANGE
-            var node = new Dictionary<string, object?>
+            var node = new UnderlyingDictionary
             {
                 ["child"] = new object()
             };
@@ -131,10 +164,10 @@ namespace TreeStore.DictionaryFS.Test.ItemCmdletProvider
         #region Test-Path -Path -PathType
 
         [Fact]
-        public void Powershell_test_root_path()
+        public void Powershell_tests_root_path()
         {
             // ARRANGE
-            this.ArrangeFileSystem(new Dictionary<string, object?>());
+            this.ArrangeFileSystem(new UnderlyingDictionary());
 
             // ACT
             var result = this.PowerShell.AddCommand("Test-Path")
@@ -148,10 +181,10 @@ namespace TreeStore.DictionaryFS.Test.ItemCmdletProvider
         }
 
         [Fact]
-        public void Powershell_test_root_path_as_container()
+        public void Powershell_tests_root_path_as_container()
         {
             // ARRANGE
-            this.ArrangeFileSystem(new Dictionary<string, object?>());
+            this.ArrangeFileSystem(new UnderlyingDictionary());
 
             // ACT
             var result = this.PowerShell.AddCommand("Test-Path")
@@ -166,12 +199,12 @@ namespace TreeStore.DictionaryFS.Test.ItemCmdletProvider
         }
 
         [Fact]
-        public void Powershell_test_child_path()
+        public void Powershell_tests_child_path()
         {
             // ARRANGE
-            this.ArrangeFileSystem(new Dictionary<string, object?>
+            this.ArrangeFileSystem(new UnderlyingDictionary
             {
-                ["child"] = new Dictionary<string, object>()
+                ["child"] = new UnderlyingDictionary()
             });
 
             // ACT
@@ -186,12 +219,12 @@ namespace TreeStore.DictionaryFS.Test.ItemCmdletProvider
         }
 
         [Fact]
-        public void Powershell_test_child_path_as_container()
+        public void Powershell_tests_child_path_as_container()
         {
             // ARRANGE
-            this.ArrangeFileSystem(new Dictionary<string, object?>
+            this.ArrangeFileSystem(new UnderlyingDictionary
             {
-                ["child"] = new Dictionary<string, object>()
+                ["child"] = new UnderlyingDictionary()
             });
 
             // ACT
@@ -214,7 +247,7 @@ namespace TreeStore.DictionaryFS.Test.ItemCmdletProvider
         public void Powershell_invoke_default_action_fails()
         {
             // ARRANGE
-            var root = new Dictionary<string, object?>
+            var root = new UnderlyingDictionary
             {
                 ["item"] = new object()
             };

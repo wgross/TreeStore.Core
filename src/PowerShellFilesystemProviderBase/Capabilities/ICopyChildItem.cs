@@ -3,7 +3,7 @@ using System.Management.Automation;
 
 namespace PowerShellFilesystemProviderBase.Capabilities
 {
-    public interface ICopyChildItem
+    public interface ICopyChildItem : IItemExists
     {
         /// <summary>
         /// Returns custom parameters to be applied for the copying achild node named <paramref name="childName"/> to a destination.

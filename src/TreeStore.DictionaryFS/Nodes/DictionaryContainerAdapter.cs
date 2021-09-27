@@ -131,8 +131,9 @@ namespace TreeStore.DictionaryFS.Nodes
         #region IRemoveChildItem
 
         /// <inheritdoc/>
-        void IRemoveChildItem.RemoveChildItem(string childName)
+        void IRemoveChildItem.RemoveChildItem(string childName, bool recurse)
         {
+            // call only if recurse is true?
             this.Underlying.Remove(childName);
         }
 
@@ -179,13 +180,13 @@ namespace TreeStore.DictionaryFS.Nodes
                     case 0:
                         // put node directly under this node
                         if (this.Underlying.TryAdd(nodeToMove.Name, underlyingDict.Underlying))
-                            parentOfNodeToMove.RemoveChildItem(nodeToMove.Name);
+                            parentOfNodeToMove.RemoveChildItem(nodeToMove.Name, recurse: true);
                         return;
 
                     case 1:
                         // put node directly under this node with new name
                         if (this.Underlying.TryAdd(destination[0], underlyingDict.Underlying))
-                            parentOfNodeToMove.RemoveChildItem(nodeToMove.Name);
+                            parentOfNodeToMove.RemoveChildItem(nodeToMove.Name, recurse: true);
                         return;
 
                     default:

@@ -107,8 +107,8 @@ namespace PowerShellFilesystemProviderBase.Nodes
         #region IRemoveChildItem
 
         ///<inheritdoc/>
-        public void RemoveChildItem(string childName)
-            => this.InvokeUnderlyingOrThrow<IRemoveChildItem>(removeChildItem => removeChildItem.RemoveChildItem(childName));
+        public void RemoveChildItem(string childName, bool recurse)
+            => this.InvokeUnderlyingOrThrow<IRemoveChildItem>(removeChildItem => removeChildItem.RemoveChildItem(childName, recurse));
 
         ///<inheritdoc/>
         public object? RemoveChildItemParameters(string childName, bool recurse)
@@ -197,8 +197,8 @@ namespace PowerShellFilesystemProviderBase.Nodes
         public void MoveChildItem(ContainerNode parentOfNode, ProviderNode nodeToMove, string[] destination)
             => this.InvokeUnderlyingOrThrow<IMoveChildItem>(moveChildItem => moveChildItem.MoveChildItem(parentOfNode, nodeToMove, destination));
 
-        public object? MoveChildItemParameter(string name, string destination, bool recurse)
-            => this.InvokeUnderlyingOrDefault<IMoveChildItem>(moveChildItem => moveChildItem.MoveChildItemParameters(name, destination, recurse));
+        public object? MoveChildItemParameter(string name, string destination)
+            => this.InvokeUnderlyingOrDefault<IMoveChildItem>(moveChildItem => moveChildItem.MoveChildItemParameters(name, destination));
 
         #endregion IMoveChildItem
     }

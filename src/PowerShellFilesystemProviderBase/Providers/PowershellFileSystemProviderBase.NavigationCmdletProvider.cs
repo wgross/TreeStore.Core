@@ -65,10 +65,12 @@ namespace PowerShellFilesystemProviderBase.Providers
                 fallback: () => base.MoveItem(path, destination));
         }
 
+        
         protected override object MoveItemDynamicParameters(string path, string destination)
-        {
-            return base.MoveItemDynamicParameters(path, destination);
-        }
+            => this.InvokeContainerNodeOrDefault(
+                path: new PathTool().SplitProviderPath(path).path.items,
+                invoke: c => c.MoveChildItemParameter(path, destination),
+                fallback: () => base.MoveItemDynamicParameters(path, destination));
 
         protected override string MakePath(string parent, string child)
         {

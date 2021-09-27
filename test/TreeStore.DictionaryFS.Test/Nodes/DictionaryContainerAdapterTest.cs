@@ -227,8 +227,10 @@ namespace TreeStore.DictionaryFS.Test.Nodes
 
         #region IRemoveChildItem
 
-        [Fact]
-        public void RemoveChildItem_removes_dictionary_item()
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void RemoveChildItem_removes_dictionary_item(bool recurse)
         {
             // ARRANGE
             var underlying = new UnderlyingDictionary
@@ -241,7 +243,7 @@ namespace TreeStore.DictionaryFS.Test.Nodes
             var node = ArrangeContainerAdapter(underlying);
 
             // ACT
-            ((IRemoveChildItem)node).RemoveChildItem("container1");
+            ((IRemoveChildItem)node).RemoveChildItem("container1", recurse);
 
             // ASSERT
             Assert.False(underlying.TryGetValue("container1", out var _));

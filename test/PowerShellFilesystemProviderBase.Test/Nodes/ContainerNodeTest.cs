@@ -450,60 +450,68 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
 
         #region IRemoveChildItem
 
-        [Fact]
-        public void RemoveChildItem_invokes_underlying()
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void RemoveChildItem_invokes_underlying(bool recurse)
         {
             // ARRANGE
             var underlying = this.mocks.Create<IRemoveChildItem>();
             underlying
-                .Setup(u => u.RemoveChildItem("child1"));
+                .Setup(u => u.RemoveChildItem("child1", recurse));
 
             var node = ArrangeNode("name", ServiceProvider(With<IRemoveChildItem>(underlying)));
 
             // ACT
-            node.RemoveChildItem("child1");
+            node.RemoveChildItem("child1", recurse);
         }
 
-        [Fact]
-        public void RemoveChildItem_defaults_to_exception()
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void RemoveChildItem_defaults_to_exception(bool recurse)
         {
             // ARRANGE
             var node = ArrangeNode("name", ServiceProvider());
 
             // ACT
-            var result = Assert.Throws<PSNotSupportedException>(() => node.RemoveChildItem("child1"));
+            var result = Assert.Throws<PSNotSupportedException>(() => node.RemoveChildItem("child1", recurse));
 
             // ASSERT
             Assert.Equal("Node(name='name') doesn't provide an implementation of capability 'IRemoveChildItem'.", result.Message);
         }
 
-        [Fact]
-        public void RemoveChildItemParameters_invokes_underlying()
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void RemoveChildItemParameters_invokes_underlying(bool recurse)
         {
             // ARRANGE
             var parameters = new object();
             var underlying = this.mocks.Create<IRemoveChildItem>();
             underlying
-                .Setup(u => u.RemoveChildItemParameters("child1", true))
+                .Setup(u => u.RemoveChildItemParameters("child1", recurse))
                 .Returns(parameters);
 
             var node = ArrangeNode("name", ServiceProvider(With<IRemoveChildItem>(underlying)));
 
             // ACT
-            var result = node.RemoveChildItemParameters("child1", true);
+            var result = node.RemoveChildItemParameters("child1", recurse);
 
             // ASSERT
             Assert.Same(parameters, result);
         }
 
-        [Fact]
-        public void RemoveChildItemParameters_defaults_to_null()
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void RemoveChildItemParameters_defaults_to_null(bool recurse)
         {
             // ARRANGE
             var node = ArrangeNode("name", ServiceProvider());
 
             // ACT
-            var result = node.RemoveChildItemParameters("child1", true);
+            var result = node.RemoveChildItemParameters("child1", recurse);
 
             // ASSERT
             Assert.Null(result);
@@ -745,13 +753,13 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
             var parameters = new object();
             var underlying = this.mocks.Create<IMoveChildItem>();
             underlying
-                .Setup(u => u.MoveChildItemParameters("name", "destination", true))
+                .Setup(u => u.MoveChildItemParameters("name", "destination"))
                 .Returns(parameters);
 
             var node = ArrangeNode("name", ServiceProvider(With<IMoveChildItem>(underlying)));
 
             // ACT
-            var result = node.MoveChildItemParameter("name", "destination", true);
+            var result = node.MoveChildItemParameter("name", "destination");
 
             // ASSERT
             Assert.Same(parameters, result);
@@ -779,7 +787,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
             var node = ArrangeNode("name", ServiceProvider());
 
             // ACT
-            var result = node.MoveChildItemParameter("name", "destination", true);
+            var result = node.MoveChildItemParameter("name", "destination");
 
             // ASSERT
             Assert.Null(result);

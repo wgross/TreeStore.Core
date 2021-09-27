@@ -15,7 +15,7 @@ namespace TreeStore.DictionaryFS.Test.ContainerCmdletProvider
         #region Get-ChildItem -Path -Recurse
 
         [Fact]
-        public void Powershell_retrieves_roots_childnodes()
+        public void Powershell_reads_roots_childnodes()
         {
             // ARRANGE
             var root = new UnderlyingDictionary
