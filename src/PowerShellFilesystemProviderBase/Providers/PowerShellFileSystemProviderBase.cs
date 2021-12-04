@@ -12,7 +12,7 @@ namespace PowerShellFilesystemProviderBase.Providers
     {
         private PowershellFileSystemDriveInfo DriveInfo => (PowershellFileSystemDriveInfo)this.PSDriveInfo;
 
-        public (bool exists, ProviderNode? node) TryGetChildNode(ContainerNode parentNode, string childName)
+        public static (bool exists, ProviderNode? node) TryGetChildNode(ContainerNode parentNode, string childName)
         {
             var childNode = parentNode
                 .GetChildItems()
@@ -32,7 +32,7 @@ namespace PowerShellFilesystemProviderBase.Providers
             {
                 traversal = traversal.node switch
                 {
-                    ContainerNode container => this.TryGetChildNode(container, pathItem),
+                    ContainerNode container => TryGetChildNode(container, pathItem),
                     _ => (false, default)
                 };
                 if (!traversal.exists) return false;
@@ -41,7 +41,7 @@ namespace PowerShellFilesystemProviderBase.Providers
             return true;
         }
 
-        protected bool TryGetNodeByPath<T>(ProviderNode startNode, string[] path, [NotNullWhen(returnValue: true)] out ProviderNode? providerNode, [NotNullWhen(returnValue: true)] out T? providerNodeCapbility) where T : class
+        protected static bool TryGetNodeByPath<T>(ProviderNode startNode, string[] path, [NotNullWhen(returnValue: true)] out ProviderNode? providerNode, [NotNullWhen(returnValue: true)] out T? providerNodeCapbility) where T : class
         {
             providerNode = default;
             providerNodeCapbility = default;
@@ -51,7 +51,7 @@ namespace PowerShellFilesystemProviderBase.Providers
             {
                 cursor = cursor.node switch
                 {
-                    ContainerNode container => this.TryGetChildNode(container, pathItem),
+                    ContainerNode container => TryGetChildNode(container, pathItem),
                     _ => (false, default)
                 };
                 if (!cursor.exists) return false;
@@ -64,11 +64,11 @@ namespace PowerShellFilesystemProviderBase.Providers
         }
 
         protected ProviderNode GetDeepestNodeByPath(string path, out string[] missingPath)
-           => this.GetDeepestNodeByPath(this.DriveInfo.RootNode, new PathTool().Split(path), out missingPath);
+           => GetDeepestNodeByPath(this.DriveInfo.RootNode, new PathTool().Split(path), out missingPath);
 
-        protected ProviderNode GetDeepestNodeByPath(ProviderNode startNode, string[] path, out string[] missingPath)
+        protected static ProviderNode GetDeepestNodeByPath(ProviderNode startNode, string[] path, out string[] missingPath)
         {
-            var traversal = this.TraversePathComplete(startNode, path).ToArray();
+            var traversal = TraversePathComplete(startNode, path).ToArray();
 
             // the whole path might not exists
             missingPath = traversal.SkipWhile(t => t.exists).Select(t => t.name).ToArray();
@@ -77,7 +77,7 @@ namespace PowerShellFilesystemProviderBase.Providers
             return traversal.TakeWhile(t => t.node is not null).LastOrDefault().node ?? startNode;
         }
 
-        protected IEnumerable<(string name, bool exists, ProviderNode? node)> TraversePathComplete(ProviderNode startNode, string[] path)
+        protected static IEnumerable<(string name, bool exists, ProviderNode? node)> TraversePathComplete(ProviderNode startNode, string[] path)
         {
             (bool exists, ProviderNode? node) cursor = (true, startNode);
 
@@ -89,7 +89,7 @@ namespace PowerShellFilesystemProviderBase.Providers
                     cursor = cursor.node switch
                     {
                         // you can only fetch child node from containers
-                        ContainerNode c => this.TryGetChildNode(c, pathItem),
+                        ContainerNode c => TryGetChildNode(c, pathItem),
 
                         // from leaf nodes, no child can be retrieved
                         _ => (false, null)
@@ -97,9 +97,7 @@ namespace PowerShellFilesystemProviderBase.Providers
 
                     // the result of the last traversal is returned
                     yield return (
-                        name: pathItem,
-                        exists: cursor.exists,
-                        node: cursor.node
+                        name: pathItem, cursor.exists, cursor.node
                     );
                 }
                 else
@@ -146,11 +144,7 @@ namespace PowerShellFilesystemProviderBase.Providers
         /// <returns></returns>
         protected T InvokeContainerNodeOrDefault<T>(string[] path, Func<ContainerNode, T> invoke, Func<T> fallback)
         {
-            if (this.TryGetContainerNodeByPath(path, out var containerNode))
-            {
-                return invoke(containerNode);
-            }
-            else return fallback();
+            return this.TryGetContainerNodeByPath(path, out var containerNode) ? invoke(containerNode) : fallback();
         }
 
         protected void InvokeContainerNodeOrDefault(string[] path, Action<ContainerNode> invoke, Action fallback)
@@ -159,7 +153,10 @@ namespace PowerShellFilesystemProviderBase.Providers
             {
                 invoke(containerNode);
             }
-            else fallback();
+            else
+            {
+                fallback();
+            }
         }
 
         protected bool TryGetContainerNodeByPath(string[] path, [NotNullWhen(true)] out ContainerNode? containerNode)
@@ -175,7 +172,10 @@ namespace PowerShellFilesystemProviderBase.Providers
                 containerNode = default;
                 return false;
             }
-            else throw new ItemNotFoundException($"Can't find path '{string.Join(this.ItemSeparator, path)}'");
+            else
+            {
+                throw new ItemNotFoundException($"Can't find path '{string.Join(this.ItemSeparator, path)}'");
+            }
         }
 
         protected void InvokeProviderNodeOrDefault(string[] path, Action<ProviderNode> invoke, Action fallback)
@@ -184,16 +184,15 @@ namespace PowerShellFilesystemProviderBase.Providers
             {
                 invoke(node);
             }
-            else fallback();
+            else
+            {
+                fallback();
+            }
         }
 
-        protected T InvokeProviderNodeOrDefault<T>(string[] path, Func<ProviderNode, T> invoke, Func<T> fallback)
+        protected T? InvokeProviderNodeOrDefault<T>(string[] path, Func<ProviderNode, T> invoke, Func<T> fallback)
         {
-            if (this.TryGetNodeByPath(path, out var node))
-            {
-                return invoke(node);
-            }
-            else return fallback();
+            return this.TryGetNodeByPath(path, out var node) ? invoke(node) : fallback();
         }
 
         #endregion Invoke a node capability

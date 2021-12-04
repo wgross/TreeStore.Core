@@ -10,12 +10,12 @@ namespace PowerShellFilesystemProviderBase.Capabilities
         /// </summary>
         /// <param name="propertyToGet"></param>
         /// <returns>empty <see cref="RuntimeDefinedParameterDictionary"/> by default</returns>
-        object? GetItemPropertyParameters(IEnumerable<string> propertyToGet) => new RuntimeDefinedParameterDictionary();
+        object? GetItemPropertyParameters(IEnumerable<string>? propertyToGet) => new RuntimeDefinedParameterDictionary();
 
         /// <summary>
         /// Removes the value from an item property.
         /// </summary>
         /// <param name="propertyToGet"></param>
-        PSObject GetItemProperty(IEnumerable<string> propertyToGet);
+        PSObject GetItemProperty(IEnumerable<string>? propertyToGet);
     }
 }

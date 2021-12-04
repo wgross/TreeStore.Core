@@ -11,17 +11,17 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
 {
     public class ContainerNodeTest : IDisposable
     {
-        private readonly MockRepository mocks = new MockRepository(MockBehavior.Strict);
+        private readonly MockRepository mocks = new(MockBehavior.Strict);
 
         public void Dispose() => this.mocks.VerifyAll();
 
-        private ContainerNode ArrangeNode(string name, IServiceProvider sp) => new ContainerNode(name, sp);
+        private static ContainerNode ArrangeNode(string name, IServiceProvider sp) => new(name, sp);
 
         [Fact]
         public void ContainerNode_rejects_null_data()
         {
             // ACT & ASSERT
-            var node = Assert.Throws<ArgumentNullException>(() => this.ArrangeNode("name", null));
+            var node = Assert.Throws<ArgumentNullException>(() => ArrangeNode("name", null));
         }
 
         #region Name
@@ -30,14 +30,14 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         public void ContainerNode_rejects_null_name()
         {
             // ACT & ASSERT
-            var node = Assert.Throws<ArgumentNullException>(() => this.ArrangeNode(null, ServiceProvider()));
+            var node = Assert.Throws<ArgumentNullException>(() => ArrangeNode(null, ServiceProvider()));
         }
 
         [Fact]
         public void ContainerNode_provides_name()
         {
             // ARRANGE
-            var node = this.ArrangeNode("name", ServiceProvider());
+            var node = ArrangeNode("name", ServiceProvider());
 
             // ACT
             var result = node.Name;
@@ -57,7 +57,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
             var getChildItem = this.mocks.Create<IGetChildItems>();
             getChildItem
                 .Setup(gci => gci.GetChildItems())
-                .Returns(new[] { this.ArrangeNode("name", ServiceProvider()) });
+                .Returns(new[] { ArrangeNode("name", ServiceProvider()) });
 
             var node = ArrangeNode("", ServiceProvider(With<IGetChildItems>(getChildItem)));
 
@@ -76,7 +76,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
             var getChildItem = this.mocks.Create<IGetChildItems>();
             getChildItem
                 .Setup(gci => gci.GetChildItems())
-                .Returns(new[] { this.ArrangeNode("unkown", ServiceProvider()) });
+                .Returns(new[] { ArrangeNode("unkown", ServiceProvider()) });
 
             var node = ArrangeNode("", ServiceProvider(With<IGetChildItems>(getChildItem)));
 
@@ -98,7 +98,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
             setItem
                 .Setup(gi => gi.SetItem(1));
 
-            var node = this.ArrangeNode("name", ServiceProvider(With<ISetItem>(setItem)));
+            var node = ArrangeNode("name", ServiceProvider(With<ISetItem>(setItem)));
 
             // ACT
             node.SetItem(1);
@@ -108,13 +108,13 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         public void SetItem_defaults_to_exception()
         {
             // ARRANGE
-            var node = this.ArrangeNode("name", ServiceProvider());
+            var node = ArrangeNode("name", ServiceProvider());
 
             // ACT
             var result = Assert.Throws<PSNotSupportedException>(() => node.SetItem(1));
 
             // ASSERT
-            Assert.Equal($"Node(name='name') doesn't provide an implementation of capability 'ISetItem'.", result.Message);
+            Assert.Equal("Node(name='name') doesn't provide an implementation of capability 'ISetItem'.", result.Message);
         }
 
         [Fact]
@@ -127,7 +127,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
                 .Setup(gi => gi.SetItemParameters())
                 .Returns(parameters);
 
-            var node = this.ArrangeNode("name", ServiceProvider(With<ISetItem>(setItem)));
+            var node = ArrangeNode("name", ServiceProvider(With<ISetItem>(setItem)));
 
             // ACT
             var result = node.SetItemParameters();
@@ -140,7 +140,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         public void SetItemParameters_defaults_to_null()
         {
             // ARRANGE
-            var node = this.ArrangeNode("name", ServiceProvider());
+            var node = ArrangeNode("name", ServiceProvider());
 
             // ACT
             var result = node.SetItemParameters();
@@ -161,7 +161,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
             clearItem
                 .Setup(ci => ci.ClearItem());
 
-            var node = this.ArrangeNode("name", ServiceProvider(With<IClearItem>(clearItem)));
+            var node = ArrangeNode("name", ServiceProvider(With<IClearItem>(clearItem)));
 
             // ACT
             node.ClearItem();
@@ -171,13 +171,13 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         public void ClearItem_defaults_to_exception()
         {
             // ARRANGE
-            var node = this.ArrangeNode("name", ServiceProvider());
+            var node = ArrangeNode("name", ServiceProvider());
 
             // ACT
             var result = Assert.Throws<PSNotSupportedException>(() => node.ClearItem());
 
             // ASSERT
-            Assert.Equal($"Node(name='name') doesn't provide an implementation of capability 'IClearItem'.", result.Message);
+            Assert.Equal("Node(name='name') doesn't provide an implementation of capability 'IClearItem'.", result.Message);
         }
 
         [Fact]
@@ -190,7 +190,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
                 .Setup(gi => gi.ClearItemParameters())
                 .Returns(parameters);
 
-            var node = this.ArrangeNode("name", ServiceProvider(With<IClearItem>(clearItem)));
+            var node = ArrangeNode("name", ServiceProvider(With<IClearItem>(clearItem)));
 
             // ACT
             var result = node.ClearItemParameters();
@@ -203,7 +203,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         public void ClearItemParameter_defaults_to_null()
         {
             // ARRANGE
-            var node = this.ArrangeNode("name", ServiceProvider());
+            var node = ArrangeNode("name", ServiceProvider());
 
             // ACT
             var result = node.ClearItemParameters();
@@ -220,7 +220,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         public void ItemExists_defaults_to_true()
         {
             // ARRANGE
-            var node = this.ArrangeNode("name", ServiceProvider());
+            var node = ArrangeNode("name", ServiceProvider());
 
             // ACT
             var result = node.ItemExists();
@@ -238,7 +238,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
                 .Setup(ii => ii.ItemExists())
                 .Returns(false);
 
-            var node = this.ArrangeNode("name", ServiceProvider(With<IItemExists>(itemExists)));
+            var node = ArrangeNode("name", ServiceProvider(With<IItemExists>(itemExists)));
 
             // ACT
             var result = node.ItemExists();
@@ -257,7 +257,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
                 .Setup(gi => gi.ItemExistsParameters())
                 .Returns(parameters);
 
-            var node = this.ArrangeNode("name", ServiceProvider(With<IItemExists>(itemExists)));
+            var node = ArrangeNode("name", ServiceProvider(With<IItemExists>(itemExists)));
 
             // ACT
             var result = node.ItemExistsParameters();
@@ -270,7 +270,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         public void ItemExistsParameter_defaults_to_null()
         {
             // ARRANGE
-            var node = this.ArrangeNode("name", ServiceProvider());
+            var node = ArrangeNode("name", ServiceProvider());
 
             // ACT
             var result = node.ItemExistsParameters();
@@ -287,13 +287,13 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         public void InvokeItem_defaults_to_exception()
         {
             // ARRANGE
-            var node = this.ArrangeNode("name", ServiceProvider());
+            var node = ArrangeNode("name", ServiceProvider());
 
             // ACT
             var result = Assert.Throws<PSNotSupportedException>(() => node.InvokeItem());
 
             // ASSERT
-            Assert.Equal($"Node(name='name') doesn't provide an implementation of capability 'IInvokeItem'.", result.Message);
+            Assert.Equal("Node(name='name') doesn't provide an implementation of capability 'IInvokeItem'.", result.Message);
         }
 
         [Fact]
@@ -304,7 +304,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
             itemExists
                 .Setup(ii => ii.InvokeItem());
 
-            var node = this.ArrangeNode("name", ServiceProvider(With<IInvokeItem>(itemExists)));
+            var node = ArrangeNode("name", ServiceProvider(With<IInvokeItem>(itemExists)));
 
             // ACT
             node.InvokeItem();
@@ -320,7 +320,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
                 .Setup(gi => gi.InvokeItemParameters())
                 .Returns(parameters);
 
-            var node = this.ArrangeNode("name", ServiceProvider(With<IInvokeItem>(itemExists)));
+            var node = ArrangeNode("name", ServiceProvider(With<IInvokeItem>(itemExists)));
 
             // ACT
             var result = node.InvokeItemParameters();
@@ -333,7 +333,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         public void InvokeItemParameter_defaults_to_null()
         {
             // ARRANGE
-            var node = this.ArrangeNode("name", ServiceProvider());
+            var node = ArrangeNode("name", ServiceProvider());
 
             // ACT
             var result = node.InvokeItemParameters();
@@ -361,7 +361,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
                 .Setup(u => u.GetChildItems())
                 .Returns(childItems);
 
-            var node = this.ArrangeNode("name", ServiceProvider(With<IGetChildItems>(underlying)));
+            var node = ArrangeNode("name", ServiceProvider(With<IGetChildItems>(underlying)));
 
             // ACT
             var result = node.GetChildItems().ToArray();
@@ -374,7 +374,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         public void GetChildItems_defaults_to_empty()
         {
             // ARRANGE
-            var node = this.ArrangeNode("name", ServiceProvider());
+            var node = ArrangeNode("name", ServiceProvider());
 
             // ACT
             var result = node.GetChildItems().ToArray();
@@ -393,7 +393,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
                 .Setup(u => u.GetChildItemParameters("path", true))
                 .Returns(parameters);
 
-            var node = this.ArrangeNode("name", ServiceProvider(With<IGetChildItems>(underlying)));
+            var node = ArrangeNode("name", ServiceProvider(With<IGetChildItems>(underlying)));
 
             // ACT
             var result = node.GetChildItemParameters("path", recurse: true);
@@ -406,7 +406,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         public void GetChildItemsParameters_defaults_to_empty()
         {
             // ARRANGE
-            var node = this.ArrangeNode("name", ServiceProvider());
+            var node = ArrangeNode("name", ServiceProvider());
 
             // ACT
             var result = node.GetChildItemParameters("path", true);
@@ -424,7 +424,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
                 .Setup(u => u.HasChildItems())
                 .Returns(true);
 
-            var node = this.ArrangeNode("name", ServiceProvider(With<IGetChildItems>(underlying)));
+            var node = ArrangeNode("name", ServiceProvider(With<IGetChildItems>(underlying)));
 
             // ACT
             var result = node.HasChildItems();
@@ -437,7 +437,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         public void HasChildItems_defaults_to_false()
         {
             // ARRANGE
-            var node = this.ArrangeNode("name", ServiceProvider());
+            var node = ArrangeNode("name", ServiceProvider());
 
             // ACT
             var result = node.HasChildItems();
@@ -458,7 +458,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
             underlying
                 .Setup(u => u.RemoveChildItem("child1"));
 
-            var node = this.ArrangeNode("name", ServiceProvider(With<IRemoveChildItem>(underlying)));
+            var node = ArrangeNode("name", ServiceProvider(With<IRemoveChildItem>(underlying)));
 
             // ACT
             node.RemoveChildItem("child1");
@@ -468,13 +468,13 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         public void RemoveChildItem_defaults_to_exception()
         {
             // ARRANGE
-            var node = this.ArrangeNode("name", ServiceProvider());
+            var node = ArrangeNode("name", ServiceProvider());
 
             // ACT
             var result = Assert.Throws<PSNotSupportedException>(() => node.RemoveChildItem("child1"));
 
             // ASSERT
-            Assert.Equal($"Node(name='name') doesn't provide an implementation of capability 'IRemoveChildItem'.", result.Message);
+            Assert.Equal("Node(name='name') doesn't provide an implementation of capability 'IRemoveChildItem'.", result.Message);
         }
 
         [Fact]
@@ -487,7 +487,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
                 .Setup(u => u.RemoveChildItemParameters("child1", true))
                 .Returns(parameters);
 
-            var node = this.ArrangeNode("name", ServiceProvider(With<IRemoveChildItem>(underlying)));
+            var node = ArrangeNode("name", ServiceProvider(With<IRemoveChildItem>(underlying)));
 
             // ACT
             var result = node.RemoveChildItemParameters("child1", true);
@@ -500,7 +500,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         public void RemoveChildItemParameters_defaults_to_null()
         {
             // ARRANGE
-            var node = this.ArrangeNode("name", ServiceProvider());
+            var node = ArrangeNode("name", ServiceProvider());
 
             // ACT
             var result = node.RemoveChildItemParameters("child1", true);
@@ -523,7 +523,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
                 .Setup(u => u.NewChildItem("child1", "itemTypeName", value))
                 .Returns(new LeafNode("child1", ServiceProvider()));
 
-            var node = this.ArrangeNode("name", ServiceProvider(With<INewChildItem>(underlying)));
+            var node = ArrangeNode("name", ServiceProvider(With<INewChildItem>(underlying)));
 
             // ACT
             node.NewChildItem("child1", "itemTypeName", value);
@@ -533,13 +533,13 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         public void NewChildItem_defaults_to_exception()
         {
             // ARRANGE
-            var node = this.ArrangeNode("name", ServiceProvider());
+            var node = ArrangeNode("name", ServiceProvider());
 
             // ACT
             var result = Assert.Throws<PSNotSupportedException>(() => node.NewChildItem("child1", "itemTypeValue", null));
 
             // ASSERT
-            Assert.Equal($"Node(name='name') doesn't provide an implementation of capability 'INewChildItem'.", result.Message);
+            Assert.Equal("Node(name='name') doesn't provide an implementation of capability 'INewChildItem'.", result.Message);
         }
 
         [Fact]
@@ -552,7 +552,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
                 .Setup(u => u.NewChildItemParameters("child1", "newItemTypeValue", null))
                 .Returns(parameters);
 
-            var node = this.ArrangeNode("name", ServiceProvider(With<INewChildItem>(underlying)));
+            var node = ArrangeNode("name", ServiceProvider(With<INewChildItem>(underlying)));
 
             // ACT
             var result = node.NewChildItemParameters("child1", "newItemTypeValue", null);
@@ -565,7 +565,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         public void NewChildItemParameters_defaults_to_null()
         {
             // ARRANGE
-            var node = this.ArrangeNode("name", ServiceProvider());
+            var node = ArrangeNode("name", ServiceProvider());
 
             // ACT
             var result = node.NewChildItemParameters("child1", "itemTypeValue", null);
@@ -586,7 +586,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
             underlying
                 .Setup(u => u.RenameChildItem("name", "newName"));
 
-            var node = this.ArrangeNode("name", ServiceProvider(With<IRenameChildItem>(underlying)));
+            var node = ArrangeNode("name", ServiceProvider(With<IRenameChildItem>(underlying)));
 
             // ACT
             node.RenameChildItem("name", "newName");
@@ -596,13 +596,13 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         public void RenameChildItem_defaults_to_exception()
         {
             // ARRANGE
-            var node = this.ArrangeNode("name", ServiceProvider());
+            var node = ArrangeNode("name", ServiceProvider());
 
             // ACT
             var result = Assert.Throws<PSNotSupportedException>(() => node.RenameChildItem("name", "newName"));
 
             // ASSERT
-            Assert.Equal($"Node(name='name') doesn't provide an implementation of capability 'IRenameChildItem'.", result.Message);
+            Assert.Equal("Node(name='name') doesn't provide an implementation of capability 'IRenameChildItem'.", result.Message);
         }
 
         [Fact]
@@ -615,7 +615,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
                 .Setup(u => u.RenameChildItemParameters("name", "newName"))
                 .Returns(parameters);
 
-            var node = this.ArrangeNode("name", ServiceProvider(With<IRenameChildItem>(underlying)));
+            var node = ArrangeNode("name", ServiceProvider(With<IRenameChildItem>(underlying)));
 
             // ACT
             var result = node.RenameChildItemParameters("name", "newName");
@@ -629,7 +629,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         {
             // ARRANGE
 
-            var node = this.ArrangeNode("name", ServiceProvider());
+            var node = ArrangeNode("name", ServiceProvider());
 
             // ACT
             var result = node.RenameChildItemParameters("name", "newName");
@@ -651,7 +651,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
                 .Setup(u => u.CopyChildItemRecursive(It.IsAny<ProviderNode>(), new[] { "child", "grandchild" }))
                 .Returns(new ContainerNode("name", ServiceProvider()));
 
-            var node = this.ArrangeNode("name", ServiceProvider(With<ICopyChildItemRecursive>(underlying)));
+            var node = ArrangeNode("name", ServiceProvider(With<ICopyChildItemRecursive>(underlying)));
 
             // ACT
             node.CopyChildItem(new ContainerNode("name", ServiceProvider()), new[] { "child", "grandchild" }, true);
@@ -666,7 +666,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
                 .Setup(u => u.CopyChildItem(It.IsAny<ProviderNode>(), new[] { "child", "grandchild" }))
                 .Returns(new ContainerNode("name", ServiceProvider()));
 
-            var node = this.ArrangeNode("name", ServiceProvider(With<ICopyChildItem>(underlying)));
+            var node = ArrangeNode("name", ServiceProvider(With<ICopyChildItem>(underlying)));
 
             // ACT
             node.CopyChildItem(new ContainerNode("name", ServiceProvider()), new[] { "child", "grandchild" }, false);
@@ -676,13 +676,13 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         public void CopyChildItemRecursive_defaults_to_exception()
         {
             // ARRANGE
-            var node = this.ArrangeNode("name", ServiceProvider());
+            var node = ArrangeNode("name", ServiceProvider());
 
             // ACT
             var result = Assert.Throws<PSNotSupportedException>(() => node.CopyChildItem(new ContainerNode("name", ServiceProvider()), new[] { "child", "grandchild" }, false));
 
             // ASSERT
-            Assert.Equal($"Node(name='name') doesn't provide an implementation of capability 'ICopyChildItem'.", result.Message);
+            Assert.Equal("Node(name='name') doesn't provide an implementation of capability 'ICopyChildItem'.", result.Message);
         }
 
         [Fact]
@@ -695,7 +695,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
                 .Setup(u => u.CopyChildItemParameters("name", "destination", true))
                 .Returns(parameters);
 
-            var node = this.ArrangeNode("name", ServiceProvider(With<ICopyChildItem>(underlying)));
+            var node = ArrangeNode("name", ServiceProvider(With<ICopyChildItem>(underlying)));
 
             // ACT
             var result = node.CopyChildItemParameters(childName: "name", destination: "destination", recurse: true);
@@ -708,7 +708,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         public void CopyItemParameters_defaults_to_null()
         {
             // ARRANGE
-            var node = this.ArrangeNode("name", ServiceProvider());
+            var node = ArrangeNode("name", ServiceProvider());
 
             // ACT
             var result = node.CopyChildItemParameters(childName: "name", destination: "destination", recurse: true);
@@ -732,10 +732,10 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
             underlying
                 .Setup(u => u.MoveChildItem(parentOfNode, nodeToMove, new string[0]));
 
-            var node = this.ArrangeNode("name", ServiceProvider(With<IMoveChildItem>(underlying)));
+            var node = ArrangeNode("name", ServiceProvider(With<IMoveChildItem>(underlying)));
 
             // ACT
-            node.MoveChildItem(parentOfNode, nodeToMove, destination: new string[0]);
+            node.MoveChildItem(parentOfNode, nodeToMove, destination: Array.Empty<string>());
         }
 
         [Fact]
@@ -748,7 +748,7 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
                 .Setup(u => u.MoveChildItemParameters("name", "destination", true))
                 .Returns(parameters);
 
-            var node = this.ArrangeNode("name", ServiceProvider(With<IMoveChildItem>(underlying)));
+            var node = ArrangeNode("name", ServiceProvider(With<IMoveChildItem>(underlying)));
 
             // ACT
             var result = node.MoveChildItemParameter("name", "destination", true);
@@ -763,20 +763,20 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
             // ARRANGE
             var parentOfNode = new ContainerNode("Name", ServiceProvider());
             var nodeToMove = new LeafNode("name", ServiceProvider());
-            var node = this.ArrangeNode("name", ServiceProvider());
+            var node = ArrangeNode("name", ServiceProvider());
 
             // ACT
-            var result = Assert.Throws<PSNotSupportedException>(() => node.MoveChildItem(parentOfNode, nodeToMove, destination: new string[0]));
+            var result = Assert.Throws<PSNotSupportedException>(() => node.MoveChildItem(parentOfNode, nodeToMove, destination: Array.Empty<string>()));
 
             // ASSERT
-            Assert.Equal($"Node(name='name') doesn't provide an implementation of capability 'IMoveChildItem'.", result.Message);
+            Assert.Equal("Node(name='name') doesn't provide an implementation of capability 'IMoveChildItem'.", result.Message);
         }
 
         [Fact]
         public void MoveChildItemParameters_defaults_to_null()
         {
             // ARRANGE
-            var node = this.ArrangeNode("name", ServiceProvider());
+            var node = ArrangeNode("name", ServiceProvider());
 
             // ACT
             var result = node.MoveChildItemParameter("name", "destination", true);

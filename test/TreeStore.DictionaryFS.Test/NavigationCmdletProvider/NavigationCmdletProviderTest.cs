@@ -13,10 +13,10 @@ namespace TreeStore.DictionaryFS.Test.NavigationCmdletProvider
         public void PowerShell_moves_node_to_child()
         {
             // ARRANGE
-            var root = new Dictionary<string, object>
+            var root = new Dictionary<string, object?>
             {
-                ["child1"] = new Dictionary<string, object>(),
-                ["child2"] = new Dictionary<string, object>(),
+                ["child1"] = new Dictionary<string, object?>(),
+                ["child2"] = new Dictionary<string, object?>(),
                 ["property"] = "text"
             };
             var child1 = root["child1"];
@@ -33,17 +33,17 @@ namespace TreeStore.DictionaryFS.Test.NavigationCmdletProvider
             // ASSERT
             Assert.False(this.PowerShell.HadErrors);
             Assert.False(root.TryGetValue("child1", out var _));
-            Assert.Same(child1, ((Dictionary<string, object>)root["child2"])["child1"]);
+            Assert.Same(child1, ((Dictionary<string, object?>)root["child2"]!)["child1"]);
         }
 
         [Fact]
         public void PowerShell_moves_node_to_child_with_new_name()
         {
             // ARRANGE
-            var root = new Dictionary<string, object>
+            var root = new Dictionary<string, object?>
             {
-                ["child1"] = new Dictionary<string, object>(),
-                ["child2"] = new Dictionary<string, object>(),
+                ["child1"] = new Dictionary<string, object?>(),
+                ["child2"] = new Dictionary<string, object?>(),
                 ["property"] = "text"
             };
             var child1 = root["child1"];
@@ -60,17 +60,17 @@ namespace TreeStore.DictionaryFS.Test.NavigationCmdletProvider
             // ASSERT
             Assert.False(this.PowerShell.HadErrors);
             Assert.False(root.TryGetValue("child1", out var _));
-            Assert.Same(child1, ((Dictionary<string, object>)root["child2"])["newname"]);
+            Assert.Same(child1, ((Dictionary<string, object>)root["child2"]!)["newname"]);
         }
 
         [Fact]
         public void PowerShell_moves_node_to_grandchild_with_new_name()
         {
             // ARRANGE
-            var root = new Dictionary<string, object>
+            var root = new Dictionary<string, object?>
             {
-                ["child1"] = new Dictionary<string, object>(),
-                ["child2"] = new Dictionary<string, object>(),
+                ["child1"] = new Dictionary<string, object?>(),
+                ["child2"] = new Dictionary<string, object?>(),
                 ["property"] = "text"
             };
             var child1 = root["child1"];
@@ -87,7 +87,7 @@ namespace TreeStore.DictionaryFS.Test.NavigationCmdletProvider
             // ASSERT
             Assert.False(this.PowerShell.HadErrors);
             Assert.False(root.TryGetValue("child1", out var _));
-            Assert.Same(child1, ((Dictionary<string, object>)((Dictionary<string, object>)root["child2"])["child3"])["newname"]);
+            Assert.Same(child1, ((Dictionary<string, object>)((Dictionary<string, object>)root["child2"]!)["child3"])["newname"]);
         }
 
         #endregion Move-Item -Path -Destination

@@ -214,7 +214,7 @@ namespace TreeStore.DictionaryFS.Test.ItemCmdletProvider
         public void Powershell_invoke_default_action_fails()
         {
             // ARRANGE
-            var root = new Dictionary<string, object>
+            var root = new Dictionary<string, object?>
             {
                 ["item"] = new object()
             };
@@ -222,7 +222,7 @@ namespace TreeStore.DictionaryFS.Test.ItemCmdletProvider
             this.ArrangeFileSystem(root);
 
             // ACT
-            var result = this.PowerShell.AddCommand("Invoke-Item")
+            var _ = this.PowerShell.AddCommand("Invoke-Item")
                 .AddParameter("Path", @"test:\item")
                 .Invoke()
                 .ToArray();

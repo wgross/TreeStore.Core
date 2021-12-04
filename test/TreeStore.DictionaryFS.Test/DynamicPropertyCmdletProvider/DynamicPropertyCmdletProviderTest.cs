@@ -23,7 +23,7 @@ namespace TreeStore.DictionaryFS.Test.DynamicPropertyCmdletProvider
             this.ArrangeFileSystem(root);
 
             // ACT
-            var result = this.PowerShell.AddCommand("Copy-ItemProperty")
+            var _ = this.PowerShell.AddCommand("Copy-ItemProperty")
                 .AddParameter("Path", @"test:\")
                 .AddParameter("Destination", @"test:\child")
                 .AddParameter("Name", "data")
@@ -54,7 +54,7 @@ namespace TreeStore.DictionaryFS.Test.DynamicPropertyCmdletProvider
             this.ArrangeFileSystem(root);
 
             // ACT
-            var result = this.PowerShell.AddCommand("Remove-ItemProperty")
+            var _ = this.PowerShell.AddCommand("Remove-ItemProperty")
                 .AddParameter("Path", @"test:\")
                 .AddParameter("Name", "data")
                 .Invoke()
@@ -62,7 +62,7 @@ namespace TreeStore.DictionaryFS.Test.DynamicPropertyCmdletProvider
 
             // ASSERT
             Assert.False(this.PowerShell.HadErrors);
-            Assert.False(child.TryGetValue("data", out var value));
+            Assert.False(child.TryGetValue("data", out var _));
         }
 
         #endregion Remove-ItemProperty -Path -Name
@@ -83,7 +83,7 @@ namespace TreeStore.DictionaryFS.Test.DynamicPropertyCmdletProvider
             this.ArrangeFileSystem(root);
 
             // ACT
-            var result = this.PowerShell.AddCommand("Move-ItemProperty")
+            var _ = this.PowerShell.AddCommand("Move-ItemProperty")
                 .AddParameter("Path", @"test:\")
                 .AddParameter("Destination", @"test:\child")
                 .AddParameter("Name", "data")
@@ -115,7 +115,7 @@ namespace TreeStore.DictionaryFS.Test.DynamicPropertyCmdletProvider
             this.ArrangeFileSystem(root);
 
             // ACT
-            var result = this.PowerShell.AddCommand("New-ItemProperty")
+            var _ = this.PowerShell.AddCommand("New-ItemProperty")
                 .AddParameter("Path", @"test:\")
                 .AddParameter("Name", "newdata")
                 .AddParameter("Value", 1)
@@ -146,7 +146,7 @@ namespace TreeStore.DictionaryFS.Test.DynamicPropertyCmdletProvider
             this.ArrangeFileSystem(root);
 
             // ACT
-            var result = this.PowerShell.AddCommand("Rename-ItemProperty")
+            var _ = this.PowerShell.AddCommand("Rename-ItemProperty")
                 .AddParameter("Path", @"test:\")
                 .AddParameter("Name", "data")
                 .AddParameter("NewName", "newname")

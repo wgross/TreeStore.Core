@@ -20,7 +20,7 @@ namespace TreeStore.DictionaryFS.Test.ContainerCmdletProvider
             // ARRANGE
             var root = new UnderlyingDictionary
             {
-                ["child1"] = new UnderlyingDictionary { },
+                ["child1"] = new UnderlyingDictionary(),
                 ["property"] = "text"
             };
 
@@ -36,7 +36,7 @@ namespace TreeStore.DictionaryFS.Test.ContainerCmdletProvider
             Assert.False(this.PowerShell.HadErrors);
             Assert.Single(result);
 
-            var psobject = result.ElementAt(0);
+            var psobject = result[0];
 
             Assert.Equal("child1", psobject.Property<string>("PSChildName"));
             Assert.True(psobject.Property<bool>("PSIsContainer"));
@@ -72,9 +72,9 @@ namespace TreeStore.DictionaryFS.Test.ContainerCmdletProvider
 
             // ASSERT
             Assert.False(this.PowerShell.HadErrors);
-            Assert.Equal(2, result.Count());
+            Assert.Equal(2, result.Length);
 
-            var psobject = result.ElementAt(0);
+            var psobject = result[0];
 
             Assert.Equal("child1", psobject.Property<string>("PSChildName"));
             Assert.True(psobject.Property<bool>("PSIsContainer"));
@@ -83,7 +83,7 @@ namespace TreeStore.DictionaryFS.Test.ContainerCmdletProvider
             Assert.Equal(@"TreeStore.DictionaryFS\DictionaryFS::test:\child1", psobject.Property<string>("PSPath"));
             Assert.Equal(@"TreeStore.DictionaryFS\DictionaryFS::test:\", psobject.Property<string>("PSParentPath"));
 
-            psobject = result.ElementAt(1);
+            psobject = result[1];
 
             Assert.Equal("grandchild", psobject.Property<string>("PSChildName"));
             Assert.True(psobject.Property<bool>("PSIsContainer"));
@@ -122,9 +122,9 @@ namespace TreeStore.DictionaryFS.Test.ContainerCmdletProvider
 
             // ASSERT
             Assert.False(this.PowerShell.HadErrors);
-            Assert.Equal(2, result.Count());
+            Assert.Equal(2, result.Length);
 
-            var psobject = result.ElementAt(0);
+            var psobject = result[0];
 
             Assert.Equal("child1", psobject.Property<string>("PSChildName"));
             Assert.True(psobject.Property<bool>("PSIsContainer"));
@@ -133,7 +133,7 @@ namespace TreeStore.DictionaryFS.Test.ContainerCmdletProvider
             Assert.Equal(@"TreeStore.DictionaryFS\DictionaryFS::test:\child1", psobject.Property<string>("PSPath"));
             Assert.Equal(@"TreeStore.DictionaryFS\DictionaryFS::test:\", psobject.Property<string>("PSParentPath"));
 
-            psobject = result.ElementAt(1);
+            psobject = result[1];
 
             Assert.Equal("grandchild", psobject.Property<string>("PSChildName"));
             Assert.True(psobject.Property<bool>("PSIsContainer"));
@@ -159,7 +159,7 @@ namespace TreeStore.DictionaryFS.Test.ContainerCmdletProvider
             this.ArrangeFileSystem(root);
 
             // ACT
-            var result = this.PowerShell.AddCommand("Remove-Item")
+            var _ = this.PowerShell.AddCommand("Remove-Item")
                 .AddParameter("Path", @"test:\child1")
                 .Invoke()
                 .ToArray();
@@ -208,7 +208,7 @@ namespace TreeStore.DictionaryFS.Test.ContainerCmdletProvider
             this.ArrangeFileSystem(root);
 
             // ACT
-            var result = this.PowerShell.AddCommand("Remove-Item")
+            var _ = this.PowerShell.AddCommand("Remove-Item")
                 .AddParameter("Path", @"test:\child1")
                 .AddParameter("Recurse", true)
                 .Invoke()
@@ -312,7 +312,7 @@ namespace TreeStore.DictionaryFS.Test.ContainerCmdletProvider
             this.ArrangeFileSystem(root);
 
             // ACT
-            var result = this.PowerShell.AddCommand("Rename-Item")
+            var _ = this.PowerShell.AddCommand("Rename-Item")
                 .AddParameter("Path", @"test:\child1")
                 .AddParameter("NewName", "newName")
                 .Invoke()
@@ -346,7 +346,7 @@ namespace TreeStore.DictionaryFS.Test.ContainerCmdletProvider
             this.ArrangeFileSystem(root);
 
             // ACT
-            var result = this.PowerShell.AddCommand("Copy-Item")
+            var _ = this.PowerShell.AddCommand("Copy-Item")
                 .AddParameter("Path", @"test:\child1")
                 .AddParameter("Destination", @"test:\child2")
                 .Invoke()
@@ -378,7 +378,7 @@ namespace TreeStore.DictionaryFS.Test.ContainerCmdletProvider
             this.ArrangeFileSystem(root);
 
             // ACT
-            var result = this.PowerShell.AddCommand("Copy-Item")
+            var _ = this.PowerShell.AddCommand("Copy-Item")
                 .AddParameter("Path", @"test:\child1")
                 .AddParameter("Destination", @"test:\child2\newname")
                 .Invoke()
@@ -411,7 +411,7 @@ namespace TreeStore.DictionaryFS.Test.ContainerCmdletProvider
             this.ArrangeFileSystem(root);
 
             // ACT
-            var result = this.PowerShell.AddCommand("Copy-Item")
+            var _ = this.PowerShell.AddCommand("Copy-Item")
                 .AddParameter("Path", @"test:\child1")
                 .AddParameter("Destination", @"test:\child2")
                 .AddParameter("Recurse")
@@ -424,7 +424,7 @@ namespace TreeStore.DictionaryFS.Test.ContainerCmdletProvider
             Assert.True(child2!.TryGetValue<UnderlyingDictionary>("child1", out var copy_child1));
             Assert.NotNull(copy_child1!);
             Assert.NotSame(child1, copy_child1);
-            Assert.True(copy_child1!.TryGetValue<UnderlyingDictionary>("grandchild", out var copy_grandchild));
+            Assert.True(copy_child1!.TryGetValue<UnderlyingDictionary>("grandchild", out var _));
             Assert.True(copy_child1!.TryGetValue<int>("data", out var data));
             Assert.Equal(1, data);
         }
@@ -448,7 +448,7 @@ namespace TreeStore.DictionaryFS.Test.ContainerCmdletProvider
             this.ArrangeFileSystem(root);
 
             // ACT
-            var result = this.PowerShell.AddCommand("Copy-Item")
+            var _ = this.PowerShell.AddCommand("Copy-Item")
                 .AddParameter("Path", @"test:\child1")
                 .AddParameter("Destination", @"test:\child2\parent\newname")
                 .AddParameter("Recurse")
@@ -463,7 +463,7 @@ namespace TreeStore.DictionaryFS.Test.ContainerCmdletProvider
 
             Assert.NotNull(newname!);
             Assert.NotSame(child1, newname);
-            Assert.True(newname!.TryGetValue<UnderlyingDictionary>("grandchild", out var copy_grandchild));
+            Assert.True(newname!.TryGetValue<UnderlyingDictionary>("grandchild", out var _));
             Assert.True(newname!.TryGetValue<int>("data", out var data));
             Assert.Equal(1, data);
         }

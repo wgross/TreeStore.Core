@@ -6,6 +6,6 @@ namespace PowerShellFilesystemProviderBase.Capabilities
     {
         object? SetItemParameters() => new RuntimeDefinedParameterDictionary();
 
-        void SetItem(object value);
+        void SetItem(object? value);
     }
 }

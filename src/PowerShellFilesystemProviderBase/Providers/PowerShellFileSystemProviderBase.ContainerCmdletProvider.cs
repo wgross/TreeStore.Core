@@ -132,7 +132,7 @@ namespace PowerShellFilesystemProviderBase.Providers
         {
             var (parentPath, childName) = new PathTool().SplitParentPath(path);
 
-            if (this.TryGetNodeByPath<INewChildItem>(this.DriveInfo.RootNode, parentPath, out var providerNode, out var newChildItem))
+            if (TryGetNodeByPath<INewChildItem>(this.DriveInfo.RootNode, parentPath, out var providerNode, out var newChildItem))
             {
                 var resultNode = newChildItem.NewChildItem(childName, itemTypeName, newItemValue);
                 if (resultNode is not null)
@@ -155,7 +155,7 @@ namespace PowerShellFilesystemProviderBase.Providers
         {
             var (parentPath, childName) = new PathTool().SplitParentPath(path);
 
-            if (this.TryGetNodeByPath<IRenameChildItem>(this.DriveInfo.RootNode, parentPath, out var providerNode, out var renameChildItem))
+            if (TryGetNodeByPath<IRenameChildItem>(this.DriveInfo.RootNode, parentPath, out var providerNode, out var renameChildItem))
             {
                 renameChildItem.RenameChildItem(childName, newName);
             }

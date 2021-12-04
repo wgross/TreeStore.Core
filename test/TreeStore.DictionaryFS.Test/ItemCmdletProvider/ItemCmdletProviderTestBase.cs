@@ -6,11 +6,8 @@ namespace TreeStore.DictionaryFS.Test.ItemCmdletProvider
 {
     public abstract class ItemCmdletProviderTestBase : PowershellTestBase
     {
-        private object rootData;
-
         public void ArrangeFileSystem(IDictionary<string, object?> data)
         {
-            this.rootData = data;
             DictionaryFilesystemProvider.RootNodeProvider = _ => new DictionaryContainerAdapter(data);
 
             this.ArrangeFileSystem();

@@ -8,6 +8,7 @@ using Xunit;
 
 namespace TreeStore.DictionaryFS.Test.DriveCmdletProvider
 {
+    [Collection(nameof(PowerShell))]
     public class DriveCmdletProviderTest : PowershellTestBase
     {
         public DriveCmdletProviderTest()

@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.30804.86
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31912.275
 MinimumVisualStudioVersion = 15.0.26124.0
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{33B5892E-A9AB-4F48-9531-74C2E1741D4D}"
 EndProject
@@ -24,8 +24,6 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.PowerShell.Security", "submodules\PowerShell\src\Microsoft.PowerShell.Security\Microsoft.PowerShell.Security.csproj", "{2C0CF394-63F1-4032-8791-08A7E43B222D}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "System.Management.Automation", "submodules\PowerShell\src\System.Management.Automation\System.Management.Automation.csproj", "{A482F40B-B74D-4FE0-9808-39BFECEEC692}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.PowerShell.MarkdownRender", "submodules\PowerShell\src\Microsoft.PowerShell.MarkdownRender\Microsoft.PowerShell.MarkdownRender.csproj", "{FD75640F-49C5-47AA-88CF-C08613FB9063}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.PowerShell.CoreCLR.Eventing", "submodules\PowerShell\src\Microsoft.PowerShell.CoreCLR.Eventing\Microsoft.PowerShell.CoreCLR.Eventing.csproj", "{A98E503A-0FA5-45AE-A1E3-141615AD27F9}"
 EndProject
@@ -145,18 +143,6 @@ Global
 		{A482F40B-B74D-4FE0-9808-39BFECEEC692}.Release|x64.Build.0 = Release|Any CPU
 		{A482F40B-B74D-4FE0-9808-39BFECEEC692}.Release|x86.ActiveCfg = Release|Any CPU
 		{A482F40B-B74D-4FE0-9808-39BFECEEC692}.Release|x86.Build.0 = Release|Any CPU
-		{FD75640F-49C5-47AA-88CF-C08613FB9063}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{FD75640F-49C5-47AA-88CF-C08613FB9063}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{FD75640F-49C5-47AA-88CF-C08613FB9063}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{FD75640F-49C5-47AA-88CF-C08613FB9063}.Debug|x64.Build.0 = Debug|Any CPU
-		{FD75640F-49C5-47AA-88CF-C08613FB9063}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{FD75640F-49C5-47AA-88CF-C08613FB9063}.Debug|x86.Build.0 = Debug|Any CPU
-		{FD75640F-49C5-47AA-88CF-C08613FB9063}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{FD75640F-49C5-47AA-88CF-C08613FB9063}.Release|Any CPU.Build.0 = Release|Any CPU
-		{FD75640F-49C5-47AA-88CF-C08613FB9063}.Release|x64.ActiveCfg = Release|Any CPU
-		{FD75640F-49C5-47AA-88CF-C08613FB9063}.Release|x64.Build.0 = Release|Any CPU
-		{FD75640F-49C5-47AA-88CF-C08613FB9063}.Release|x86.ActiveCfg = Release|Any CPU
-		{FD75640F-49C5-47AA-88CF-C08613FB9063}.Release|x86.Build.0 = Release|Any CPU
 		{A98E503A-0FA5-45AE-A1E3-141615AD27F9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{A98E503A-0FA5-45AE-A1E3-141615AD27F9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A98E503A-0FA5-45AE-A1E3-141615AD27F9}.Debug|x64.ActiveCfg = Debug|Any CPU
@@ -242,7 +228,6 @@ Global
 		{A43A0C60-3665-4376-92B9-5FFF4A80911A} = {2641BADD-98C1-4CFD-A0F4-56D0C2AD74D0}
 		{2C0CF394-63F1-4032-8791-08A7E43B222D} = {2641BADD-98C1-4CFD-A0F4-56D0C2AD74D0}
 		{A482F40B-B74D-4FE0-9808-39BFECEEC692} = {2641BADD-98C1-4CFD-A0F4-56D0C2AD74D0}
-		{FD75640F-49C5-47AA-88CF-C08613FB9063} = {2641BADD-98C1-4CFD-A0F4-56D0C2AD74D0}
 		{A98E503A-0FA5-45AE-A1E3-141615AD27F9} = {2641BADD-98C1-4CFD-A0F4-56D0C2AD74D0}
 		{8EE5A0DE-D68A-45F6-A191-10E950212229} = {2641BADD-98C1-4CFD-A0F4-56D0C2AD74D0}
 		{A860EF8B-0E39-4519-BCE4-CC7B23A87AC0} = {2641BADD-98C1-4CFD-A0F4-56D0C2AD74D0}

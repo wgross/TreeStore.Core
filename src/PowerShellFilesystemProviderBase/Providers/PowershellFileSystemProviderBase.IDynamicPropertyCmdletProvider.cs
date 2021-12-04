@@ -32,7 +32,7 @@ namespace PowerShellFilesystemProviderBase.Providers
                 invoke: n => n.MoveItemPropertyParameters(sourcePath, sourceProperty, destinationPath, destinationProperty),
                 fallback: () => null);
 
-        public void NewProperty(string path, string propertyName, string propertyTypeName, object value)
+        public void NewProperty(string path, string propertyName, string propertyTypeName, object? value)
         {
             if (this.TryGetNodeByPath(path, out var providerNode))
             {
@@ -40,7 +40,7 @@ namespace PowerShellFilesystemProviderBase.Providers
             }
         }
 
-        public object? NewPropertyDynamicParameters(string path, string propertyName, string propertyTypeName, object value)
+        public object? NewPropertyDynamicParameters(string path, string propertyName, string propertyTypeName, object? value)
             => this.InvokeProviderNodeOrDefault(
                 path: new PathTool().SplitProviderPath(path).path.items,
                 invoke: n => n.NewItemPropertyParameter(propertyName, propertyTypeName, value),
@@ -54,7 +54,12 @@ namespace PowerShellFilesystemProviderBase.Providers
             }
         }
 
+#pragma warning disable CS8766
+
+        // Nullability of reference types in return type doesn't match implicitly implemented member (possibly because of nullability attributes).
+        // Powershell doesn provide a nullability hint in its interface
         public object? RemovePropertyDynamicParameters(string path, string propertyName)
+#pragma warning restore CS8766 // Nullability of reference types in return type doesn't match implicitly implemented member (possibly because of nullability attributes).
             => this.InvokeProviderNodeOrDefault(
                 path: new PathTool().SplitProviderPath(path).path.items,
                 invoke: n => n.RemoveItemPropertyParameters(propertyName),

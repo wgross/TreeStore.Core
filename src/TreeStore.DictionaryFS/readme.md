@@ -2,7 +2,7 @@
 
 A sample file system base of TreeStore.Provider.Core.
 
-## DictionaryContainerAdapter as implementation of IServiceProvider
+## DictionaryContainerAdapter implements IServiceProvider
 
 The center piece of the sample file system is the adapter class ['DictionaryContainerAdapter'](Nodes/DictionaryContainerAdapter.cs).
 
@@ -10,8 +10,8 @@ The adapter class teats all key-value-pairs which have a value that can be cast 
 All other key-value-pairs are properties of the file system item.
 The filesystem uses only container nodes, Leaf nodes aren't created.
 
-The implementation of the IServiceProvider-interface is simple. If the requested type is assignable to from this,
-the references of the adapter is returned as implementation of the requested service:
+The implementation of the IServiceProvider interface is simple.
+If the requested type is assignable from ```this```, the references of the adapter is returned as implementation of the requested service:
 
 ```Csharp
 public object? GetService(Type serviceType)
@@ -22,7 +22,8 @@ public object? GetService(Type serviceType)
 }
 ```
 
-All TreeStore capabilities are implemented as explicit interface implementations. As Example the implementation of ```IGetItem```:
+All [TreeStore capabilities](../PowerShellFilesystemProviderBase/Capabilities/readme.md) are implemented as explicit interface implementations.
+As Example the implementation of ```IGetItem```:
 
 ```Csharp
 PSObject? IGetItem.GetItem()
@@ -44,11 +45,11 @@ Alternatively you may just return ```null```.
 
 To provide a dynamic parameters for an operation you have to override these methods and return a populated [RuntimeDefinedParameterDictionary](https://docs.microsoft.com/en-us/dotnet/api/system.management.automation.runtimedefinedparameterdictionary) or a class with annotated properties.
 
-## Creation of a new Drive and the Drives State
+## Custom File System Provider and Drive Info
 
-Two additional mandatory parts of a file system are [DictionaryFileSystemProvider](./DictionaryFilesystemProvider.cs) and [DictionaryFileSystemInfo](./DictionaryFileSystemDriveInfo.cs)
+Two additional required parts of a PowerShell file system are provided with [DictionaryFileSystemProvider](./DictionaryFilesystemProvider.cs) and [DictionaryFileSystemInfo](./DictionaryFileSystemDriveInfo.cs)
 
-![CReate new drive](./create-drive.svg)
+![Create new drive](./create-drive.svg)
 
 The file system provider inherits from the TreeStore provider core and overrides the method which is called when a new file system is mounted.
 The received generic ```PSDriveInfo``` contains the parameters of the powershell ```New-PSDrive``` command and is used to initialize the custom ```DictionaryFileSystemInfo```.

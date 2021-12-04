@@ -21,7 +21,7 @@ namespace PowerShellFilesystemProviderBase.Providers
                 invoke: n => n.ClearItemPropertyParameters(propertyToClear),
                 fallback: () => null);
 
-        public void GetProperty(string path, Collection<string> providerSpecificPickList)
+        public void GetProperty(string path, Collection<string>? providerSpecificPickList)
         {
             if (this.TryGetNodeByPath(path, out var providerNode))
             {
@@ -34,7 +34,7 @@ namespace PowerShellFilesystemProviderBase.Providers
             }
         }
 
-        public object? GetPropertyDynamicParameters(string path, Collection<string> providerSpecificPickList)
+        public object? GetPropertyDynamicParameters(string path, Collection<string>? providerSpecificPickList)
              => this.InvokeProviderNodeOrDefault(
                 path: new PathTool().SplitProviderPath(path).path.items,
                 invoke: n => n.GetItemPropertyParameters(providerSpecificPickList),

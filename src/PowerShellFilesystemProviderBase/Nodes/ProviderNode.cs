@@ -10,28 +10,26 @@ namespace PowerShellFilesystemProviderBase.Nodes
 {
     public abstract record ProviderNode
     {
-        private readonly string name;
-        private readonly IServiceProvider underlying;
 
         protected ProviderNode(string? name, IServiceProvider underlying)
         {
             if (name is null) throw new ArgumentNullException(nameof(name));
             if (underlying is null) throw new ArgumentNullException(nameof(underlying));
 
-            this.name = name;
-            this.underlying = underlying;
+            this.Name = name;
+            this.Underlying = underlying;
         }
 
-        public IServiceProvider Underlying => this.underlying;
+        public IServiceProvider Underlying { get; }
 
-        public string Name => this.name;
+        public string Name { get; }
 
         #region Delegate to Underlying or ..
 
         protected bool TryGetUnderlyingService<T>([NotNullWhen(true)] out T? service)
         {
             service = this.Underlying.GetService<T>();
-            return (service is not null);
+            return service is not null;
         }
 
         protected void GetUnderlyingServiceOrThrow<T>(out T service)
@@ -175,7 +173,7 @@ namespace PowerShellFilesystemProviderBase.Nodes
 
         #region IGetItemProperty
 
-        public PSObject? GetItemProperty(IEnumerable<string> providerSpecificPickList)
+        public PSObject? GetItemProperty(IEnumerable<string>? providerSpecificPickList)
         {
             if (this.TryInvokeUnderlyingOrDefault<IGetItemProperty>(getItemProperty => getItemProperty.GetItemProperty(providerSpecificPickList), out var result))
             {
@@ -184,7 +182,7 @@ namespace PowerShellFilesystemProviderBase.Nodes
             else
             {
                 var psObject = this.GetItem();
-                if (providerSpecificPickList is null || !providerSpecificPickList.Any())
+                if (providerSpecificPickList?.Any() != true)
                     return psObject;
 
                 if (psObject is not null)
@@ -202,7 +200,7 @@ namespace PowerShellFilesystemProviderBase.Nodes
             }
         }
 
-        public object? GetItemPropertyParameters(IEnumerable<string> providerSpecificPickList)
+        public object? GetItemPropertyParameters(IEnumerable<string>? providerSpecificPickList)
             => this.InvokeUnderlyingOrDefault<IGetItemProperty>(getItemItemProperty => getItemItemProperty.GetItemPropertyParameters(providerSpecificPickList));
 
         #endregion IGetItemProperty

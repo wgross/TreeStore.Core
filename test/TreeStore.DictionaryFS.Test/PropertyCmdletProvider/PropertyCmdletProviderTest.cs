@@ -13,14 +13,12 @@ namespace TreeStore.DictionaryFS.Test.PropertyCmdletProvider
         public void Powershell_creates_item_property()
         {
             // ARRANGE
-            var root = new UnderlyingDictionary
-            {
-            };
+            var root = new UnderlyingDictionary();
 
             this.ArrangeFileSystem(root);
 
             // ACT
-            var result = this.PowerShell.AddCommand("New-ItemProperty")
+            var _ = this.PowerShell.AddCommand("New-ItemProperty")
                 .AddParameter("Path", @"test:\")
                 .AddParameter("Name", "data")
                 .AddParameter("Value", "text")
@@ -82,7 +80,7 @@ namespace TreeStore.DictionaryFS.Test.PropertyCmdletProvider
             Assert.Equal("test", result.Single().Property<PSDriveInfo>("PSDrive").Name);
             Assert.Equal("DictionaryFS", result.Single().Property<ProviderInfo>("PSProvider").Name);
             Assert.Equal(@"TreeStore.DictionaryFS\DictionaryFS::test:\", result.Single().Property<string>("PSPath"));
-            Assert.Equal(@"", result.Single().Property<string>("PSParentPath"));
+            Assert.Equal("", result.Single().Property<string>("PSParentPath"));
         }
 
         [Fact]
@@ -97,7 +95,7 @@ namespace TreeStore.DictionaryFS.Test.PropertyCmdletProvider
             this.ArrangeFileSystem(root);
 
             // ACT
-            var result = this.PowerShell.AddCommand("Set-ItemProperty")
+            var _ = this.PowerShell.AddCommand("Set-ItemProperty")
                 .AddParameter("Path", @"test:\")
                 .AddParameter("Name", "data")
                 .AddParameter("Value", "text")
@@ -122,7 +120,7 @@ namespace TreeStore.DictionaryFS.Test.PropertyCmdletProvider
             this.ArrangeFileSystem(root);
 
             // ACT
-            var result = this.PowerShell.AddCommand("Remove-ItemProperty")
+            var _ = this.PowerShell.AddCommand("Remove-ItemProperty")
                 .AddParameter("Path", @"test:\")
                 .AddParameter("Name", "data")
                 .Invoke()
@@ -145,7 +143,7 @@ namespace TreeStore.DictionaryFS.Test.PropertyCmdletProvider
             this.ArrangeFileSystem(root);
 
             // ACT
-            var result = this.PowerShell.AddCommand("Rename-ItemProperty")
+            var _ = this.PowerShell.AddCommand("Rename-ItemProperty")
                 .AddParameter("Path", @"test:\")
                 .AddParameter("Name", "data")
                 .AddParameter("NewName", "data-changed")
@@ -162,9 +160,7 @@ namespace TreeStore.DictionaryFS.Test.PropertyCmdletProvider
         public void Powershell_copies_item_property()
         {
             // ARRANGE
-            var child = new UnderlyingDictionary
-            {
-            };
+            var child = new UnderlyingDictionary();
 
             var root = new UnderlyingDictionary
             {
@@ -175,7 +171,7 @@ namespace TreeStore.DictionaryFS.Test.PropertyCmdletProvider
             this.ArrangeFileSystem(root);
 
             // ACT
-            var result = this.PowerShell.AddCommand("Copy-ItemProperty")
+            var _ = this.PowerShell.AddCommand("Copy-ItemProperty")
                 .AddParameter("Path", @"test:\")
                 .AddParameter("Name", "data")
                 .AddParameter("Destination", @"test:\child")
@@ -194,9 +190,7 @@ namespace TreeStore.DictionaryFS.Test.PropertyCmdletProvider
         public void Powershell_moves_item_property()
         {
             // ARRANGE
-            var child = new UnderlyingDictionary
-            {
-            };
+            var child = new UnderlyingDictionary();
 
             var root = new UnderlyingDictionary
             {
@@ -207,7 +201,7 @@ namespace TreeStore.DictionaryFS.Test.PropertyCmdletProvider
             this.ArrangeFileSystem(root);
 
             // ACT
-            var result = this.PowerShell.AddCommand("Move-ItemProperty")
+            var _ = this.PowerShell.AddCommand("Move-ItemProperty")
                 .AddParameter("Path", @"test:\")
                 .AddParameter("Name", "data")
                 .AddParameter("Destination", @"test:\child")
