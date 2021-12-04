@@ -104,10 +104,19 @@ namespace PowerShellFilesystemProviderBase.Providers
             return base.GetChildNamesDynamicParameters(path);
         }
 
-        protected override bool HasChildItems(string path) => this.InvokeContainerNodeOrDefault(
-            path: new PathTool().SplitProviderPath(path).path.items,
-            invoke: c => c.HasChildItems(),
-            fallback: () => this.HasChildItems(path));
+        protected override bool HasChildItems(string path)
+        {
+            return this.InvokeProviderNodeOrDefault<bool>(
+                path: new PathTool().SplitProviderPath(path).path.items,
+                invoke: n => n switch
+                {
+                    ContainerNode c => c.HasChildItems(),
+
+                    // LeafNodes never have children
+                    _ => false
+                },
+                fallback: () => base.HasChildItems(path));
+        }
 
         protected override void RemoveItem(string path, bool recurse)
         {
