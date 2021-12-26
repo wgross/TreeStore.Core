@@ -36,8 +36,13 @@ namespace PowerShellFilesystemProviderBase.Providers
         protected override bool IsItemContainer(string path)
         {
             if (this.TryGetNodeByPath(path, out var node))
+            {
                 if (node is ContainerNode)
+                {
                     return true;
+                }
+            }
+
             return false;
         }
 
@@ -60,12 +65,14 @@ namespace PowerShellFilesystemProviderBase.Providers
                         // destination ancestor is a container and might accept the move operation
                         destinationAncestorContainer.MoveChildItem(sourceParentNode, nodeToMove, destination: missingPath);
                     }
-                    else base.MoveItem(path, destination);
+                    else
+                    {
+                        base.MoveItem(path, destination);
+                    }
                 },
                 fallback: () => base.MoveItem(path, destination));
         }
 
-        
         protected override object MoveItemDynamicParameters(string path, string destination)
             => this.InvokeContainerNodeOrDefault(
                 path: new PathTool().SplitProviderPath(path).path.items,

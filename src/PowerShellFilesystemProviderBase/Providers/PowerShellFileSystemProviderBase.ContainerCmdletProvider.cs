@@ -29,6 +29,7 @@ namespace PowerShellFilesystemProviderBase.Providers
                 path: parentPath,
                 invoke: sourceParentNode =>
                 {
+                    // first check that node to copy exists
                     if (!sourceParentNode.TryGetChildNode(childName, out var nodeToCopy))
                         throw new InvalidOperationException($"Item '{path}' doesn't exist");
 
@@ -40,7 +41,10 @@ namespace PowerShellFilesystemProviderBase.Providers
                         // destination ancestor is a container and might accept the copy
                         destinationAncestorContainer.CopyChildItem(nodeToCopy, destination: missingPath, recurse);
                     }
-                    else base.CopyItem(path, destination, recurse);
+                    else
+                    {
+                        base.CopyItem(path, destination, recurse);
+                    }
                 },
                 fallback: () => base.CopyItem(path, destination, recurse));
         }
@@ -140,8 +144,7 @@ namespace PowerShellFilesystemProviderBase.Providers
         protected override void NewItem(string path, string itemTypeName, object newItemValue)
         {
             var (parentPath, childName) = new PathTool().SplitParentPath(path);
-
-            if (TryGetNodeByPath<INewChildItem>(this.DriveInfo.RootNode, parentPath, out var providerNode, out var newChildItem))
+            if (TryGetNodeByPath<INewChildItem>(this.DriveInfo.RootNode, parentPath, out _, out var newChildItem))
             {
                 var resultNode = newChildItem.NewChildItem(childName, itemTypeName, newItemValue);
                 if (resultNode is not null)
@@ -163,8 +166,7 @@ namespace PowerShellFilesystemProviderBase.Providers
         protected override void RenameItem(string path, string newName)
         {
             var (parentPath, childName) = new PathTool().SplitParentPath(path);
-
-            if (TryGetNodeByPath<IRenameChildItem>(this.DriveInfo.RootNode, parentPath, out var providerNode, out var renameChildItem))
+            if (TryGetNodeByPath<IRenameChildItem>(this.DriveInfo.RootNode, parentPath, out _, out var renameChildItem))
             {
                 renameChildItem.RenameChildItem(childName, newName);
             }

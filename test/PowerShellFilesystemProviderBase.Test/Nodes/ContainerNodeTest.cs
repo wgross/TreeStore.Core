@@ -735,15 +735,16 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
             // ARRANGE
             var parentOfNode = new ContainerNode("Name", ServiceProvider());
             var nodeToMove = new LeafNode("name", ServiceProvider());
-
+            var destination = Array.Empty<string>();
             var underlying = this.mocks.Create<IMoveChildItem>();
             underlying
-                .Setup(u => u.MoveChildItem(parentOfNode, nodeToMove, new string[0]));
+                .Setup(u => u.MoveChildItem(parentOfNode, nodeToMove, destination))
+                .Returns((LeafNode)null);
 
             var node = ArrangeNode("name", ServiceProvider(With<IMoveChildItem>(underlying)));
 
             // ACT
-            node.MoveChildItem(parentOfNode, nodeToMove, destination: Array.Empty<string>());
+            node.MoveChildItem(parentOfNode, nodeToMove, destination);
         }
 
         [Fact]

@@ -10,7 +10,6 @@ namespace PowerShellFilesystemProviderBase.Nodes
 {
     public abstract record ProviderNode
     {
-
         protected ProviderNode(string? name, IServiceProvider underlying)
         {
             if (name is null) throw new ArgumentNullException(nameof(name));

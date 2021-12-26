@@ -43,9 +43,15 @@ namespace TreeStore.DictionaryFS.Nodes
         public (bool exists, ProviderNode? node) TryGetChildNode(string childName)
         {
             if (this.Underlying.TryGetValue(childName, out var childData))
+            {
                 if (childData is not null)
+                {
                     if (childData is IDictionary<string, object> childDict)
+                    {
                         return (true, new ContainerNode(childName, new DictionaryContainerAdapter(childDict!)));
+                    }
+                }
+            }
 
             return (false, default);
         }
@@ -117,7 +123,10 @@ namespace TreeStore.DictionaryFS.Nodes
                     this.Underlying.Add(kv.Key, kv.Value);
                 }
             }
-            else throw new InvalidOperationException($"Data of type '{value.GetType()}' can't be assigned");
+            else
+            {
+                throw new InvalidOperationException($"Data of type '{value.GetType()}' can't be assigned");
+            }
         }
 
         #endregion ISetItem
@@ -171,7 +180,7 @@ namespace TreeStore.DictionaryFS.Nodes
 
         #region IMoveChildItem
 
-        void IMoveChildItem.MoveChildItem(ContainerNode parentOfNodeToMove, ProviderNode nodeToMove, string[] destination)
+        ProviderNode? IMoveChildItem.MoveChildItem(ContainerNode parentOfNodeToMove, ProviderNode nodeToMove, string[] destination)
         {
             if (nodeToMove.Underlying is DictionaryContainerAdapter underlyingDict)
             {
@@ -181,13 +190,13 @@ namespace TreeStore.DictionaryFS.Nodes
                         // put node directly under this node
                         if (this.Underlying.TryAdd(nodeToMove.Name, underlyingDict.Underlying))
                             parentOfNodeToMove.RemoveChildItem(nodeToMove.Name, recurse: true);
-                        return;
+                        return nodeToMove;
 
                     case 1:
                         // put node directly under this node with new name
                         if (this.Underlying.TryAdd(destination[0], underlyingDict.Underlying))
                             parentOfNodeToMove.RemoveChildItem(nodeToMove.Name, recurse: true);
-                        return;
+                        return nodeToMove;
 
                     default:
                         // put node directly under the new node in between
@@ -198,10 +207,13 @@ namespace TreeStore.DictionaryFS.Nodes
                             var container = new ContainerNode(destination[0], new DictionaryContainerAdapter(newDict));
                             container.MoveChildItem(parentOfNodeToMove, nodeToMove, destination[1..]);
                         }
-                        return;
+                        return nodeToMove;
                 }
             }
-            else throw new NotImplementedException();
+            else
+            {
+                throw new NotImplementedException();
+            }
         }
 
         #endregion IMoveChildItem
@@ -250,8 +262,13 @@ namespace TreeStore.DictionaryFS.Nodes
             foreach (var n in name)
             {
                 if (this.Underlying.TryGetValue(n, out var value))
+                {
                     if (value is IDictionary<string, object>)
+                    {
                         continue;
+                    }
+                }
+
                 this.Underlying[n] = null;
             }
         }
@@ -265,8 +282,12 @@ namespace TreeStore.DictionaryFS.Nodes
             foreach (var property in psObject.Properties)
             {
                 if (this.Underlying.TryGetValue(property.Name, out var value))
+                {
                     if (value is IDictionary<string, object>)
+                    {
                         continue;
+                    }
+                }
 
                 this.Underlying[property.Name] = property.Value;
             }

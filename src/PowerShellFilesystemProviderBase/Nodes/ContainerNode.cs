@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Reflection;
 
 namespace PowerShellFilesystemProviderBase.Nodes
 {
@@ -13,82 +12,10 @@ namespace PowerShellFilesystemProviderBase.Nodes
             : base(name, underlying)
         { }
 
-        #region Reflection Queries
-
-        private IEnumerable<PropertyInfo> GetDictionaryProperties()
-        {
-            return this.Underlying
-                .GetType()
-                .GetProperties()
-                .Where(pi => IsDictionaryWithStringKey(pi.PropertyType));
-        }
-
-        private static bool IsDictionaryWithStringKey(Type type)
-        {
-            if (!ImplementsGenericDefinition(type, typeof(IDictionary<,>), out var implementingType))
-                return false;
-
-            if (implementingType.GetGenericArguments().First().Equals(typeof(string)))
-                return true;
-
-            return false;
-        }
-
-        /// <summary>
-        /// Verifoies iof the <paramref name="type"/> implements the <paramref name="genericInterfaceDefinition"/> and
-        /// extracts the type combination in <paramref name="implementingType"/>.
-        /// Taken from  from https://github.com/JamesNK/Newtonsoft.Json/blob/master/Src/Newtonsoft.Json/Utilities/ReflectionUtils.cs
-        /// </summary>
-        /// <param name="type"></param>
-        /// <param name="genericInterfaceDefinition"></param>
-        /// <param name="implementingType"></param>
-        /// <returns></returns>
-        private static bool ImplementsGenericDefinition(Type type, Type genericInterfaceDefinition, [NotNullWhen(true)] out Type? implementingType)
-        {
-            if (!genericInterfaceDefinition.IsInterface || !genericInterfaceDefinition.IsGenericTypeDefinition)
-            {
-                implementingType = default;
-                return false;
-            }
-
-            if (type.IsInterface)
-            {
-                if (type.IsGenericType)
-                {
-                    Type interfaceDefinition = type.GetGenericTypeDefinition();
-
-                    if (genericInterfaceDefinition == interfaceDefinition)
-                    {
-                        implementingType = type;
-                        return true;
-                    }
-                }
-            }
-
-            foreach (Type i in type.GetInterfaces())
-            {
-                if (i.IsGenericType)
-                {
-                    Type interfaceDefinition = i.GetGenericTypeDefinition();
-
-                    if (genericInterfaceDefinition == interfaceDefinition)
-                    {
-                        implementingType = i;
-                        return true;
-                    }
-                }
-            }
-
-            implementingType = default;
-            return false;
-        }
-
-        #endregion Reflection Queries
-
         public bool TryGetChildNode(string childName, [NotNullWhen(true)] out ProviderNode? childNode)
         {
             childNode = this.GetChildItems().FirstOrDefault(n => n.Name.Equals(childName, StringComparison.OrdinalIgnoreCase));
-            return (childNode is not null);
+            return childNode is not null;
         }
 
         #region IGetChildItems
@@ -142,13 +69,21 @@ namespace PowerShellFilesystemProviderBase.Nodes
 
         #region ICopyChildItemRecursive
 
+        /// <summary>
+        /// The copy request receives the destination node and the reminder of the destination path which could not be
+        /// resolved from the file system provider. It is up to the node implementation to decide if the remaining path items should be created
+        /// on the fly
+        /// </summary>
+        /// <param name="nodeToCopy">node to copy. May be container of leaf</param>
+        /// <param name="destination">path item under this which couldn't be resolved because they don't exist yet</param>
+        /// <param name="recurse">Copy must include all child item of the <paramref name="nodeToCopy"/></param>
         public void CopyChildItem(ProviderNode nodeToCopy, string[] destination, bool recurse)
         {
             if (recurse)
             {
                 if (this.TryGetUnderlyingService<ICopyChildItemRecursive>(out var copyChildItemRecursive))
                 {
-                    // the underlying handles the operation istself.
+                    // the underlying handles the operation itself.
 
                     copyChildItemRecursive.CopyChildItemRecursive(nodeToCopy, destination);
                 }
@@ -194,8 +129,9 @@ namespace PowerShellFilesystemProviderBase.Nodes
 
         #region IMoveChildItem
 
-        public void MoveChildItem(ContainerNode parentOfNode, ProviderNode nodeToMove, string[] destination)
-            => this.InvokeUnderlyingOrThrow<IMoveChildItem>(moveChildItem => moveChildItem.MoveChildItem(parentOfNode, nodeToMove, destination));
+        // TODO: The provider gives the original parent to make it easier to remove the connection to the moved node. Necessary?
+        public void MoveChildItem(ContainerNode parentOfNodeToMove, ProviderNode nodeToMove, string[] destination)
+            => this.InvokeUnderlyingOrThrow<IMoveChildItem>(moveChildItem => moveChildItem.MoveChildItem(parentOfNodeToMove, nodeToMove, destination));
 
         public object? MoveChildItemParameter(string name, string destination)
             => this.InvokeUnderlyingOrDefault<IMoveChildItem>(moveChildItem => moveChildItem.MoveChildItemParameters(name, destination));
