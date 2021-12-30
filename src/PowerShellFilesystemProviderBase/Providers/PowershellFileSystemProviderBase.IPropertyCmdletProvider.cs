@@ -29,7 +29,7 @@ namespace PowerShellFilesystemProviderBase.Providers
 
                 this.WriteItemObject(
                     item: pso,
-                    path: this.DecoratePath(path),
+                    path: path,
                     isContainer: providerNode is ContainerNode);
             }
         }

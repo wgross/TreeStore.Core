@@ -47,7 +47,7 @@ namespace PowerShellFilesystemProviderBase.Providers
                 from _2 in Parse.Char(':').Repeat(2)
                 select (module, provider);
 
-            // (module\provider::)drive: a dreive is optionally prefixed with the module\provider name
+            // (module\provider::)drive: a drive is optionally prefixed with the module\provider name
             private static readonly Parser<(string module, string provider, string drive)> ModuleProviderDrive =
                 from moduleProvider in ModuleProvider.Optional()
                 from drive in Drive
@@ -66,7 +66,7 @@ namespace PowerShellFilesystemProviderBase.Providers
                     provider: moduleProviderDrive.GetOrDefault().provider,
                     drive: moduleProviderDrive.GetOrDefault().drive,
                     path: (
-                        isrooted: moduleProviderDrive.IsDefined ? true : path.isRooted, // a path woth module/provider/dreive is implicitely rooted
+                        isrooted: moduleProviderDrive.IsDefined ? true : path.isRooted, // a path with module/provider/drive is implicitly rooted
                         items: path.items
                     )
                 );
@@ -78,26 +78,6 @@ namespace PowerShellFilesystemProviderBase.Providers
             return splitted.path.items.Any()
                 ? (parentPath: splitted.path.items[0..^1], childName: splitted.path.items[^1])
                 : (parentPath: new string[0], childName: null);
-        }
-
-        public string GetChildNameFromProviderPath(string path)
-        {
-            var splitted = this.SplitProviderPath(path);
-            return splitted.path.items.Any() ? splitted.path.items[^1] : string.Empty;
-        }
-
-        public string[] Split(string path)
-        {
-            if (string.IsNullOrEmpty(path))
-                return new string[0] { };
-
-            return path.Split(separator: System.IO.Path.DirectorySeparatorChar, System.StringSplitOptions.RemoveEmptyEntries);
-        }
-
-        public (string[] parentPath, string childName) SplitParentPath(string path)
-        {
-            var splitted = this.Split(path);
-            return (splitted[0..^1], splitted[^1]);
         }
 
         /// <summary>

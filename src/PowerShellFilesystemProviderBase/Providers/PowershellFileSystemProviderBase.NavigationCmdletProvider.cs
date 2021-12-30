@@ -5,33 +5,9 @@ namespace PowerShellFilesystemProviderBase.Providers
 {
     public partial class PowerShellFileSystemProviderBase
     {
-        protected override string GetParentPath(string path, string root)
-        {
-            var splittedProviderPath = new PathTool().SplitProviderPath(path);
-            var splittedPath = new PathTool().SplitParentPathAndChildName(path);
+        protected override string GetParentPath(string path, string root) => base.GetParentPath(path, root);
 
-            var parentPath = string.Join(this.ItemSeparator, splittedPath.parentPath);
-
-            if (splittedProviderPath.path.isRooted)
-            {
-                if (splittedProviderPath.path.items.Length > 0)
-                {
-                    parentPath = $"{splittedProviderPath.drive}:\\{parentPath}";
-                }
-                else
-                {
-                    // the root node has no parent
-                    return string.Empty;
-                }
-            }
-
-            if (!string.IsNullOrEmpty(splittedProviderPath.module))
-            {
-                parentPath = $"{splittedProviderPath.module}\\{splittedProviderPath.provider}::{parentPath}";
-            }
-
-            return parentPath;
-        }
+        protected override string GetChildName(string path) => base.GetChildName(path);
 
         protected override bool IsItemContainer(string path)
         {
@@ -73,20 +49,14 @@ namespace PowerShellFilesystemProviderBase.Providers
                 fallback: () => base.MoveItem(path, destination));
         }
 
-        protected override object MoveItemDynamicParameters(string path, string destination)
+        protected override object? MoveItemDynamicParameters(string path, string destination)
             => this.InvokeContainerNodeOrDefault(
                 path: new PathTool().SplitProviderPath(path).path.items,
                 invoke: c => c.MoveChildItemParameter(path, destination),
                 fallback: () => base.MoveItemDynamicParameters(path, destination));
 
-        protected override string MakePath(string parent, string child)
-        {
-            return base.MakePath(parent, child);
-        }
+        protected override string MakePath(string parent, string child) => base.MakePath(parent, child);
 
-        protected override string NormalizeRelativePath(string path, string basePath)
-        {
-            return base.NormalizeRelativePath(path, basePath);
-        }
+        protected override string NormalizeRelativePath(string path, string basePath) => base.NormalizeRelativePath(path, basePath);
     }
 }

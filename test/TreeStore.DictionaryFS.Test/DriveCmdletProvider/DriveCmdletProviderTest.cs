@@ -36,7 +36,7 @@ namespace TreeStore.DictionaryFS.Test.DriveCmdletProvider
             var psdriveInfo = result.Single().Unwrap<PSDriveInfo>();
 
             Assert.Equal("test", psdriveInfo.Name);
-            Assert.Equal("", psdriveInfo.Root);
+            Assert.Equal("test:\\", psdriveInfo.Root);
         }
     }
 }

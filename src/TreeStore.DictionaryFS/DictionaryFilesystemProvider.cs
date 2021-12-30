@@ -22,7 +22,7 @@ namespace TreeStore.DictionaryFS
             return new DictionaryFileSystemDriveInfo(RootNodeProvider, new PSDriveInfo(
                name: drive.Name,
                provider: drive.Provider,
-               root: drive.Root,
+               root: $@"{drive.Name}:\",
                description: drive.Description,
                credential: drive.Credential));
         }

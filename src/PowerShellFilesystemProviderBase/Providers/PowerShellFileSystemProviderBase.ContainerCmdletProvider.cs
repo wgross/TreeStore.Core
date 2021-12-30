@@ -23,7 +23,7 @@ namespace PowerShellFilesystemProviderBase.Providers
         /// <param name="recurse"></param>
         protected override void CopyItem(string path, string destination, bool recurse)
         {
-            var (parentPath, childName) = new PathTool().SplitParentPath(path);
+            var (parentPath, childName) = new PathTool().SplitParentPathAndChildName(path);
 
             this.InvokeContainerNodeOrDefault(
                 path: parentPath,
@@ -74,7 +74,7 @@ namespace PowerShellFilesystemProviderBase.Providers
                     var childItemPath = Path.Join(path, childGetItem.Name);
                     this.WriteItemObject(
                         item: childItemPSObject,
-                        path: this.DecoratePath(childItemPath),
+                        path: childItemPath,
                         isContainer: childGetItem is ContainerNode);
 
                     //TODO: recurse in cmdlet provider will be slow if the underlying model could optimize fetching of data.
@@ -93,10 +93,7 @@ namespace PowerShellFilesystemProviderBase.Providers
             invoke: c => c.GetChildItemParameters(path, recurse),
             fallback: () => base.GetChildItemsDynamicParameters(path, recurse));
 
-        protected override string GetChildName(string path)
-        {
-            return new PathTool().GetChildNameFromProviderPath(path);
-        }
+       
 
         protected override void GetChildNames(string path, ReturnContainers returnContainers)
         {
@@ -134,7 +131,7 @@ namespace PowerShellFilesystemProviderBase.Providers
 
         protected override object? RemoveItemDynamicParameters(string path, bool recurse)
         {
-            var (parentPath, childName) = new PathTool().SplitParentPath(path);
+            var (parentPath, childName) = new PathTool().SplitParentPathAndChildName(path);
 
             return this.InvokeContainerNodeOrDefault(parentPath,
                invoke: c => c.RemoveChildItemParameters(childName, recurse),
@@ -143,7 +140,7 @@ namespace PowerShellFilesystemProviderBase.Providers
 
         protected override void NewItem(string path, string itemTypeName, object newItemValue)
         {
-            var (parentPath, childName) = new PathTool().SplitParentPath(path);
+            var (parentPath, childName) = new PathTool().SplitParentPathAndChildName(path);
             if (TryGetNodeByPath<INewChildItem>(this.DriveInfo.RootNode, parentPath, out _, out var newChildItem))
             {
                 var resultNode = newChildItem.NewChildItem(childName, itemTypeName, newItemValue);
@@ -156,7 +153,7 @@ namespace PowerShellFilesystemProviderBase.Providers
 
         protected override object? NewItemDynamicParameters(string path, string itemTypeName, object newItemValue)
         {
-            var (parentPath, childName) = new PathTool().SplitParentPath(path);
+            var (parentPath, childName) = new PathTool().SplitParentPathAndChildName(path);
 
             return this.InvokeContainerNodeOrDefault(parentPath,
                 invoke: c => c.NewChildItemParameters(childName, itemTypeName, newItemValue),
@@ -165,7 +162,7 @@ namespace PowerShellFilesystemProviderBase.Providers
 
         protected override void RenameItem(string path, string newName)
         {
-            var (parentPath, childName) = new PathTool().SplitParentPath(path);
+            var (parentPath, childName) = new PathTool().SplitParentPathAndChildName(path);
             if (TryGetNodeByPath<IRenameChildItem>(this.DriveInfo.RootNode, parentPath, out _, out var renameChildItem))
             {
                 renameChildItem.RenameChildItem(childName, newName);
@@ -174,7 +171,7 @@ namespace PowerShellFilesystemProviderBase.Providers
 
         protected override object? RenameItemDynamicParameters(string path, string newName)
         {
-            var (parentPath, childName) = new PathTool().SplitParentPath(path);
+            var (parentPath, childName) = new PathTool().SplitParentPathAndChildName(path);
 
             return this.InvokeContainerNodeOrDefault(parentPath,
                 invoke: c => c.RenameChildItemParameters(childName, newName),

@@ -5,16 +5,15 @@ namespace PowerShellFilesystemProviderBase.Capabilities
     public interface INewItemProperty
     {
         /// <summary>
-        /// Returns custom parameters to be applied for the setting ofitem properties in
+        /// Returns custom parameters for property creation. These will extend the set of parameters accepted by the New-ItemProperty
+        /// command. By default an empty <see cref="RuntimeDefinedParameterDictionary"/> is returned.
         /// </summary>
-        /// <param name="properties"></param>
-        /// <returns>empty <see cref="RuntimeDefinedParameterDictionary"/> by default</returns>
         object? NewItemPropertyParameters(string propertyName, string? propertyTypeName, object? value) => new RuntimeDefinedParameterDictionary();
 
         /// <summary>
-        /// New the given item properties
+        /// Creates a new item property named <paramref name="propertyName"/> having the type <paramref name="propertyTypeName"/>.
+        /// The property receives the initial value of <paramref name="value"/>.
         /// </summary>
-        /// <param name="properties"></param>
         void NewItemProperty(string propertyName, string? propertyTypeName, object? value);
     }
 }

@@ -64,7 +64,7 @@ namespace PowerShellFilesystemProviderBase.Providers
         }
 
         protected ProviderNode GetDeepestNodeByPath(string path, out string[] missingPath)
-           => GetDeepestNodeByPath(this.DriveInfo.RootNode, new PathTool().Split(path), out missingPath);
+            => GetDeepestNodeByPath(this.DriveInfo.RootNode, new PathTool().SplitProviderPath(path).path.items, out missingPath);
 
         protected static ProviderNode GetDeepestNodeByPath(ProviderNode startNode, string[] path, out string[] missingPath)
         {
@@ -124,11 +124,9 @@ namespace PowerShellFilesystemProviderBase.Providers
 
             this.WriteItemObject(
                 item: psobject,
-                path: this.DecoratePath(path),
+                path: path,
                 isContainer: node is ContainerNode);
         }
-
-        protected string DecoratePath(string path) => @$"{this.PSDriveInfo.Name}:\{path}";
 
         #endregion Write a ProviderNode to pipeline
 

@@ -28,7 +28,7 @@ namespace TreeStore.DictionaryFS.Test.ItemCmdletProvider
 
             var psobject = result.Single();
 
-            Assert.Equal(string.Empty, psobject.Property<string>("PSChildName"));
+            Assert.Equal("test:", psobject.Property<string>("PSChildName"));
             Assert.True(psobject.Property<bool>("PSIsContainer"));
             Assert.Equal("test", psobject.Property<PSDriveInfo>("PSDrive").Name);
             Assert.Equal("DictionaryFS", psobject.Property<ProviderInfo>("PSProvider").Name);
@@ -63,7 +63,7 @@ namespace TreeStore.DictionaryFS.Test.ItemCmdletProvider
             Assert.Equal("test", psobject.Property<PSDriveInfo>("PSDrive").Name);
             Assert.Equal("DictionaryFS", psobject.Property<ProviderInfo>("PSProvider").Name);
             Assert.Equal(@"TreeStore.DictionaryFS\DictionaryFS::test:\item", psobject.Property<string>("PSPath"));
-            Assert.Equal(@"TreeStore.DictionaryFS\DictionaryFS::test:\", psobject.Property<string>("PSParentPath"));
+            Assert.Equal(@"TreeStore.DictionaryFS\DictionaryFS::test:", psobject.Property<string>("PSParentPath"));
         }
 
         [Fact]
