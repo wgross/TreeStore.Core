@@ -15,12 +15,9 @@ namespace PowerShellFilesystemProviderBase.Providers
 
         /// <summary>
         /// Implements the copying of a provider item.
-        /// The existence of the child ndoe <paramref name="path"/> has lready happend in <see cref="ItemExists(string)"/>.
+        /// The existence of the child node <paramref name="path"/> has already happened in <see cref="ItemExists(string)"/>.
         /// th destination path <paramref name="destination"/> is completely unverified.
         /// </summary>
-        /// <param name="path"></param>
-        /// <param name="destination"></param>
-        /// <param name="recurse"></param>
         protected override void CopyItem(string path, string destination, bool recurse)
         {
             var (parentPath, childName) = new PathTool().SplitParentPathAndChildName(path);
@@ -59,12 +56,17 @@ namespace PowerShellFilesystemProviderBase.Providers
             base.GetChildItems(path, recurse);
         }
 
-        protected override void GetChildItems(string path, bool recurse, uint depth) => this.InvokeContainerNodeOrDefault(
-            path: new PathTool().SplitProviderPath(path).path.items,
-            invoke: c => this.GetChildItems(parentContainer: c, path, recurse, depth),
-            fallback: () => base.GetChildItems(path, recurse, depth));
+        protected override void GetChildItems(string path, bool recurse, uint depth)
+        {
+            void writeItemObject(PSObject item, string path, string name, bool isContainer) => this.WriteItemObject(item, path, isContainer);
 
-        private void GetChildItems(ContainerNode parentContainer, string path, bool recurse, uint depth)
+            this.InvokeContainerNodeOrDefault(
+              path: new PathTool().SplitProviderPath(path).path.items,
+              invoke: c => this.GetChildItems(parentContainer: c, path, recurse, depth, writeItemObject),
+              fallback: () => base.GetChildItems(path, recurse, depth));
+        }
+
+        private void GetChildItems(ContainerNode parentContainer, string path, bool recurse, uint depth, Action<PSObject, string, string, bool> writeItemObject)
         {
             foreach (var childGetItem in parentContainer.GetChildItems())
             {
@@ -72,10 +74,7 @@ namespace PowerShellFilesystemProviderBase.Providers
                 if (childItemPSObject is not null)
                 {
                     var childItemPath = Path.Join(path, childGetItem.Name);
-                    this.WriteItemObject(
-                        item: childItemPSObject,
-                        path: childItemPath,
-                        isContainer: childGetItem is ContainerNode);
+                    writeItemObject(childItemPSObject, childItemPath, childGetItem.Name, childGetItem is ContainerNode);
 
                     //TODO: recurse in cmdlet provider will be slow if the underlying model could optimize fetching of data.
                     // alternatives:
@@ -83,7 +82,7 @@ namespace PowerShellFilesystemProviderBase.Providers
                     // - notify first container of incoming request so it can prepare the fetch: IPrepareGetChildItems: Prepare(bool recurse, uint depth) then resurce in provider
                     //   General solution would be to introduce a call context to allow an impl. to inspect the original request.
                     if (recurse && depth > 0 && childGetItem is ContainerNode childContainer)
-                        this.GetChildItems(childContainer, childItemPath, recurse, depth - 1);
+                        this.GetChildItems(childContainer, childItemPath, recurse, depth - 1, writeItemObject);
                 }
             }
         }
@@ -93,11 +92,14 @@ namespace PowerShellFilesystemProviderBase.Providers
             invoke: c => c.GetChildItemParameters(path, recurse),
             fallback: () => base.GetChildItemsDynamicParameters(path, recurse));
 
-       
-
         protected override void GetChildNames(string path, ReturnContainers returnContainers)
         {
-            base.GetChildNames(path, returnContainers);
+            void writeItemObject(PSObject _, string path, string name, bool isContainer) => this.WriteItemObject(name, path, isContainer);
+
+            this.InvokeContainerNodeOrDefault(
+                path: new PathTool().SplitProviderPath(path).path.items,
+                invoke: c => this.GetChildItems(parentContainer: c, path, recurse: false, depth: 0, writeItemObject),
+                fallback: () => base.GetChildNames(path, returnContainers));
         }
 
         protected override object GetChildNamesDynamicParameters(string path)
