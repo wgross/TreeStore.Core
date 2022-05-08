@@ -27,7 +27,7 @@ namespace PowerShellFilesystemProviderBase.Providers
                 invoke: sourceParentNode =>
                 {
                     // first check that node to copy exists
-                    if (!sourceParentNode.TryGetChildNode(childName, out var nodeToCopy))
+                    if (!sourceParentNode.TryGetChildNode(childName!, out var nodeToCopy))
                         throw new InvalidOperationException($"Item '{path}' doesn't exist");
 
                     // find the deepest ancestor which serves as a destination to copy to
@@ -136,7 +136,7 @@ namespace PowerShellFilesystemProviderBase.Providers
             var (parentPath, childName) = new PathTool().SplitParentPathAndChildName(path);
 
             return this.InvokeContainerNodeOrDefault(parentPath,
-               invoke: c => c.RemoveChildItemParameters(childName, recurse),
+               invoke: c => c.RemoveChildItemParameters(childName!, recurse),
                fallback: () => base.RemoveItemDynamicParameters(path, recurse));
         }
 
@@ -145,7 +145,7 @@ namespace PowerShellFilesystemProviderBase.Providers
             var (parentPath, childName) = new PathTool().SplitParentPathAndChildName(path);
             if (TryGetNodeByPath<INewChildItem>(this.DriveInfo.RootNode, parentPath, out _, out var newChildItem))
             {
-                var resultNode = newChildItem.NewChildItem(childName, itemTypeName, newItemValue);
+                var resultNode = newChildItem.NewChildItem(childName!, itemTypeName, newItemValue);
                 if (resultNode is not null)
                 {
                     this.WriteProviderNode(path, resultNode);
@@ -158,7 +158,7 @@ namespace PowerShellFilesystemProviderBase.Providers
             var (parentPath, childName) = new PathTool().SplitParentPathAndChildName(path);
 
             return this.InvokeContainerNodeOrDefault(parentPath,
-                invoke: c => c.NewChildItemParameters(childName, itemTypeName, newItemValue),
+                invoke: c => c.NewChildItemParameters(childName!, itemTypeName, newItemValue),
                 fallback: () => base.NewItemDynamicParameters(path, itemTypeName, newItemValue));
         }
 
@@ -167,7 +167,7 @@ namespace PowerShellFilesystemProviderBase.Providers
             var (parentPath, childName) = new PathTool().SplitParentPathAndChildName(path);
             if (TryGetNodeByPath<IRenameChildItem>(this.DriveInfo.RootNode, parentPath, out _, out var renameChildItem))
             {
-                renameChildItem.RenameChildItem(childName, newName);
+                renameChildItem.RenameChildItem(childName!, newName);
             }
         }
 
@@ -176,7 +176,7 @@ namespace PowerShellFilesystemProviderBase.Providers
             var (parentPath, childName) = new PathTool().SplitParentPathAndChildName(path);
 
             return this.InvokeContainerNodeOrDefault(parentPath,
-                invoke: c => c.RenameChildItemParameters(childName, newName),
+                invoke: c => c.RenameChildItemParameters(childName!, newName),
                 fallback: () => base.RenameItemDynamicParameters(path, newName));
         }
     }
