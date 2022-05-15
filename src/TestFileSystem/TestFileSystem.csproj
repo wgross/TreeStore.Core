@@ -6,7 +6,7 @@
 
   <ItemGroup>
     <!--<PackageReference Include="PowerShellStandard.Library" Version="5.1.0" />-->
-    <ProjectReference Include="..\..\src\PowerShellFilesystemProviderBase\PowerShellFilesystemProviderBase.csproj" />
+    <ProjectReference Include="..\TreeStore.Core\TreeStore.Core.csproj" />
   </ItemGroup>
 
 </Project>

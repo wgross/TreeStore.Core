@@ -5,7 +5,7 @@
   
   <ItemGroup>
         <!-- path must be relative to the projects that will use the file-->
-        <Compile Include="..\TestData\PowerShellFilesystemProviderTestData.cs" Link="TestData\PowerShellFilesystemProviderTestData.cs" />
+        <Compile Include="..\TestData\TreeStoreCoreTestData.cs" Link="TestData\TreeStoreCoreTestData.cs" />
   </ItemGroup>
 
 </Project>

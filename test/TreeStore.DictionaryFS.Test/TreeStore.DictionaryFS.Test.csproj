@@ -22,7 +22,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\TreeStore.DictionaryFS\TreeStore.DictionaryFS.csproj" />
-    <ProjectReference Include="..\PowerShellFilesystemProviderBase.Test\PowerShellFilesystemProviderBase.Test.csproj" />
+    <ProjectReference Include="..\TreeStore.Core.Test\TreeStore.Core.Test.csproj" />
   </ItemGroup>
 
   <ItemGroup>

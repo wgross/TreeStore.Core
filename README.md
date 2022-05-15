@@ -61,7 +61,7 @@ class Payload : IServiceProvider,
 }
 ```
 
-Read mor about the capabilties at [./src/PowershellFileSystemProviderBase/Capabilities](./src/PowershellFileSystemProviderBase/Capabilities/readme.md)
+Read mor about the capabilities at [./src/TreeStore.Core/Capabilities](./src/PowershellFileSystemProviderBase/Capabilities/readme.md)
 
 The sample file system  ['DictionaryFS'](src/TreeStore.DictionaryFS/readme.md) shows an implementation of the provider node capabilities and a `IServiceProvider` using nested 'IDictionary<string,object>' instances.
 This file system is also used to write integration tests for the provider logic.

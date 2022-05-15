@@ -6,7 +6,7 @@ A sample file system base of TreeStore.Core.
 
 The center piece of the sample file system is the adapter class ['DictionaryContainerAdapter'](Nodes/DictionaryContainerAdapter.cs).
 
-The adapter class treats all key-value-pairs which have a value that can be cast to ```IDictionary<string,object?>``` as a child node.
+The adapter class treats all key-value-pairs which have a value that can be cast to `IDictionary<string,object?>` as a child node.
 All other key-value-pairs are properties of the file system item.
 The filesystem uses only container nodes, Leaf nodes aren't supported.
 
@@ -22,7 +22,7 @@ public object? GetService(Type serviceType)
 }
 ```
 
-All [TreeStore capabilities](../PowerShellFilesystemProviderBase/Capabilities/readme.md) are implemented as explicit interface implementations.
+All [TreeStore capabilities](../TreeStore.Core/Capabilities/readme.md) are implemented as explicit interface implementations.
 As an example the implementation of `IGetItem`:
 
 ```Csharp
@@ -36,7 +36,7 @@ PSObject? IGetItem.GetItem()
 ```
 
 The DictionaryFS example doesn't make use of dynamic parameters. 
-It relies on the default implementations of the capability interfaces. For `IGetItem` the implementation can be found in [IGetItem.cs](../PowerShellFilesystemProviderBase/Capabilities/IGetItem.cs) and it look like this:
+It relies on the default implementations of the capability interfaces. For `IGetItem` the implementation can be found in [IGetItem.cs](../TreeStore.Core/Capabilities/IGetItem.cs) and it look like this:
 
 ```Csharp
 object? GetItemParameters() => new RuntimeDefinedParameterDictionary();

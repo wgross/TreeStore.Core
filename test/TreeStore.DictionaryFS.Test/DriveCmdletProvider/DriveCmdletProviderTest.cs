@@ -1,5 +1,5 @@
-﻿using PowerShellFilesystemProviderBase;
-using PowerShellFilesystemProviderBase.Test;
+﻿using TreeStore.Core;
+using TreeStore.Core.Test;
 using System.Collections.Generic;
 using System.Linq;
 using System.Management.Automation;

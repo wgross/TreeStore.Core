@@ -1,6 +1,6 @@
 ﻿using Moq;
-using PowerShellFilesystemProviderBase;
-using PowerShellFilesystemProviderBase.Capabilities;
+using TreeStore.Core;
+using TreeStore.Core.Capabilities;
 using System.Collections.Generic;
 using System.Linq;
 using System.Management.Automation;

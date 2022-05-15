@@ -1,4 +1,4 @@
-﻿using PowerShellFilesystemProviderBase;
+﻿using TreeStore.Core;
 using System.Linq;
 using System.Management.Automation;
 using Xunit;

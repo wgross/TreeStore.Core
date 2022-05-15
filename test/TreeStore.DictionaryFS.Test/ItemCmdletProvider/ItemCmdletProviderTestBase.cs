@@ -1,4 +1,4 @@
-﻿using PowerShellFilesystemProviderBase.Test;
+﻿using TreeStore.Core.Test;
 using System.Collections.Generic;
 using TreeStore.DictionaryFS.Nodes;
 

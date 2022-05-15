@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Management.Automation;
 using Xunit;
 
 namespace TreeStore.DictionaryFS.Test.NavigationCmdletProvider
