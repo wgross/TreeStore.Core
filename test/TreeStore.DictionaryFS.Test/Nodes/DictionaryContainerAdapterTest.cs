@@ -185,7 +185,7 @@ namespace TreeStore.DictionaryFS.Test.Nodes
             var node = ArrangeContainerAdapter(underlying);
 
             // ACT
-            var result = ((IGetChildItems)node).GetChildItems().ToArray();
+            var result = ((IGetChildItem)node).GetChildItems().ToArray();
 
             // ASSERT
             Assert.Single(result);
@@ -201,7 +201,7 @@ namespace TreeStore.DictionaryFS.Test.Nodes
             var node = ArrangeContainerAdapter(underlying);
 
             // ACT
-            var result = ((IGetChildItems)node).GetChildItems().ToArray();
+            var result = ((IGetChildItem)node).GetChildItems().ToArray();
 
             // ASSERT
             Assert.Empty(result);
@@ -217,7 +217,7 @@ namespace TreeStore.DictionaryFS.Test.Nodes
             });
 
             // ACT
-            var result = ((IGetChildItems)node).HasChildItems();
+            var result = ((IGetChildItem)node).HasChildItems();
 
             // ASSERT
             Assert.True(result);

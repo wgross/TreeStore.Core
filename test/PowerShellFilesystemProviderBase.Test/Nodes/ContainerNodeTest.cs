@@ -54,12 +54,12 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         public void ContainerNode_finds_child_by_name(string name)
         {
             // ARRANGE
-            var getChildItem = this.mocks.Create<IGetChildItems>();
+            var getChildItem = this.mocks.Create<IGetChildItem>();
             getChildItem
                 .Setup(gci => gci.GetChildItems())
                 .Returns(new[] { ArrangeNode("name", ServiceProvider()) });
 
-            var node = ArrangeNode("", ServiceProvider(With<IGetChildItems>(getChildItem)));
+            var node = ArrangeNode("", ServiceProvider(With<IGetChildItem>(getChildItem)));
 
             // ACT
             var result = node.TryGetChildNode(name, out var childNode);
@@ -73,12 +73,12 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         public void ContainerNode_finding_unknown_child_item_by_name_returns_null()
         {
             // ARRANGE
-            var getChildItem = this.mocks.Create<IGetChildItems>();
+            var getChildItem = this.mocks.Create<IGetChildItem>();
             getChildItem
                 .Setup(gci => gci.GetChildItems())
                 .Returns(new[] { ArrangeNode("unkown", ServiceProvider()) });
 
-            var node = ArrangeNode("", ServiceProvider(With<IGetChildItems>(getChildItem)));
+            var node = ArrangeNode("", ServiceProvider(With<IGetChildItem>(getChildItem)));
 
             // ACT
             var result = node.TryGetChildNode("name", out var childNode);
@@ -356,12 +356,12 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
                 //ContainerNodeFactory.Create("child2", new Dictionary<string,object>())
             };
 
-            var underlying = this.mocks.Create<IGetChildItems>();
+            var underlying = this.mocks.Create<IGetChildItem>();
             underlying
                 .Setup(u => u.GetChildItems())
                 .Returns(childItems);
 
-            var node = ArrangeNode("name", ServiceProvider(With<IGetChildItems>(underlying)));
+            var node = ArrangeNode("name", ServiceProvider(With<IGetChildItem>(underlying)));
 
             // ACT
             var result = node.GetChildItems().ToArray();
@@ -388,12 +388,12 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         {
             // ARRANGE
             var parameters = new object();
-            var underlying = this.mocks.Create<IGetChildItems>();
+            var underlying = this.mocks.Create<IGetChildItem>();
             underlying
                 .Setup(u => u.GetChildItemParameters("path", true))
                 .Returns(parameters);
 
-            var node = ArrangeNode("name", ServiceProvider(With<IGetChildItems>(underlying)));
+            var node = ArrangeNode("name", ServiceProvider(With<IGetChildItem>(underlying)));
 
             // ACT
             var result = node.GetChildItemParameters("path", recurse: true);
@@ -419,12 +419,12 @@ namespace PowerShellFilesystemProviderBase.Test.Nodes
         public void HasChildItems_invokes_underlying()
         {
             // ARRANGE
-            var underlying = this.mocks.Create<IGetChildItems>();
+            var underlying = this.mocks.Create<IGetChildItem>();
             underlying
                 .Setup(u => u.HasChildItems())
                 .Returns(true);
 
-            var node = ArrangeNode("name", ServiceProvider(With<IGetChildItems>(underlying)));
+            var node = ArrangeNode("name", ServiceProvider(With<IGetChildItem>(underlying)));
 
             // ACT
             var result = node.HasChildItems();

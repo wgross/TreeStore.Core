@@ -6,7 +6,10 @@ using System.Linq;
 
 namespace PowerShellFilesystemProviderBase.Nodes
 {
-    public record ContainerNode : ProviderNode
+    /// <summary>
+    /// A <see cref="ProviderNode"/> which may have child nodes.
+    /// </summary>
+    public record ContainerNode : ProviderNode, IGetChildItem
     {
         public ContainerNode(string? name, IServiceProvider underlying)
             : base(name, underlying)
@@ -18,18 +21,21 @@ namespace PowerShellFilesystemProviderBase.Nodes
             return childNode is not null;
         }
 
-        #region IGetChildItems
+        #region IGetChildItem
 
+        ///<inheritdoc/>
         public IEnumerable<ProviderNode> GetChildItems()
-            => this.InvokeUnderlyingOrDefault<IGetChildItems>(getChildItems => getChildItems.GetChildItems());
+            => this.InvokeUnderlyingOrDefault<IGetChildItem>(getChildItems => getChildItems.GetChildItems());
 
+        ///<inheritdoc/>
         public object? GetChildItemParameters(string path, bool recurse)
-            => this.InvokeUnderlyingOrDefault<IGetChildItems>(getChildItems => getChildItems.GetChildItemParameters(path, recurse));
+            => this.InvokeUnderlyingOrDefault<IGetChildItem>(getChildItems => getChildItems.GetChildItemParameters(path, recurse));
 
+        ///<inheritdoc/>
         public bool HasChildItems()
-            => this.InvokeUnderlyingOrDefault<IGetChildItems>(getChildItems => getChildItems.HasChildItems());
+            => this.InvokeUnderlyingOrDefault<IGetChildItem>(getChildItems => getChildItems.HasChildItems());
 
-        #endregion IGetChildItems
+        #endregion IGetChildItem
 
         #region IRemoveChildItem
 

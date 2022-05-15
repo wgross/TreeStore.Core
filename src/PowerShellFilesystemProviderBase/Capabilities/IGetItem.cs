@@ -2,19 +2,19 @@
 
 namespace PowerShellFilesystemProviderBase.Capabilities
 {
+    /// <summary>
+    /// Get an item representation to write to the pipe
+    /// </summary>
     public interface IGetItem
     {
         /// <summary>
-        /// Returns custom parameters to be applied on retrieving the item
+        /// Dynamic parameter provided to PowerShells 'Get-Item' command.
         /// </summary>
-        /// <param name="childName"></param>
-        /// <returns>empty <see cref="RuntimeDefinedParameterDictionary"/> by default</returns>
         object? GetItemParameters() => new RuntimeDefinedParameterDictionary();
 
         /// <summary>
-        /// Creates a <see cref="PSObject"/> warpping the implementing class of this interface in the <see cref="PowerShell"/> pipe.
+        /// Creates a <see cref="PSObject"/> wrapping the implementing class of this interface in the <see cref="PowerShell"/> pipe.
         /// </summary>
-        /// <returns></returns>
         PSObject? GetItem();
     }
 }

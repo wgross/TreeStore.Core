@@ -20,12 +20,11 @@ namespace TreeStore.DictionaryFS.Nodes
     /// </summary>
     /// <typeparam name="TUnderlying"></typeparam>
     /// <typeparam name="V"></typeparam>
-    public record DictionaryContainerAdapter :
-        IServiceProvider,
+    public record DictionaryContainerAdapter : IServiceProvider,
         // ItemCmdletProvider
         IGetItem, ISetItem, IClearItem,
         // ContainerCmdletProvider
-        IGetChildItems, IRemoveChildItem, INewChildItem, IRenameChildItem, ICopyChildItem,
+        IGetChildItem, IRemoveChildItem, INewChildItem, IRenameChildItem, ICopyChildItem,
         // NavigationCmdletProvider
         IMoveChildItem,
         // ItemPropertyCmdletAdapter
@@ -72,10 +71,10 @@ namespace TreeStore.DictionaryFS.Nodes
         #region IGetChildItem
 
         /// <inheritdoc/>
-        bool IGetChildItems.HasChildItems() => ((IGetChildItems)this).GetChildItems().Any();
+        bool IGetChildItem.HasChildItems() => ((IGetChildItem)this).GetChildItems().Any();
 
         /// <inheritdoc/>
-        IEnumerable<ProviderNode> IGetChildItems.GetChildItems()
+        IEnumerable<ProviderNode> IGetChildItem.GetChildItems()
         {
             foreach (var item in this.Underlying)
             {
