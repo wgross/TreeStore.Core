@@ -1,8 +1,19 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <PropertyGroup>
+  	<Authors>github.com/wgross</Authors>
+  	<VersionPrefix>0.9.0</VersionPrefix>
+  	<Description>Base classes for implementing PowerShell file system providers easily</Description>
+  	<RepositoryUrl>http://github.com/wgross/TreeStore.Core</RepositoryUrl>
+  	<PackageLicenseExpression>MIT</PackageLicenseExpression>
+  	<PackageProjectUrl>http://github.com/wgross/TreeStore.Core</PackageProjectUrl>
+  	<IncludeSymbols>true</IncludeSymbols>
+  	<SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
 
   <ItemGroup>

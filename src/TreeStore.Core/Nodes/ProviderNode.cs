@@ -1,10 +1,10 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using TreeStore.Core.Capabilities;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Management.Automation;
+using TreeStore.Core.Capabilities;
 
 namespace TreeStore.Core.Nodes
 {
@@ -99,12 +99,9 @@ namespace TreeStore.Core.Nodes
         public object? GetItemParameters()
             => this.InvokeUnderlyingOrDefault<IGetItem>(getItem => getItem.GetItemParameters());
 
-        /// <inheritdoc/>
-        public PSObject? GetItem()
+        public PSObject GetItem()
         {
-            PSObject? pso = (PSObject?)this.InvokeUnderlyingOrDefault<IGetItem>(gi => gi.GetItem()) ?? PSObject.AsPSObject(this.Underlying);
-
-            if (pso is null) return null;
+            PSObject pso = (PSObject?)this.InvokeUnderlyingOrDefault<IGetItem>(gi => gi.GetItem()) ?? PSObject.AsPSObject(this.Underlying);
 
             pso.Properties.Add(new PSNoteProperty("PSChildName", this.Name));
             return pso;
@@ -172,30 +169,26 @@ namespace TreeStore.Core.Nodes
 
         #region IGetItemProperty
 
-        public PSObject? GetItemProperty(IEnumerable<string>? providerSpecificPickList)
+        public PSObject GetItemProperty(IEnumerable<string>? providerSpecificPickList)
         {
             if (this.TryInvokeUnderlyingOrDefault<IGetItemProperty>(getItemProperty => getItemProperty.GetItemProperty(providerSpecificPickList), out var result))
             {
-                return (PSObject?)result;
+                return (PSObject)result;
             }
             else
             {
                 var psObject = this.GetItem();
-                if (providerSpecificPickList?.Any() != true)
+                if (providerSpecificPickList is null || !providerSpecificPickList.Any())
                     return psObject;
 
-                if (psObject is not null)
+                var partialPsObject = new PSObject();
+                foreach (var property in providerSpecificPickList)
                 {
-                    var partialPsObject = new PSObject();
-                    foreach (var property in providerSpecificPickList)
-                    {
-                        var psProperty = psObject.Properties.FirstOrDefault(p => p.Name.Equals(property, StringComparison.OrdinalIgnoreCase));
-                        if (psProperty is not null)
-                            partialPsObject.Properties.Add(new PSNoteProperty(psProperty.Name, psProperty.Value));
-                    }
-                    return partialPsObject;
+                    var psProperty = psObject.Properties.FirstOrDefault(p => p.Name.Equals(property, StringComparison.OrdinalIgnoreCase));
+                    if (psProperty is not null)
+                        partialPsObject.Properties.Add(new PSNoteProperty(psProperty.Name, psProperty.Value));
                 }
-                return psObject;
+                return partialPsObject;
             }
         }
 

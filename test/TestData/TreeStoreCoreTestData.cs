@@ -26,8 +26,7 @@ namespace TreeStore.Core.Test
                 return sp => sp.AddSingleton<T>((T)((Mock)capability).Object);
             else
                 return sp => sp.AddSingleton<T>((T)capability);
-        }
-
+        } 
         public static ContainerNode ContainerNode(string name, params Action<ServiceCollection>[] setup)
         {
             return new ContainerNode(name, ServiceProvider(setup));
