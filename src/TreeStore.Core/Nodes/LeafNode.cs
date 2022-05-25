@@ -3,7 +3,7 @@
 namespace TreeStore.Core.Nodes
 {
     /// <summary>
-    /// Representa a <see cref="ProvioderNode"/> with child nodes.
+    /// Represents a <see cref="ProviderNode"/> without child nodes.
     /// </summary>
     public sealed record LeafNode : ProviderNode
     {

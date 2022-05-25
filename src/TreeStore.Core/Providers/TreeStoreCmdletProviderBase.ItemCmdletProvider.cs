@@ -1,6 +1,6 @@
 ﻿namespace TreeStore.Core.Providers
 {
-    public partial class PowerShellFileSystemProviderBase
+    public partial class TreeStoreCmdletProviderBase
     {
         protected override void ClearItem(string path)
         {

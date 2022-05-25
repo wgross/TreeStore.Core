@@ -16,6 +16,7 @@ namespace TreeStore.Core.Test
 
         public void Dispose()
         {
+            this.PowerShell.Dispose();
             this.Mocks.VerifyAll();
         }
     }

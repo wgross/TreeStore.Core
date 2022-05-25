@@ -2,7 +2,7 @@
 
 namespace TreeStore.Core.Providers
 {
-    public partial class PowerShellFileSystemProviderBase : IDynamicPropertyCmdletProvider
+    public partial class TreeStoreCmdletProviderBase : IDynamicPropertyCmdletProvider
     {
         public void CopyProperty(string sourcePath, string sourceProperty, string destinationPath, string destinationProperty)
         {

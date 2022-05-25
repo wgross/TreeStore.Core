@@ -5,7 +5,7 @@ using System.Management.Automation.Provider;
 namespace TreeStore.DictionaryFS
 {
     [CmdletProvider(DictionaryFilesystemProvider.Id, ProviderCapabilities.None)]
-    public class DictionaryFilesystemProvider : global::TreeStore.Core.Providers.PowerShellFileSystemProviderBase
+    public class DictionaryFilesystemProvider : global::TreeStore.Core.Providers.TreeStoreCmdletProviderBase
     {
         public const string Id = "DictionaryFS";
 

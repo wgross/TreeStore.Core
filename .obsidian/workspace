@@ -1,0 +1,99 @@
+{
+  "main": {
+    "id": "f1d671bc71c155e0",
+    "type": "split",
+    "children": [
+      {
+        "id": "46cfa19032eb2977",
+        "type": "leaf",
+        "state": {
+          "type": "markdown",
+          "state": {
+            "file": "src/TreeStore.Core/Providers/Untitled.md",
+            "mode": "source",
+            "source": false
+          }
+        }
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "4d3744ff0aad7c73",
+    "type": "split",
+    "children": [
+      {
+        "id": "d6e2e0da77c257a5",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "fc96bfc22f09b144",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {}
+            }
+          },
+          {
+            "id": "61e7858129717d79",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "IServiceProvider",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 592
+  },
+  "right": {
+    "id": "06605bc89da5866e",
+    "type": "split",
+    "children": [
+      {
+        "id": "944853e44dd13b7f",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "beba446be6e63207",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "src/TreeStore.Core/Providers/Untitled.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "active": "46cfa19032eb2977",
+  "lastOpenFiles": [
+    "src/TreeStore.Core/Providers/Untitled.md",
+    "src/TreeStore.Core/Nodes/readme.md",
+    "src/TreeStore.DictionaryFS/readme.md",
+    "src/TreeStore.Core/Capabilities/readme.md",
+    "().md",
+    "README.md"
+  ]
+}

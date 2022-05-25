@@ -3,7 +3,7 @@ using System;
 
 namespace TreeStore.Core.Providers
 {
-    public partial class PowerShellFileSystemProviderBase
+    public partial class TreeStoreCmdletProviderBase
     {
         protected override string GetParentPath(string path, string root) => base.GetParentPath(path, root);
 

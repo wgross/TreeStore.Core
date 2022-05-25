@@ -8,9 +8,9 @@ using System.Management.Automation.Provider;
 
 namespace TreeStore.Core.Providers
 {
-    public partial class PowerShellFileSystemProviderBase : NavigationCmdletProvider
+    public partial class TreeStoreCmdletProviderBase : NavigationCmdletProvider
     {
-        private PowershellFileSystemDriveInfo DriveInfo => (PowershellFileSystemDriveInfo)this.PSDriveInfo;
+        private TreeStoreDriveInfoBase DriveInfo => (TreeStoreDriveInfoBase)this.PSDriveInfo;
 
         public static (bool exists, ProviderNode? node) TryGetChildNode(ContainerNode parentNode, string childName)
         {

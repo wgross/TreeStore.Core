@@ -1,4 +1,4 @@
-﻿# DictionaryFS
+# DictionaryFS
 
 A sample file system base of TreeStore.Core.
 
@@ -60,10 +60,10 @@ Two additional required parts of a PowerShell file system are provided with [Dic
 
 ```mermaid
 sequenceDiagram
-    PowerShell ->>+ PowerShell: New-PSDrive
-    PowerShell ->>+ PSDriveInfo: new
-    PSDriveInfo -->>+ PowerShell: return psDriveInfo
-    PowerShell ->>+ DictionaryFileSystemProvider: NewDrive(psDriveInfo)
+    PowerShell ->> PowerShell: New-PSDrive
+    PowerShell ->> PSDriveInfo: new
+    PSDriveInfo -->> PowerShell: return psDriveInfo
+    PowerShell ->> DictionaryFileSystemProvider: NewDrive(psDriveInfo)
     DictionaryFileSystemProvider ->>+ DictionaryFileSystemDriveInfo: create from psDriveInfo
 
 ```

@@ -4,9 +4,9 @@ using System.Management.Automation;
 
 namespace TreeStore.Core.Providers
 {
-    public abstract class PowershellFileSystemDriveInfo : PSDriveInfo
+    public abstract class TreeStoreDriveInfoBase : PSDriveInfo
     {
-        protected PowershellFileSystemDriveInfo(PSDriveInfo driveInfo, Func<string, IServiceProvider> rootNodeProvider)
+        protected TreeStoreDriveInfoBase(PSDriveInfo driveInfo, Func<string, IServiceProvider> rootNodeProvider)
             : base(driveInfo)
         {
             this.rootNodeProvider = rootNodeProvider;

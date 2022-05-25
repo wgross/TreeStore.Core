@@ -9,7 +9,7 @@ namespace TreeStore.Core.Nodes
     /// <summary>
     /// A <see cref="ProviderNode"/> which may have child nodes.
     /// </summary>
-    public record ContainerNode : ProviderNode, IGetChildItem
+    public record ContainerNode : ProviderNode
     {
         public ContainerNode(string? name, IServiceProvider underlying)
             : base(name, underlying)

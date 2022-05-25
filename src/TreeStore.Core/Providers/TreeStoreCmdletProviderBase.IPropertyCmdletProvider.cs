@@ -5,7 +5,7 @@ using System.Management.Automation.Provider;
 
 namespace TreeStore.Core.Providers
 {
-    public partial class PowerShellFileSystemProviderBase : IPropertyCmdletProvider
+    public partial class TreeStoreCmdletProviderBase : IPropertyCmdletProvider
     {
         public void ClearProperty(string path, Collection<string> propertyToClear)
         {
