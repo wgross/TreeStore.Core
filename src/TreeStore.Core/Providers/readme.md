@@ -30,4 +30,4 @@ public abstract class TreeStoreDriveInfoBase : PSDriveInfo
 }
 ```
 
-This is an important 'thing' to connect the TreeStore file system provider with the custom payload data. The name given to the delegate is the name of the drive used by the PowerShell to identify the drive. While the TreeStore provider doesn't have to be overridden the drive info must be. 
+This is an important 'hinge' for connecting the TreeStore file system provider with the custom payload data. The name given to the delegate is the name of the drive used by the PowerShell to identify the drive. While the TreeStore provider doesn't have to be overridden the drive info must be. 

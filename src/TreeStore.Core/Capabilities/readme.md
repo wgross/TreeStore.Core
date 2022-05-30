@@ -9,7 +9,13 @@ Path traversal means that a PowerShell provider path is mapped to a TreeStore pr
 
 ### IGetChildItem
 
-Path traversal depends on the implementation of `IGetChildItem`  capability and is also by  `Get-ChildItem`.
+Path traversal depends on the implementation of `IGetChildItem`  capability and is also used to implement  `Get-ChildItem` command.
+
+There is s special case for invocation of `Get-ChildItem`: `Get-ChildItem -Name` only provides the names of the child items instead of the whole 'item'. PowerShells `ContainerProviderBase` provides a method to implement the case separately. TreeStore maps invocation to `GetChildNames` and `GetChildNamesDynamicParameters` to the implementation of `GetChildItems`.
+
+A future improvement would be:
+- [ ] Provide an `IGetChildNames` capability
+	- [ ] Fallback to `IGetChildItem` capability if `IGetChildNames` is missing
 
 ## Implementing ItemCmdletProvider
 
