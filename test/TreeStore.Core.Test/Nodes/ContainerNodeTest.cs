@@ -353,7 +353,6 @@ namespace TreeStore.Core.Test.Nodes
             var childItems = new ProviderNode[]
             {
                 ArrangeLeafNode("child1", ServiceProvider()),
-                //ContainerNodeFactory.Create("child2", new Dictionary<string,object>())
             };
 
             var underlying = this.mocks.Create<IGetChildItem>();

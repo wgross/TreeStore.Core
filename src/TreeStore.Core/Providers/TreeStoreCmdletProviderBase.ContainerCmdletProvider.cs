@@ -1,8 +1,8 @@
-﻿using TreeStore.Core.Capabilities;
-using TreeStore.Core.Nodes;
-using System;
+﻿using System;
 using System.IO;
 using System.Management.Automation;
+using TreeStore.Core.Capabilities;
+using TreeStore.Core.Nodes;
 
 namespace TreeStore.Core.Providers
 {
@@ -15,8 +15,8 @@ namespace TreeStore.Core.Providers
 
         /// <summary>
         /// Implements the copying of a provider item.
-        /// The existence of the child node <paramref name="path"/> has already happened in <see cref="ItemExists(string)"/>.
-        /// th destination path <paramref name="destination"/> is completely unverified.
+        /// The existence of the child node <paramref name="path"/> has been verified in <see cref="ItemExists(string)"/>.
+        /// th destination path <paramref name="destination"/> is unverified.
         /// </summary>
         protected override void CopyItem(string path, string destination, bool recurse)
         {
@@ -51,10 +51,13 @@ namespace TreeStore.Core.Providers
             invoke: c => c.CopyChildItemParameters(path, destination, recurse),
             fallback: () => base.CopyItemDynamicParameters(path, destination, recurse));
 
-        protected override void GetChildItems(string path, bool recurse)
-        {
-            base.GetChildItems(path, recurse);
-        }
+        /// <summary>
+        /// this isn't used. The base class method in <see cref="ContainerCmdletProvider"/> is called if depth is <see cref="uint.MaxValue"/>.
+        /// </summary>
+        //protected override void GetChildItems(string path, bool recurse)
+        //{
+        //    base.GetChildItems(path, recurse);
+        //}
 
         protected override void GetChildItems(string path, bool recurse, uint depth)
         {
@@ -102,10 +105,7 @@ namespace TreeStore.Core.Providers
                 fallback: () => base.GetChildNames(path, returnContainers));
         }
 
-        protected override object GetChildNamesDynamicParameters(string path)
-        {
-            return base.GetChildNamesDynamicParameters(path);
-        }
+        protected override object GetChildNamesDynamicParameters(string path) => this.GetChildItemsDynamicParameters(path, recurse: false);
 
         protected override bool HasChildItems(string path)
         {

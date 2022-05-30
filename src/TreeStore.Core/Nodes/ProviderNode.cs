@@ -12,8 +12,8 @@ namespace TreeStore.Core.Nodes
     {
         protected ProviderNode(string? name, IServiceProvider underlying)
         {
-            if (name is null) throw new ArgumentNullException(nameof(name));
-            if (underlying is null) throw new ArgumentNullException(nameof(underlying));
+            ArgumentNullException.ThrowIfNull(name, nameof(name));
+            ArgumentNullException.ThrowIfNull(underlying, nameof(underlying));
 
             this.Name = name;
             this.Underlying = underlying;
