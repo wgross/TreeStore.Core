@@ -1,269 +1,268 @@
-﻿using TreeStore.Core;
-using System.Linq;
+﻿using System.Linq;
 using System.Management.Automation;
+using TreeStore.Core;
 using Xunit;
 using UnderlyingDictionary = System.Collections.Generic.Dictionary<string, object?>;
 
-namespace TreeStore.DictionaryFS.Test.ItemCmdletProvider
+namespace TreeStore.DictionaryFS.Test.ItemCmdletProvider;
+
+[Collection(nameof(PowerShell))]
+public sealed class ItemCmdletProviderTest : ItemCmdletProviderTestBase
 {
-    [Collection(nameof(PowerShell))]
-    public sealed class ItemCmdletProviderTest : ItemCmdletProviderTestBase
+    #region Get-Item -Path
+
+    [Fact]
+    public void Powershell_reads_root_node()
     {
-        #region Get-Item -Path
+        // ARRANGE
+        this.ArrangeFileSystem(new UnderlyingDictionary());
 
-        [Fact]
-        public void Powershell_reads_root_node()
+        // ACT
+        var result = this.PowerShell.AddCommand("Get-Item")
+            .AddParameter("Path", @"test:\")
+            .Invoke()
+            .ToArray();
+
+        // ASSERT
+        Assert.False(this.PowerShell.HadErrors);
+
+        var psobject = result.Single();
+
+        Assert.Equal("test:", psobject.Property<string>("PSChildName"));
+        Assert.True(psobject.Property<bool>("PSIsContainer"));
+        Assert.Equal("test", psobject.Property<PSDriveInfo>("PSDrive").Name);
+        Assert.Equal("DictionaryFS", psobject.Property<ProviderInfo>("PSProvider").Name);
+        Assert.Equal(@"TreeStore.DictionaryFS\DictionaryFS::test:\", psobject.Property<string>("PSPath"));
+        Assert.Equal(string.Empty, psobject.Property<string>("PSParentPath"));
+    }
+
+    [Fact]
+    public void Powershell_reads_root_child_node()
+    {
+        // ARRANGE
+        var root = new UnderlyingDictionary
         {
-            // ARRANGE
-            this.ArrangeFileSystem(new UnderlyingDictionary());
+            ["item"] = new UnderlyingDictionary()
+        };
 
-            // ACT
-            var result = this.PowerShell.AddCommand("Get-Item")
-                .AddParameter("Path", @"test:\")
-                .Invoke()
-                .ToArray();
+        this.ArrangeFileSystem(root);
 
-            // ASSERT
-            Assert.False(this.PowerShell.HadErrors);
+        // ACT
+        var result = this.PowerShell.AddCommand("Get-Item")
+            .AddParameter("Path", @"test:\item")
+            .Invoke()
+            .ToArray();
 
-            var psobject = result.Single();
+        // ASSERT
+        Assert.False(this.PowerShell.HadErrors);
 
-            Assert.Equal("test:", psobject.Property<string>("PSChildName"));
-            Assert.True(psobject.Property<bool>("PSIsContainer"));
-            Assert.Equal("test", psobject.Property<PSDriveInfo>("PSDrive").Name);
-            Assert.Equal("DictionaryFS", psobject.Property<ProviderInfo>("PSProvider").Name);
-            Assert.Equal(@"TreeStore.DictionaryFS\DictionaryFS::test:\", psobject.Property<string>("PSPath"));
-            Assert.Equal(string.Empty, psobject.Property<string>("PSParentPath"));
-        }
+        var psobject = result.Single();
 
-        [Fact]
-        public void Powershell_reads_root_child_node()
+        Assert.Equal("item", psobject.Property<string>("PSChildName"));
+        Assert.True(psobject.Property<bool>("PSIsContainer"));
+        Assert.Equal("test", psobject.Property<PSDriveInfo>("PSDrive").Name);
+        Assert.Equal("DictionaryFS", psobject.Property<ProviderInfo>("PSProvider").Name);
+        Assert.Equal(@"TreeStore.DictionaryFS\DictionaryFS::test:\item", psobject.Property<string>("PSPath"));
+        Assert.Equal(@"TreeStore.DictionaryFS\DictionaryFS::test:", psobject.Property<string>("PSParentPath"));
+    }
+
+    [Fact]
+    public void Powershell_reads_root_grandchild_node()
+    {
+        // ARRANGE
+        var root = new UnderlyingDictionary
         {
-            // ARRANGE
-            var root = new UnderlyingDictionary
+            ["item"] = new UnderlyingDictionary
             {
                 ["item"] = new UnderlyingDictionary()
-            };
+            }
+        };
 
-            this.ArrangeFileSystem(root);
+        this.ArrangeFileSystem(root);
 
-            // ACT
-            var result = this.PowerShell.AddCommand("Get-Item")
-                .AddParameter("Path", @"test:\item")
-                .Invoke()
-                .ToArray();
+        // ACT
+        var result = this.PowerShell.AddCommand("Get-Item")
+            .AddParameter("Path", @"test:\item\item")
+            .Invoke()
+            .ToArray();
 
-            // ASSERT
-            Assert.False(this.PowerShell.HadErrors);
+        // ASSERT
+        Assert.False(this.PowerShell.HadErrors);
 
-            var psobject = result.Single();
+        var psobject = result.Single();
 
-            Assert.Equal("item", psobject.Property<string>("PSChildName"));
-            Assert.True(psobject.Property<bool>("PSIsContainer"));
-            Assert.Equal("test", psobject.Property<PSDriveInfo>("PSDrive").Name);
-            Assert.Equal("DictionaryFS", psobject.Property<ProviderInfo>("PSProvider").Name);
-            Assert.Equal(@"TreeStore.DictionaryFS\DictionaryFS::test:\item", psobject.Property<string>("PSPath"));
-            Assert.Equal(@"TreeStore.DictionaryFS\DictionaryFS::test:", psobject.Property<string>("PSParentPath"));
-        }
-
-        [Fact]
-        public void Powershell_reads_root_grandchild_node()
-        {
-            // ARRANGE
-            var root = new UnderlyingDictionary
-            {
-                ["item"] = new UnderlyingDictionary
-                {
-                    ["item"] = new UnderlyingDictionary()
-                }
-            };
-
-            this.ArrangeFileSystem(root);
-
-            // ACT
-            var result = this.PowerShell.AddCommand("Get-Item")
-                .AddParameter("Path", @"test:\item\item")
-                .Invoke()
-                .ToArray();
-
-            // ASSERT
-            Assert.False(this.PowerShell.HadErrors);
-
-            var psobject = result.Single();
-
-            Assert.Equal("item", psobject.Property<string>("PSChildName"));
-            Assert.True(psobject.Property<bool>("PSIsContainer"));
-            Assert.Equal("test", psobject.Property<PSDriveInfo>("PSDrive").Name);
-            Assert.Equal("DictionaryFS", psobject.Property<ProviderInfo>("PSProvider").Name);
-            Assert.Equal(@"TreeStore.DictionaryFS\DictionaryFS::test:\item\item", psobject.Property<string>("PSPath"));
-            Assert.Equal(@"TreeStore.DictionaryFS\DictionaryFS::test:\item", psobject.Property<string>("PSParentPath"));
-        }
-
-        #endregion Get-Item -Path
-
-        #region Set-Item -Path
-
-        [Fact]
-        public void Powershell_sets_item_value()
-        {
-            // ARRANGE
-            var root = new UnderlyingDictionary
-            {
-                ["child"] = new UnderlyingDictionary()
-            };
-
-            this.ArrangeFileSystem(root);
-            var newValue = new UnderlyingDictionary
-            {
-                ["data"] = new object()
-            };
-
-            // ACT
-            var result = this.PowerShell.AddCommand("Set-Item")
-                .AddParameter("Path", @"test:\child")
-                .AddParameter("Value", newValue)
-                .Invoke()
-                .ToArray();
-
-            // ASSERT
-            Assert.False(this.PowerShell.HadErrors);
-            Assert.Empty(result);
-            Assert.NotSame(newValue, root["child"]);
-            Assert.Same(newValue["data"], ((UnderlyingDictionary)root["child"]!)["data"]);
-        }
-
-        #endregion Set-Item -Path
-
-        #region Clear-Item -Path
-
-        [Fact]
-        public void Powershell_clears_item_value()
-        {
-            // ARRANGE
-            var node = new UnderlyingDictionary
-            {
-                ["child"] = new object()
-            };
-
-            this.ArrangeFileSystem(node);
-
-            // ACT
-            var result = this.PowerShell.AddCommand("Clear-Item")
-                .AddParameter("Path", @"test:\")
-                .Invoke()
-                .ToArray();
-
-            // ASSERT
-            Assert.False(this.PowerShell.HadErrors);
-            Assert.Empty(result);
-            Assert.Empty(node);
-        }
-
-        #endregion Clear-Item -Path
-
-        #region Test-Path -Path -PathType
-
-        [Fact]
-        public void Powershell_tests_root_path()
-        {
-            // ARRANGE
-            this.ArrangeFileSystem(new UnderlyingDictionary());
-
-            // ACT
-            var result = this.PowerShell.AddCommand("Test-Path")
-                .AddParameter("Path", @"test:\")
-                .Invoke()
-                .ToArray();
-
-            // ASSERT
-            Assert.False(this.PowerShell.HadErrors);
-            Assert.True((bool)result.Single().BaseObject);
-        }
-
-        [Fact]
-        public void Powershell_tests_root_path_as_container()
-        {
-            // ARRANGE
-            this.ArrangeFileSystem(new UnderlyingDictionary());
-
-            // ACT
-            var result = this.PowerShell.AddCommand("Test-Path")
-                .AddParameter("Path", @"test:\")
-                .AddParameter("PathType", "Container")
-                .Invoke()
-                .ToArray();
-
-            // ASSERT
-            Assert.False(this.PowerShell.HadErrors);
-            Assert.True((bool)result.Single().BaseObject);
-        }
-
-        [Fact]
-        public void Powershell_tests_child_path()
-        {
-            // ARRANGE
-            this.ArrangeFileSystem(new UnderlyingDictionary
-            {
-                ["child"] = new UnderlyingDictionary()
-            });
-
-            // ACT
-            var result = this.PowerShell.AddCommand("Test-Path")
-                .AddParameter("Path", @"test:\child")
-                .Invoke()
-                .ToArray();
-
-            // ASSERT
-            Assert.False(this.PowerShell.HadErrors);
-            Assert.True((bool)result.Single().BaseObject);
-        }
-
-        [Fact]
-        public void Powershell_tests_child_path_as_container()
-        {
-            // ARRANGE
-            this.ArrangeFileSystem(new UnderlyingDictionary
-            {
-                ["child"] = new UnderlyingDictionary()
-            });
-
-            // ACT
-            var result = this.PowerShell.AddCommand("Test-Path")
-                .AddParameter("Path", @"test:\child")
-                .AddParameter("PathType", "Container")
-                .Invoke()
-                .ToArray();
-
-            // ASSERT
-            Assert.False(this.PowerShell.HadErrors);
-            Assert.True((bool)result.Single().BaseObject);
-        }
-
-        #endregion Test-Path -Path -PathType
-
-        #region Invoke-Item -Path
-
-        [Fact]
-        public void Powershell_invoke_default_action_fails()
-        {
-            // ARRANGE
-            var root = new UnderlyingDictionary
-            {
-                ["item"] = new object()
-            };
-
-            this.ArrangeFileSystem(root);
-
-            // ACT
-            var _ = this.PowerShell.AddCommand("Invoke-Item")
-                .AddParameter("Path", @"test:\item")
-                .Invoke()
-                .ToArray();
-
-            // ASSERT
-            Assert.True(this.PowerShell.HadErrors);
-        }
-
-        #endregion Invoke-Item -Path
+        Assert.Equal("item", psobject.Property<string>("PSChildName"));
+        Assert.True(psobject.Property<bool>("PSIsContainer"));
+        Assert.Equal("test", psobject.Property<PSDriveInfo>("PSDrive").Name);
+        Assert.Equal("DictionaryFS", psobject.Property<ProviderInfo>("PSProvider").Name);
+        Assert.Equal(@"TreeStore.DictionaryFS\DictionaryFS::test:\item\item", psobject.Property<string>("PSPath"));
+        Assert.Equal(@"TreeStore.DictionaryFS\DictionaryFS::test:\item", psobject.Property<string>("PSParentPath"));
     }
+
+    #endregion Get-Item -Path
+
+    #region Set-Item -Path
+
+    [Fact]
+    public void Powershell_sets_item_value()
+    {
+        // ARRANGE
+        var root = new UnderlyingDictionary
+        {
+            ["child"] = new UnderlyingDictionary()
+        };
+
+        this.ArrangeFileSystem(root);
+        var newValue = new UnderlyingDictionary
+        {
+            ["data"] = new object()
+        };
+
+        // ACT
+        var result = this.PowerShell.AddCommand("Set-Item")
+            .AddParameter("Path", @"test:\child")
+            .AddParameter("Value", newValue)
+            .Invoke()
+            .ToArray();
+
+        // ASSERT
+        Assert.False(this.PowerShell.HadErrors);
+        Assert.Empty(result);
+        Assert.NotSame(newValue, root["child"]);
+        Assert.Same(newValue["data"], ((UnderlyingDictionary)root["child"]!)["data"]);
+    }
+
+    #endregion Set-Item -Path
+
+    #region Clear-Item -Path
+
+    [Fact]
+    public void Powershell_clears_item_value()
+    {
+        // ARRANGE
+        var node = new UnderlyingDictionary
+        {
+            ["child"] = new object()
+        };
+
+        this.ArrangeFileSystem(node);
+
+        // ACT
+        var result = this.PowerShell.AddCommand("Clear-Item")
+            .AddParameter("Path", @"test:\")
+            .Invoke()
+            .ToArray();
+
+        // ASSERT
+        Assert.False(this.PowerShell.HadErrors);
+        Assert.Empty(result);
+        Assert.Empty(node);
+    }
+
+    #endregion Clear-Item -Path
+
+    #region Test-Path -Path -PathType
+
+    [Fact]
+    public void Powershell_tests_root_path()
+    {
+        // ARRANGE
+        this.ArrangeFileSystem(new UnderlyingDictionary());
+
+        // ACT
+        var result = this.PowerShell.AddCommand("Test-Path")
+            .AddParameter("Path", @"test:\")
+            .Invoke()
+            .ToArray();
+
+        // ASSERT
+        Assert.False(this.PowerShell.HadErrors);
+        Assert.True((bool)result.Single().BaseObject);
+    }
+
+    [Fact]
+    public void Powershell_tests_root_path_as_container()
+    {
+        // ARRANGE
+        this.ArrangeFileSystem(new UnderlyingDictionary());
+
+        // ACT
+        var result = this.PowerShell.AddCommand("Test-Path")
+            .AddParameter("Path", @"test:\")
+            .AddParameter("PathType", "Container")
+            .Invoke()
+            .ToArray();
+
+        // ASSERT
+        Assert.False(this.PowerShell.HadErrors);
+        Assert.True((bool)result.Single().BaseObject);
+    }
+
+    [Fact]
+    public void Powershell_tests_child_path()
+    {
+        // ARRANGE
+        this.ArrangeFileSystem(new UnderlyingDictionary
+        {
+            ["child"] = new UnderlyingDictionary()
+        });
+
+        // ACT
+        var result = this.PowerShell.AddCommand("Test-Path")
+            .AddParameter("Path", @"test:\child")
+            .Invoke()
+            .ToArray();
+
+        // ASSERT
+        Assert.False(this.PowerShell.HadErrors);
+        Assert.True((bool)result.Single().BaseObject);
+    }
+
+    [Fact]
+    public void Powershell_tests_child_path_as_container()
+    {
+        // ARRANGE
+        this.ArrangeFileSystem(new UnderlyingDictionary
+        {
+            ["child"] = new UnderlyingDictionary()
+        });
+
+        // ACT
+        var result = this.PowerShell.AddCommand("Test-Path")
+            .AddParameter("Path", @"test:\child")
+            .AddParameter("PathType", "Container")
+            .Invoke()
+            .ToArray();
+
+        // ASSERT
+        Assert.False(this.PowerShell.HadErrors);
+        Assert.True((bool)result.Single().BaseObject);
+    }
+
+    #endregion Test-Path -Path -PathType
+
+    #region Invoke-Item -Path
+
+    [Fact]
+    public void Powershell_invoke_default_action_fails()
+    {
+        // ARRANGE
+        var root = new UnderlyingDictionary
+        {
+            ["item"] = new object()
+        };
+
+        this.ArrangeFileSystem(root);
+
+        // ACT
+        var _ = this.PowerShell.AddCommand("Invoke-Item")
+            .AddParameter("Path", @"test:\item")
+            .Invoke()
+            .ToArray();
+
+        // ASSERT
+        Assert.True(this.PowerShell.HadErrors);
+    }
+
+    #endregion Invoke-Item -Path
 }

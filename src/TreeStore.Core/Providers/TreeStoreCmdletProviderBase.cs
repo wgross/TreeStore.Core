@@ -8,7 +8,7 @@ using System.Management.Automation.Provider;
 
 namespace TreeStore.Core.Providers
 {
-    public partial class TreeStoreCmdletProviderBase : NavigationCmdletProvider
+    public abstract partial class TreeStoreCmdletProviderBase : NavigationCmdletProvider
     {
         private TreeStoreDriveInfoBase DriveInfo => (TreeStoreDriveInfoBase)this.PSDriveInfo;
 

@@ -1,42 +1,40 @@
-﻿using TreeStore.Core;
-using TreeStore.Core.Test;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Management.Automation;
+using TreeStore.Core;
 using TreeStore.DictionaryFS.Nodes;
 using Xunit;
 
-namespace TreeStore.DictionaryFS.Test.DriveCmdletProvider
+namespace TreeStore.DictionaryFS.Test.DriveCmdletProvider;
+
+[Collection(nameof(PowerShell))]
+public class DriveCmdletProviderTest : PowerShellTestBase
 {
-    [Collection(nameof(PowerShell))]
-    public class DriveCmdletProviderTest : PowershellTestBase
+    public DriveCmdletProviderTest()
     {
-        public DriveCmdletProviderTest()
-        {
-            DictionaryFilesystemProvider.RootNodeProvider = _ => new DictionaryContainerAdapter(new Dictionary<string, object?>());
+        DictionaryFsCmdletProvider.RootNodeProvider = _ => new DictionaryContainerAdapter(new Dictionary<string, object?>());
 
-            this.PowerShell.AddCommand("Import-Module").AddArgument("./TreeStore.DictionaryFS.dll").Invoke();
-            this.PowerShell.Commands.Clear();
-        }
+        this.PowerShell.AddCommand("Import-Module").AddArgument("./TreeStore.DictionaryFS.dll").Invoke();
+        this.PowerShell.Commands.Clear();
+    }
 
-        [Fact]
-        public void Powershell_creates_new_drive()
-        {
-            // ACT
-            var result = this.PowerShell.AddCommand("New-PSDrive")
-              .AddParameter("PSProvider", "DictionaryFS")
-              .AddParameter("Name", "test")
-              .AddParameter("Root", "")
-              .Invoke()
-              .ToArray();
+    [Fact]
+    public void Powershell_creates_new_drive()
+    {
+        // ACT
+        var result = this.PowerShell.AddCommand("New-PSDrive")
+          .AddParameter("PSProvider", "DictionaryFS")
+          .AddParameter("Name", "test")
+          .AddParameter("Root", "")
+          .Invoke()
+          .ToArray();
 
-            // ASSERT
-            Assert.False(this.PowerShell.HadErrors);
+        // ASSERT
+        Assert.False(this.PowerShell.HadErrors);
 
-            var psdriveInfo = result.Single().Unwrap<PSDriveInfo>();
+        var psdriveInfo = result.Single().Unwrap<PSDriveInfo>();
 
-            Assert.Equal("test", psdriveInfo.Name);
-            Assert.Equal("test:\\", psdriveInfo.Root);
-        }
+        Assert.Equal("test", psdriveInfo.Name);
+        Assert.Equal("test:\\", psdriveInfo.Root);
     }
 }

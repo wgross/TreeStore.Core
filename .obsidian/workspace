@@ -9,7 +9,7 @@
         "state": {
           "type": "markdown",
           "state": {
-            "file": "src/TreeStore.Core/Providers/readme.md",
+            "file": "README.md",
             "mode": "source",
             "source": false
           }
@@ -53,7 +53,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 478
+    "width": 478,
+    "collapsed": true
   },
   "right": {
     "id": "06605bc89da5866e",
@@ -69,7 +70,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "src/TreeStore.Core/Providers/readme.md",
+                "file": "README.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -89,12 +90,12 @@
   },
   "active": "46cfa19032eb2977",
   "lastOpenFiles": [
-    "src/TreeStore.Core/Providers/readme.md",
     "README.md",
+    "src/TreeStore.DictionaryFS/readme.md",
+    "src/TreeStore.Core/Providers/readme.md",
     "src/TreeStore.Core/Capabilities/readme.md",
     "ToDo.md",
     "src/TreeStore.Core/Nodes/readme.md",
-    "src/TreeStore.DictionaryFS/readme.md",
     "().md"
   ]
 }

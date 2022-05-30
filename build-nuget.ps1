@@ -14,7 +14,7 @@ Import-Module dotnet-cli-pack
 	Remove-Item -Path *.snupkg
 
 	# Create new package/symbol package
- 	dotnet-fs\Get-DotNetProjectItem -CSproj | dotnet-cli-pack\Invoke-DotNetPack
+ 	dotnet-fs\Get-DotNetProjectItem -CSproj | dotnet-cli-pack\Invoke-DotNetPack -PackOutput ("src:\packages"|Resolve-Path -Relative)
 }
 
 
