@@ -25,10 +25,11 @@ cd TreeStore.DictionaryFS.Test
 dotnet new xunit
 ```
 
-As a dependency only the main project must be added:
+As a dependency the main project must be added and the PowerShell SDK for hosting:
 
 ```Powershell
 dotnet add reference ../TreeStore.DictionaryFS
+ditnet add package Microsoft.PowerShell.SDK
 ```
 
 Now you may add a solution to the project, add the projects and continue in visual studio or an other IDE of your choice.
@@ -37,7 +38,7 @@ Now you may add a solution to the project, add the projects and continue in visu
 Two classes have to be created for a new filesystem command provider:
 
 1. The provider itself: It is annotated with a unique descriptor and may publish additional [provider capabilities](https://docs.microsoft.com/en-us/dotnet/api/system.management.automation.provider.providercapabilities). Currently TreeStore doesn't help with providing any of these capabilities yet. which is why we declare `ProviderCapabilities.None`. The provider class also knows how to create a instance of the second class to build.
-2. The drive info: The custom drive info class derived from PowerShells [PSDriveInfo](https://docs.microsoft.com/en-us/dotnet/api/system.management.automation.psdriveinfo) class holds the state of the drive. PwoerShell wiull kepep the instance of the drive info as long the the drive isn't removed. It is created from an instance of the `PSDiveInfo` class given the to providers method `NewDrive` and contains the parameters which were given to PowerShell `New-Drive` command. 
+2. The drive info: The custom drive info class derived from PowerShells [PSDriveInfo](https://docs.microsoft.com/en-us/dotnet/api/system.management.automation.psdriveinfo) class holds the state of the drive. PowerShell will keep the instance of the drive info as long the the drive isn't removed. It is created from an instance of the `PSDiveInfo` class given the to providers method `NewDrive` and contains the parameters which were given to PowerShell `New-Drive` command. 
 
 The most vital  information in respect to TreeStore kept by in the DriveInfo is how to get access to the root node of the file system data. Please refer to the files [DictionaryFsCmdletProvider](DictionaryFsCmdletProvider.cs) and [DictionaryFsDriveInfo](DictionaryFsDriveInfo.cs) for complete examples.
 

@@ -10,11 +10,11 @@ namespace TreeStore.Core.Capabilities
         /// <summary>
         /// Dynamic parameter provided to PowerShells 'Get-Item' command.
         /// </summary>
-        object? GetItemParameters() => new RuntimeDefinedParameterDictionary();
+        public object? GetItemParameters() => new RuntimeDefinedParameterDictionary();
 
         /// <summary>
         /// Creates a <see cref="PSObject"/> wrapping the implementing class of this interface in the <see cref="PowerShell"/> pipe.
         /// </summary>
-        PSObject? GetItem();
+        public PSObject? GetItem();
     }
 }

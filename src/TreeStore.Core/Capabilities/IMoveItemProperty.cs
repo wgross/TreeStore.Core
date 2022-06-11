@@ -10,12 +10,12 @@ namespace TreeStore.Core.Capabilities
         /// </summary>
         /// <param name="properties"></param>
         /// <returns>empty <see cref="RuntimeDefinedParameterDictionary"/> by default</returns>
-        object? MoveItemPropertyParameters(string sourcePath, string sourceProperty, string destinationPath, string destinationProperty) => new RuntimeDefinedParameterDictionary();
+        public object? MoveItemPropertyParameters(string sourcePath, string sourceProperty, string destinationPath, string destinationProperty) => new RuntimeDefinedParameterDictionary();
 
         /// <summary>
         /// Move the given item property
         /// </summary>
         /// <param name="properties"></param>
-        void MoveItemProperty(ProviderNode sourceNode, string sourceProperty, string destinationProperty);
+        public void MoveItemProperty(ProviderNode sourceNode, string sourceProperty, string destinationProperty);
     }
 }

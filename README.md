@@ -3,7 +3,11 @@
 A C# Framework to help building PowerShell Command providers. 
 
 ## Building the project
-Make sure the submodules are updated. Then build simple build the solution.
+Simply build the solution. 
+
+The project references  a current version of `System.Management.Automation` instead of the `PowerShellStandrad.Library`. The project also targets net6.0 instead netstatdrd2.0 and is therefore not portable between PS 5.1 and PS 7. Support the old platform would require to change the code from C# 10 to C# 7.3 which is quiet some work. 
+
+For PowerShell Debugging the PowerShell project is referenced as a submodule. This can be enabled by uncommenting the section in [TreeStore.Core](src/TreeStore.Core/TreeStore.Core.csproj). 
 
 ## Core Concepts
 
@@ -24,9 +28,10 @@ TreeStore.Core simply traverses the path and delegates the execution of the oper
 ```mermaid
 %%{
 	init: { 
+		"themeVariables": { 'noteTextColor': 'black' },
 		"sequence": { 
 			"showSequenceNumbers":true,
-			"rightAngles":true,
+			"rightAngles":true
 		}
 	}
 }%%

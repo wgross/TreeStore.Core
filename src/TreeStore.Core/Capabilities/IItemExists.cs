@@ -4,8 +4,8 @@ namespace TreeStore.Core.Capabilities
 {
     public interface IItemExists
     {
-        object? ItemExistsParameters() => new RuntimeDefinedParameterDictionary();
+        public object? ItemExistsParameters() => new RuntimeDefinedParameterDictionary();
 
-        bool ItemExists() => true;
+        public bool ItemExists() => true;
     }
 }

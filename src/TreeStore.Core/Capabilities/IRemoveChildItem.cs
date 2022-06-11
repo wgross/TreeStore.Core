@@ -9,12 +9,12 @@ namespace TreeStore.Core.Capabilities
         /// </summary>
         /// <param name="childName"></param>
         /// <returns>empty <see cref="RuntimeDefinedParameterDictionary"/> by default</returns>
-        object? RemoveChildItemParameters(string childName, bool recurse) => new RuntimeDefinedParameterDictionary();
+        public object? RemoveChildItemParameters(string childName, bool recurse) => new RuntimeDefinedParameterDictionary();
 
         /// <summary>
         /// removes the child item specify by <paramref name="childName"/>
         /// </summary>
         /// <param name="childName"></param>
-        void RemoveChildItem(string childName, bool recurse);
+        public void RemoveChildItem(string childName, bool recurse);
     }
 }

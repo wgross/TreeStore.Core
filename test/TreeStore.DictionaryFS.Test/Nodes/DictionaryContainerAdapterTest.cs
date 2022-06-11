@@ -82,6 +82,26 @@ public class DictionaryContainerAdapterTest
         Assert.Same(child!, result!.Property<object>("child"));
     }
 
+    [Fact]
+    public void GetItemParameters_is_null()
+    {
+        // ARRANGE
+        var data = new object();
+        var child = new UnderlyingDictionary();
+        var node = ArrangeContainerAdapter(new UnderlyingDictionary
+        {
+            ["data"] = data,
+            ["null"] = null,
+            ["child"] = child
+        });
+
+        // ACT
+        var result = ((IGetItem)node).GetItemParameters();
+
+        // ASSERT
+        Assert.NotNull(result);
+    }
+
     #endregion IGetItem
 
     #region ISetItem
@@ -233,7 +253,7 @@ public class DictionaryContainerAdapterTest
             {
                 { "container1", new UnderlyingDictionary { { "leaf", new { } } } },
                 { "property" , "text" },
-                { "container2", Mock.Of<IItemContainer>() },
+                { "container2", Mock.Of<IGetChildItem>() },
             };
 
         var node = ArrangeContainerAdapter(underlying);
@@ -256,7 +276,7 @@ public class DictionaryContainerAdapterTest
         var underlying = new UnderlyingDictionary
             {
                 { "property" , "text" },
-                { "container2", Mock.Of<IItemContainer>() },
+                { "container2", Mock.Of<IGetChildItem>() },
             };
 
         var node = ArrangeContainerAdapter(underlying);
@@ -283,7 +303,7 @@ public class DictionaryContainerAdapterTest
         var underlying = new UnderlyingDictionary
             {
                 { "property" , "text" },
-                { "container2", Mock.Of<IItemContainer>() },
+                { "container2", Mock.Of<IGetChildItem>() },
             };
 
         var node = ArrangeContainerAdapter(underlying);
@@ -309,7 +329,7 @@ public class DictionaryContainerAdapterTest
     {
         var underlying = new UnderlyingDictionary
         {
-            ["container1"] = Mock.Of<IItemContainer>(),
+            ["container1"] = Mock.Of<IGetChildItem>(),
         };
 
         var node = ArrangeContainerAdapter(underlying);

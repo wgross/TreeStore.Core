@@ -143,7 +143,7 @@ public sealed class ContainerCmdletProviderTest : ItemCmdletProviderTestBase
                 }
             },
             ["property"] = "text",
-            ["child2"] = Mock.Of<IItemContainer>()
+            ["child2"] = Mock.Of<IGetChildItem>()
         };
 
         this.ArrangeFileSystem(root);

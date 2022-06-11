@@ -13,6 +13,6 @@ namespace TreeStore.Core.Capabilities
         /// </summary>
         /// <param name="nodeToCopy"></param>
         /// <param name="destination"></param>
-        ProviderNode? CopyChildItemRecursive(ProviderNode nodeToCopy, string[] destination);
+        public ProviderNode? CopyChildItemRecursive(ProviderNode nodeToCopy, string[] destination);
     }
 }

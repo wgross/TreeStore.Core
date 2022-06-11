@@ -1,10 +1,10 @@
-﻿using TreeStore.Core.Nodes;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Management.Automation;
 using System.Management.Automation.Provider;
+using TreeStore.Core.Nodes;
 
 namespace TreeStore.Core.Providers
 {
@@ -172,7 +172,7 @@ namespace TreeStore.Core.Providers
             }
             else
             {
-                throw new ItemNotFoundException($"Can't find path '{string.Join(this.ItemSeparator, path)}'");
+                throw new ItemNotFoundException($"Can't find path '{string.Join("\\", path)}'");
             }
         }
 

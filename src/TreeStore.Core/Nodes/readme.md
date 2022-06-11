@@ -48,7 +48,6 @@ When called the node will ask with `GetService(typeof(<capability>)` for at leas
 - IGetItem
 - IGetItemProperty
 - IInvokeItem
-- IItemContainer
 - IItemExists
 - IMoveChildItem
 - IMoveItemProperty

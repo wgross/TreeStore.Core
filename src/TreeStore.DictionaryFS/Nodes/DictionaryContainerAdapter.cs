@@ -1,9 +1,9 @@
-﻿using TreeStore.Core.Capabilities;
-using TreeStore.Core.Nodes;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Management.Automation;
+using TreeStore.Core.Capabilities;
+using TreeStore.Core.Nodes;
 using IUnderlyingDictionary = System.Collections.Generic.IDictionary<string, object?>;
 
 namespace TreeStore.DictionaryFS.Nodes
@@ -97,11 +97,6 @@ namespace TreeStore.DictionaryFS.Nodes
             foreach (var item in this.Underlying)
                 pso.Properties.Add(new PSNoteProperty(item.Key, item.Value));
             return pso;
-        }
-
-        public void SetItem()
-        {
-            throw new NotImplementedException();
         }
 
         #endregion IGetItem

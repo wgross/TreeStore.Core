@@ -11,11 +11,11 @@ namespace TreeStore.Core.Capabilities
         /// Provide dynamic parameters to PwerShells 'Set-Item' command.
         /// </summary>
         /// <returns></returns>
-        object? SetItemParameters() => new RuntimeDefinedParameterDictionary();
+        public object? SetItemParameters() => new RuntimeDefinedParameterDictionary();
 
         /// <summary>
         /// Implements setting the items value.
         /// </summary>
-        void SetItem(object? value);
+        public void SetItem(object? value);
     }
 }

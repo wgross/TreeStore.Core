@@ -10,11 +10,11 @@ namespace TreeStore.Core.Capabilities
         /// <summary>
         /// Dynamic parameter provided to PowerShells 'Clear-Item' command.
         /// </summary>
-        object? ClearItemParameters() => new RuntimeDefinedParameterDictionary();
+        public object? ClearItemParameters() => new RuntimeDefinedParameterDictionary();
 
         /// <summary>
         /// Clear the content of the file system item.
         /// </summary>
-        void ClearItem();
+        public void ClearItem();
     }
 }

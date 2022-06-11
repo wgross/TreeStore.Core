@@ -10,13 +10,13 @@ namespace TreeStore.Core.Capabilities
         /// </summary>
         /// <param name="childName"></param>
         /// <returns>empty <see cref="RuntimeDefinedParameterDictionary"/> by default</returns>
-        object? CopyChildItemParameters(string childName, string destination, bool recurse) => new RuntimeDefinedParameterDictionary();
+        public object? CopyChildItemParameters(string childName, string destination, bool recurse) => new RuntimeDefinedParameterDictionary();
 
         /// <summary>
         /// Creates a new child node at <paramref name="destination"/> from the given <paramref name="nodeToCopy"/>
         /// </summary>
         /// <param name="nodeToCopy"></param>
         /// <param name="destination"></param>
-        ProviderNode? CopyChildItem(ProviderNode nodeToCopy, string[] destination);
+        public ProviderNode? CopyChildItem(ProviderNode nodeToCopy, string[] destination);
     }
 }
