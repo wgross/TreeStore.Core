@@ -4,7 +4,7 @@ using TreeStore.Core;
 using Xunit;
 using UnderlyingDictionary = System.Collections.Generic.Dictionary<string, object?>;
 
-namespace TreeStore.DictionaryFS.Test.ItemCmdletProvider;
+namespace TreeStore.DictionaryFS.Test;
 
 [Collection(nameof(PowerShell))]
 public sealed class ItemCmdletProviderTest : ItemCmdletProviderTestBase
@@ -40,12 +40,10 @@ public sealed class ItemCmdletProviderTest : ItemCmdletProviderTestBase
     public void Powershell_reads_root_child_node()
     {
         // ARRANGE
-        var root = new UnderlyingDictionary
+        var root = this.ArrangeFileSystem(new UnderlyingDictionary
         {
             ["item"] = new UnderlyingDictionary()
-        };
-
-        this.ArrangeFileSystem(root);
+        });
 
         // ACT
         var result = this.PowerShell.AddCommand("Get-Item")
@@ -70,15 +68,13 @@ public sealed class ItemCmdletProviderTest : ItemCmdletProviderTestBase
     public void Powershell_reads_root_grandchild_node()
     {
         // ARRANGE
-        var root = new UnderlyingDictionary
+        var root = this.ArrangeFileSystem(new UnderlyingDictionary
         {
             ["item"] = new UnderlyingDictionary
             {
                 ["item"] = new UnderlyingDictionary()
             }
-        };
-
-        this.ArrangeFileSystem(root);
+        });
 
         // ACT
         var result = this.PowerShell.AddCommand("Get-Item")
@@ -107,12 +103,12 @@ public sealed class ItemCmdletProviderTest : ItemCmdletProviderTestBase
     public void Powershell_sets_item_value()
     {
         // ARRANGE
-        var root = new UnderlyingDictionary
+
+        var root = this.ArrangeFileSystem(new UnderlyingDictionary
         {
             ["child"] = new UnderlyingDictionary()
-        };
+        });
 
-        this.ArrangeFileSystem(root);
         var newValue = new UnderlyingDictionary
         {
             ["data"] = new object()
@@ -140,23 +136,24 @@ public sealed class ItemCmdletProviderTest : ItemCmdletProviderTestBase
     public void Powershell_clears_item_value()
     {
         // ARRANGE
-        var node = new UnderlyingDictionary
+        var node = this.ArrangeFileSystem(new UnderlyingDictionary
         {
             ["child"] = new object()
-        };
-
-        this.ArrangeFileSystem(node);
+        });
 
         // ACT
         var result = this.PowerShell.AddCommand("Clear-Item")
             .AddParameter("Path", @"test:\")
+            .AddStatement()
+            .AddCommand("Get-Item")
+            .AddParameter("Path", @"test:\")
             .Invoke()
-            .ToArray();
+            .Single();
 
         // ASSERT
+        // underlying dictionary is empty
         Assert.False(this.PowerShell.HadErrors);
-        Assert.Empty(result);
-        Assert.Empty(node);
+        Assert.True(result.PropertyIsNull("child"));
     }
 
     #endregion Clear-Item -Path
@@ -199,23 +196,21 @@ public sealed class ItemCmdletProviderTest : ItemCmdletProviderTestBase
     }
 
     [Fact]
-    public void Powershell_tests_child_path()
+    public void Powershell_tests_root_path_as_leaf_fails()
     {
         // ARRANGE
-        this.ArrangeFileSystem(new UnderlyingDictionary
-        {
-            ["child"] = new UnderlyingDictionary()
-        });
+        this.ArrangeFileSystem(new UnderlyingDictionary());
 
         // ACT
         var result = this.PowerShell.AddCommand("Test-Path")
-            .AddParameter("Path", @"test:\child")
+            .AddParameter("Path", @"test:\")
+            .AddParameter("PathType", "Leaf")
             .Invoke()
             .ToArray();
 
         // ASSERT
         Assert.False(this.PowerShell.HadErrors);
-        Assert.True((bool)result.Single().BaseObject);
+        Assert.False((bool)result.Single().BaseObject);
     }
 
     [Fact]

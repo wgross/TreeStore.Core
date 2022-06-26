@@ -1,4 +1,5 @@
-﻿using Moq;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Moq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,7 +12,7 @@ using Xunit;
 using IUnderlyingDictionary = System.Collections.Generic.IDictionary<string, object?>;
 using UnderlyingDictionary = System.Collections.Generic.Dictionary<string, object?>;
 
-namespace TreeStore.DictionaryFS.Test.Nodes;
+namespace TreeStore.DictionaryFS.Test;
 
 public class DictionaryContainerAdapterTest
 {
@@ -74,7 +75,7 @@ public class DictionaryContainerAdapterTest
         });
 
         // ACT
-        var result = ((IGetItem)node).GetItem();
+        var result = node.GetRequiredService<IGetItem>().GetItem();
 
         // ASSERT
         Assert.Same(data, result!.Property<object>("data"));
@@ -96,7 +97,7 @@ public class DictionaryContainerAdapterTest
         });
 
         // ACT
-        var result = ((IGetItem)node).GetItemParameters();
+        var result = node.GetRequiredService<IGetItem>().GetItemParameters();
 
         // ASSERT
         Assert.NotNull(result);
@@ -121,7 +122,7 @@ public class DictionaryContainerAdapterTest
         };
 
         // ACT
-        ((ISetItem)node).SetItem(newData);
+        node.GetRequiredService<ISetItem>().SetItem(newData);
 
         // ASSERT
         Assert.Equal(newData.Values, node.Underlying.Values);
@@ -139,7 +140,7 @@ public class DictionaryContainerAdapterTest
         });
 
         // ACT
-        var result = Assert.Throws<InvalidOperationException>(() => ((ISetItem)node).SetItem(new object()));
+        var result = Assert.Throws<InvalidOperationException>(() => node.GetRequiredService<ISetItem>().SetItem(new object()));
 
         // ASSERT
         Assert.Equal("Data of type 'System.Object' can't be assigned", result.Message);
@@ -155,7 +156,7 @@ public class DictionaryContainerAdapterTest
         });
 
         // ACT
-        var result = Assert.Throws<ArgumentNullException>(() => ((ISetItem)node).SetItem(null));
+        var result = Assert.Throws<ArgumentNullException>(() => node.GetRequiredService<ISetItem>().SetItem(null));
 
         // ASSERT
         Assert.Equal("value", result.ParamName);
@@ -175,15 +176,57 @@ public class DictionaryContainerAdapterTest
         });
 
         // ACT
-        ((IClearItem)node).ClearItem();
+        node.GetRequiredService<IClearItem>().ClearItem();
 
         // ASSERT
+        // dictionary is empty
         Assert.Empty(node.Underlying);
     }
 
     #endregion IClearItem
 
     #region IGetChildItem
+
+    [Fact]
+    public void HasChildItems_is_true_for_Dictionary()
+    {
+        // ARRANGE
+        var underlying = new UnderlyingDictionary
+        {
+            ["container1"] = new UnderlyingDictionary
+            {
+                ["leaf"] = new { }
+            },
+            ["property"] = "text"
+        };
+
+        var node = ArrangeContainerAdapter(underlying);
+
+        // ACT
+        var result = node.GetRequiredService<IGetChildItem>().HasChildItems();
+
+        // ASSERT
+        Assert.True(result);
+    }
+
+    [Fact]
+    public void HasChildItems_is_false_for_Object()
+    {
+        // ARRANGE
+        var underlying = new UnderlyingDictionary
+        {
+            ["leaf"] = new { },
+            ["property"] = "text"
+        };
+
+        var node = ArrangeContainerAdapter(underlying);
+
+        // ACT
+        var result = node.GetRequiredService<IGetChildItem>().HasChildItems();
+
+        // ASSERT
+        Assert.False(result);
+    }
 
     [Fact]
     public void GetChildItems_gets_containers()
@@ -201,7 +244,7 @@ public class DictionaryContainerAdapterTest
         var node = ArrangeContainerAdapter(underlying);
 
         // ACT
-        var result = ((IGetChildItem)node).GetChildItems().ToArray();
+        var result = node.GetRequiredService<IGetChildItem>().GetChildItems().ToArray();
 
         // ASSERT
         Assert.Single(result);
@@ -217,26 +260,10 @@ public class DictionaryContainerAdapterTest
         var node = ArrangeContainerAdapter(underlying);
 
         // ACT
-        var result = ((IGetChildItem)node).GetChildItems().ToArray();
+        var result = node.GetRequiredService<IGetChildItem>().GetChildItems().ToArray();
 
         // ASSERT
         Assert.Empty(result);
-    }
-
-    [Fact]
-    public void HasChildItem_returns_GetChildItems_Any()
-    {
-        // ARRANGE
-        var node = ArrangeContainerAdapter(new UnderlyingDictionary
-            {
-                { "child", new Dictionary<string,object>()}
-            });
-
-        // ACT
-        var result = ((IGetChildItem)node).HasChildItems();
-
-        // ASSERT
-        Assert.True(result);
     }
 
     #endregion IGetChildItem
@@ -259,10 +286,32 @@ public class DictionaryContainerAdapterTest
         var node = ArrangeContainerAdapter(underlying);
 
         // ACT
-        ((IRemoveChildItem)node).RemoveChildItem("container1", recurse);
+        node.GetRequiredService<IRemoveChildItem>().RemoveChildItem("container1", recurse);
 
         // ASSERT
         Assert.False(underlying.TryGetValue("container1", out var _));
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void RemoveChildItem_ignores_removing_property_item(bool recurse)
+    {
+        // ARRANGE
+        var underlying = new UnderlyingDictionary
+            {
+                { "container1", new UnderlyingDictionary { { "leaf", new { } } } },
+                { "property" , "text" },
+                { "container2", Mock.Of<IGetChildItem>() },
+            };
+
+        var node = ArrangeContainerAdapter(underlying);
+
+        // ACT
+        node.GetRequiredService<IRemoveChildItem>().RemoveChildItem("property", recurse);
+
+        // ASSERT
+        Assert.True(underlying.TryGetValue("property", out var _));
     }
 
     #endregion IRemoveChildItem
@@ -286,7 +335,7 @@ public class DictionaryContainerAdapterTest
             {
                 { "Name", "container1" }
             };
-        var result = ((INewChildItem)node).NewChildItem("container1", "itemTypeValue", value);
+        var result = node.GetRequiredService<INewChildItem>().NewChildItem("container1", "itemTypeValue", value);
 
         // ASSERT
         Assert.NotNull(result);
@@ -310,7 +359,7 @@ public class DictionaryContainerAdapterTest
 
         // ACT
         var value = new UnderlyingDictionary();
-        var result = ((INewChildItem)node).NewChildItem("container1", "itemTypeValue", value);
+        var result = node.GetRequiredService<INewChildItem>().NewChildItem("container1", "itemTypeValue", value);
 
         // ASSERT
         Assert.NotNull(result);
@@ -318,6 +367,26 @@ public class DictionaryContainerAdapterTest
         Assert.True(result is ContainerNode);
         Assert.True(underlying.TryGetValue("container1", out var added));
         Assert.Same(value, added);
+    }
+
+    [Fact]
+    public void NewChildItem_fails_for_existing_property()
+    {
+        // ARRANGE
+        var underlying = new UnderlyingDictionary
+            {
+                { "property" , "text" },
+                { "container2", Mock.Of<IGetChildItem>() },
+            };
+
+        var node = ArrangeContainerAdapter(underlying);
+
+        // ACT & ASSERT
+        var value = new UnderlyingDictionary()
+            {
+                { "Name", "container1" }
+            };
+        var result = Assert.Throws<ArgumentException>(() => (node.GetRequiredService<INewChildItem>().NewChildItem("property", "itemTypeValue", value)));
     }
 
     #endregion INewChildItem
@@ -335,11 +404,49 @@ public class DictionaryContainerAdapterTest
         var node = ArrangeContainerAdapter(underlying);
 
         // ACT
-        ((IRenameChildItem)node).RenameChildItem("container1", "newname");
+        node.GetRequiredService<IRenameChildItem>().RenameChildItem("container1", "newname");
 
         // ASSERT
         Assert.True(underlying.TryGetValue("newname", out var _));
         Assert.False(underlying.TryGetValue("container1", out var _));
+    }
+
+    [Fact]
+    public void RenameChildItem_fails_for_existing_property()
+    {
+        var underlying = new UnderlyingDictionary
+        {
+            ["container1"] = Mock.Of<IGetChildItem>(),
+            ["newname"] = Mock.Of<IGetChildItem>(),
+        };
+
+        var node = ArrangeContainerAdapter(underlying);
+
+        // ACT
+        node.GetRequiredService<IRenameChildItem>().RenameChildItem("container1", "newname");
+
+        // ASSERT
+        Assert.True(underlying.TryGetValue("newname", out var _));
+        Assert.True(underlying.TryGetValue("container1", out var _));
+    }
+
+    [Fact]
+    public void RenameChildItem_fails_for_missing_property()
+    {
+        var underlying = new UnderlyingDictionary
+        {
+            ["container1"] = Mock.Of<IGetChildItem>(),
+            ["newname"] = Mock.Of<IGetChildItem>(),
+        };
+
+        var node = ArrangeContainerAdapter(underlying);
+
+        // ACT
+        node.GetRequiredService<IRenameChildItem>().RenameChildItem("missing", "newname");
+
+        // ASSERT
+        Assert.True(underlying.TryGetValue("newname", out var _));
+        Assert.True(underlying.TryGetValue("container1", out var _));
     }
 
     #endregion IRenameChildItem
@@ -355,13 +462,14 @@ public class DictionaryContainerAdapterTest
             ["child1"] = new UnderlyingDictionary(),
             ["child2"] = new UnderlyingDictionary()
         };
+
         var nodetoMove = root.AsDictionary("child1");
         var rootNode = new RootNode(ArrangeContainerAdapter(root));
         var dst = ArrangeContainerAdapter(root.AsDictionary("child2"));
 
         // ACT
         // move child1 under child2 as child1
-        ((IMoveChildItem)dst).MoveChildItem(rootNode, rootNode.GetChildItems().Single(n => n.Name == "child1"), destination: Array.Empty<string>());
+        dst.GetRequiredService<IMoveChildItem>().MoveChildItem(rootNode, rootNode.GetChildItems().Single(n => n.Name == "child1"), destination: Array.Empty<string>());
 
         // ASSERT
         Assert.Same(nodetoMove, root.AsDictionary("child2").AsDictionary("child1"));
@@ -383,7 +491,7 @@ public class DictionaryContainerAdapterTest
 
         // ACT
         // move child1 under child2 as newname
-        ((IMoveChildItem)dst).MoveChildItem(rootNode, rootNode.GetChildItems().Single(n => n.Name == "child1"), destination: new string[] { "newname" });
+        dst.GetRequiredService<IMoveChildItem>().MoveChildItem(rootNode, rootNode.GetChildItems().Single(n => n.Name == "child1"), destination: new string[] { "newname" });
 
         // ASSERT
         Assert.Same(nodetoMove, root.AsDictionary("child2").AsDictionary("newname"));
@@ -405,7 +513,7 @@ public class DictionaryContainerAdapterTest
 
         // ACT
         // move child1 under child2 as newparent/newname
-        ((IMoveChildItem)dst).MoveChildItem(rootNode, rootNode.GetChildItems().Single(n => n.Name == "child1"), destination: new string[] { "newparent", "newname" });
+        dst.GetRequiredService<IMoveChildItem>().MoveChildItem(rootNode, rootNode.GetChildItems().Single(n => n.Name == "child1"), destination: new string[] { "newparent", "newname" });
 
         // ASSERT
         Assert.Same(nodetoMove, root.AsDictionary("child2").AsDictionary("newparent").AsDictionary("newname"));
@@ -417,7 +525,7 @@ public class DictionaryContainerAdapterTest
     #region ICopyChildItem
 
     [Fact]
-    public void CopyChildItem_copies_underlying_shallow()
+    public void CopyChildItem_copies_to_node_with_source_name()
     {
         // ARRANGE
         var root = new UnderlyingDictionary
@@ -435,20 +543,22 @@ public class DictionaryContainerAdapterTest
 
         // ACT
         // copy child1 under child2 as 'child1'
-        var result = ((ICopyChildItem)dst).CopyChildItem(rootNode.GetChildItems().Single(n => n.Name == "child1"), destination: Array.Empty<string>());
+        var result = dst.GetRequiredService<ICopyChildItem>().CopyChildItem(rootNode.GetChildItems().Single(n => n.Name == "child1"), destination: Array.Empty<string>());
 
         // ASSERT
+        // child1 was created as container node
         Assert.IsType<ContainerNode>(result);
         Assert.NotNull(root.AsDictionary("child2").AsDictionary("child1"));
         Assert.NotSame(nodeToCopy, root.AsDictionary("child2").AsDictionary("child1"));
         Assert.Same(root.AsDictionary("child2").AsDictionary("child1"), ((DictionaryContainerAdapter)result!.Underlying).Underlying);
+
         Assert.Same(nodeToCopy, root.AsDictionary("child1"));
         Assert.Equal(1, root.AsDictionary("child2").AsDictionary("child1")["data"]);
         Assert.False(root.AsDictionary("child2").AsDictionary("child1").TryGetValue("grandchild", out var _));
     }
 
     [Fact]
-    public void CopyChildItem_copies_underlying_shallow_with_new_name()
+    public void CopyChildItem_copies_to_node_with_new_name()
     {
         // ARRANGE
         var root = new UnderlyingDictionary
@@ -466,7 +576,7 @@ public class DictionaryContainerAdapterTest
 
         // ACT
         // copy child1 under child2 as 'newname'
-        var result = ((ICopyChildItem)dst).CopyChildItem(rootNode.GetChildItems().Single(n => n.Name == "child1"), destination: new string[] { "newname" });
+        var result = dst.GetRequiredService<ICopyChildItem>().CopyChildItem(rootNode.GetChildItems().Single(n => n.Name == "child1"), destination: new string[] { "newname" });
 
         // ASSERT
         Assert.NotNull(root.AsDictionary("child2").AsDictionary("newname"));
@@ -477,7 +587,7 @@ public class DictionaryContainerAdapterTest
     }
 
     [Fact]
-    public void CopyChildItem_copies_underlying_shallow_with_new_parent_and_name()
+    public void CopyChildItem_copies_to_node_with_new_parent_and_name()
     {
         // ARRANGE
         var root = new UnderlyingDictionary
@@ -495,7 +605,7 @@ public class DictionaryContainerAdapterTest
 
         // ACT
         // copy child1 under child2 as 'child1'
-        var result = ((ICopyChildItem)dst).CopyChildItem(rootNode.GetChildItems().Single(n => n.Name == "child1"), destination: new string[] { "newparent", "newname" });
+        var result = dst.GetRequiredService<ICopyChildItem>().CopyChildItem(rootNode.GetChildItems().Single(n => n.Name == "child1"), destination: new string[] { "newparent", "newname" });
 
         // ASSERT
         Assert.NotNull(root.AsDictionary("child2").AsDictionary("newparent").AsDictionary("newname"));
@@ -522,10 +632,10 @@ public class DictionaryContainerAdapterTest
         var rootNode = ArrangeContainerAdapter(root);
 
         // ACT
-        ((IClearItemProperty)rootNode).ClearItemProperty(new[] { "data1", "data2" });
+        rootNode.GetRequiredService<IClearItemProperty>().ClearItemProperty(new[] { "data1", "data2" });
 
         // ASSERT
-
+        // properties still exist but are nulled
         Assert.True(root.TryGetValue("data1", out var v1));
         Assert.Null(v1);
         Assert.True(root.TryGetValue("data2", out var v2));
@@ -543,11 +653,12 @@ public class DictionaryContainerAdapterTest
         var rootNode = ArrangeContainerAdapter(root);
 
         // ACT
-        ((IClearItemProperty)rootNode).ClearItemProperty(new[] { "unkown" });
+        rootNode.GetRequiredService<IClearItemProperty>().ClearItemProperty(new[] { "unkown" });
 
         // ASSERT
-
+        // property wasn't created
         Assert.False(root.TryGetValue("unknown", out var _));
+        // other properties are untouched
         Assert.True(root.TryGetValue("data", out var value));
         Assert.Equal("text", value);
     }
@@ -563,10 +674,10 @@ public class DictionaryContainerAdapterTest
         var rootNode = ArrangeContainerAdapter(root);
 
         // ACT
-        ((IClearItemProperty)rootNode).ClearItemProperty(new[] { "data" });
+        rootNode.GetRequiredService<IClearItemProperty>().ClearItemProperty(new[] { "data" });
 
         // ASSERT
-
+        // the child node is untouched
         Assert.True(root.TryGetValue("data", out var value));
         Assert.IsType<UnderlyingDictionary>(value);
     }
@@ -587,7 +698,7 @@ public class DictionaryContainerAdapterTest
         var rootNode = ArrangeContainerAdapter(root);
 
         // ACT
-        ((ISetItemProperty)rootNode).SetItemProperty(new PSObject(new
+        rootNode.GetRequiredService<ISetItemProperty>().SetItemProperty(new PSObject(new
         {
             data1 = "changed",
             data2 = 3
@@ -615,7 +726,7 @@ public class DictionaryContainerAdapterTest
         var rootNode = ArrangeContainerAdapter(root);
 
         // ACT
-        ((ISetItemProperty)rootNode).SetItemProperty(new PSObject(new
+        rootNode.GetRequiredService<ISetItemProperty>().SetItemProperty(new PSObject(new
         {
             data1 = "changed",
             data2 = 3
@@ -639,7 +750,7 @@ public class DictionaryContainerAdapterTest
         var rootNode = ArrangeContainerAdapter(root);
 
         // ACT
-        ((ISetItemProperty)rootNode).SetItemProperty(new PSObject(new
+        rootNode.GetRequiredService<ISetItemProperty>().SetItemProperty(new PSObject(new
         {
             unkown = "changed",
         }));
@@ -692,7 +803,7 @@ public class DictionaryContainerAdapterTest
         var rootAdapter = ArrangeContainerAdapter(root);
 
         // ACT
-        ((IRemoveItemProperty)rootAdapter).RemoveItemProperty("data1");
+        rootAdapter.GetRequiredService<IRemoveItemProperty>().RemoveItemProperty("data1");
 
         // ASSERT
         Assert.False(root.TryGetValue("data1", out var _));
@@ -738,7 +849,7 @@ public class DictionaryContainerAdapterTest
         var rootAdapter = ArrangeContainerAdapter(root);
 
         // ACT
-        ((INewItemProperty)rootAdapter).NewItemProperty("data1", null, 1);
+        rootAdapter.GetRequiredService<INewItemProperty>().NewItemProperty("data1", null, 1);
 
         // ASSERT
         Assert.True(root.TryGetValue("data1", out var value));
@@ -762,7 +873,7 @@ public class DictionaryContainerAdapterTest
         var rootAdapter = ArrangeContainerAdapter(root);
 
         // ACT
-        ((IRenameItemProperty)rootAdapter).RenameItemProperty("data", "newname");
+        rootAdapter.GetRequiredService<IRenameItemProperty>().RenameItemProperty("data", "newname");
 
         // ASSERT
         Assert.True(root.TryGetValue("newname", out var value));

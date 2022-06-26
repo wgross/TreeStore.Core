@@ -1,21 +1,18 @@
 ﻿using System.Collections.Generic;
 using System.Management.Automation;
 
-namespace TreeStore.Core.Capabilities
-{
-    public interface IClearItemProperty
-    {
-        /// <summary>
-        /// Returns custom parameters to be applied for the clearing an the item property name <paramref name="propertyToClear"/>
-        /// </summary>
-        /// <param name="propertyToClear"></param>
-        /// <returns>empty <see cref="RuntimeDefinedParameterDictionary"/> by default</returns>
-        public object? ClearItemPropertyParameters(IEnumerable<string> propertyToClear) => new RuntimeDefinedParameterDictionary();
+namespace TreeStore.Core.Capabilities;
 
-        /// <summary>
-        /// Removes the value from an item property.
-        /// </summary>
-        /// <param name="propertyToClear"></param>
-        public void ClearItemProperty(IEnumerable<string> propertyToClear);
-    }
+public interface IClearItemProperty
+{
+    /// <summary>
+    /// Returns custom parameters to be applied for the clearing an the item property name <paramref name="propertiesToClear"/>
+    /// </summary>
+    /// <returns>empty <see cref="RuntimeDefinedParameterDictionary"/> by default</returns>
+    public object? ClearItemPropertyParameters(IEnumerable<string> propertiesToClear) => new RuntimeDefinedParameterDictionary();
+
+    /// <summary>
+    /// Removes the value from an item property.
+    /// </summary>
+    public void ClearItemProperty(IEnumerable<string> propertiesToClear);
 }

@@ -4,11 +4,10 @@ using System.Linq;
 using System.Management.Automation;
 using TreeStore.Core;
 using TreeStore.Core.Capabilities;
-using TreeStore.DictionaryFS.Test.ItemCmdletProvider;
 using Xunit;
 using UnderlyingDictionary = System.Collections.Generic.Dictionary<string, object?>;
 
-namespace TreeStore.DictionaryFS.Test.ContainerCmdletProvider;
+namespace TreeStore.DictionaryFS.Test;
 
 [Collection(nameof(PowerShell))]
 public sealed class ContainerCmdletProviderTest : ItemCmdletProviderTestBase
@@ -19,13 +18,11 @@ public sealed class ContainerCmdletProviderTest : ItemCmdletProviderTestBase
     public void Powershell_reads_roots_childnodes()
     {
         // ARRANGE
-        var root = new UnderlyingDictionary
+        var root = this.ArrangeFileSystem(new UnderlyingDictionary
         {
             ["child1"] = new UnderlyingDictionary(),
             ["property"] = "text"
-        };
-
-        this.ArrangeFileSystem(root);
+        });
 
         // ACT
         var result = this.PowerShell.AddCommand("Get-ChildItem")
@@ -51,13 +48,11 @@ public sealed class ContainerCmdletProviderTest : ItemCmdletProviderTestBase
     public void Powershell_reads_roots_childnodes_names()
     {
         // ARRANGE
-        var root = new UnderlyingDictionary
+        var root = this.ArrangeFileSystem(new UnderlyingDictionary
         {
             ["child1"] = new UnderlyingDictionary(),
             ["property"] = "text"
-        };
-
-        this.ArrangeFileSystem(root);
+        });
 
         // ACT
         var result = this.PowerShell.AddCommand("Get-ChildItem")
@@ -86,7 +81,7 @@ public sealed class ContainerCmdletProviderTest : ItemCmdletProviderTestBase
     public void Powershell_retrieves_roots_childnodes_recursive()
     {
         // ARRANGE
-        var root = new UnderlyingDictionary
+        var root = this.ArrangeFileSystem(new UnderlyingDictionary
         {
             ["child1"] = new UnderlyingDictionary
             {
@@ -95,9 +90,7 @@ public sealed class ContainerCmdletProviderTest : ItemCmdletProviderTestBase
                     ["property"] = "text"
                 }
             }
-        };
-
-        this.ArrangeFileSystem(root);
+        });
 
         // ACT
         var result = this.PowerShell.AddCommand("Get-ChildItem")
@@ -133,7 +126,7 @@ public sealed class ContainerCmdletProviderTest : ItemCmdletProviderTestBase
     public void Powershell_retrieves_roots_childnodes_recursive_upto_depth()
     {
         // ARRANGE
-        var root = new UnderlyingDictionary
+        var root = this.ArrangeFileSystem(new UnderlyingDictionary
         {
             ["child1"] = new UnderlyingDictionary
             {
@@ -144,9 +137,7 @@ public sealed class ContainerCmdletProviderTest : ItemCmdletProviderTestBase
             },
             ["property"] = "text",
             ["child2"] = Mock.Of<IGetChildItem>()
-        };
-
-        this.ArrangeFileSystem(root);
+        });
 
         // ACT
         var result = this.PowerShell.AddCommand("Get-ChildItem")
@@ -187,12 +178,10 @@ public sealed class ContainerCmdletProviderTest : ItemCmdletProviderTestBase
     public void Powershell_removes_root_child_node()
     {
         // ARRANGE
-        var root = new UnderlyingDictionary
+        var root = this.ArrangeFileSystem(new UnderlyingDictionary
         {
             ["child1"] = new UnderlyingDictionary(),
-        };
-
-        this.ArrangeFileSystem(root);
+        });
 
         // ACT
         var _ = this.PowerShell.AddCommand("Remove-Item")
@@ -209,20 +198,19 @@ public sealed class ContainerCmdletProviderTest : ItemCmdletProviderTestBase
     public void Powershell_removes_root_child_node_fails_if_node_has_children()
     {
         // ARRANGE
-        var root = new UnderlyingDictionary
+        var root = this.ArrangeFileSystem(new UnderlyingDictionary
         {
             ["child1"] = new UnderlyingDictionary()
             {
                 ["grandchild1"] = new UnderlyingDictionary()
             }
-        };
-
-        this.ArrangeFileSystem(root);
+        });
 
         // ACT
         var result = Assert.Throws<CmdletInvocationException>(() => this.PowerShell
             .AddCommand("Remove-Item")
             .AddParameter("Path", @"test:\child1")
+            .AddParameter("Recurse", false)
             .Invoke());
 
         // ASSERT
@@ -233,15 +221,13 @@ public sealed class ContainerCmdletProviderTest : ItemCmdletProviderTestBase
     public void Powershell_removes_root_child_node_recursive()
     {
         // ARRANGE
-        var root = new UnderlyingDictionary
+        var root = this.ArrangeFileSystem(new UnderlyingDictionary
         {
             ["child1"] = new UnderlyingDictionary
             {
                 ["grandchild1"] = new UnderlyingDictionary()
             }
-        };
-
-        this.ArrangeFileSystem(root);
+        });
 
         // ACT
         var _ = this.PowerShell.AddCommand("Remove-Item")
@@ -263,10 +249,8 @@ public sealed class ContainerCmdletProviderTest : ItemCmdletProviderTestBase
     public void Powershell_creates_child_item()
     {
         // ARRANGE
-        var root = new UnderlyingDictionary();
+        var root = this.ArrangeFileSystem(new UnderlyingDictionary());
         var child = new UnderlyingDictionary();
-
-        this.ArrangeFileSystem(root);
 
         // ACT
         var result = this.PowerShell.AddCommand("New-Item")
@@ -295,10 +279,8 @@ public sealed class ContainerCmdletProviderTest : ItemCmdletProviderTestBase
     public void Powershell_creating_child_fails_with_null_value()
     {
         // ARRANGE
-        var root = new UnderlyingDictionary();
+        var root = this.ArrangeFileSystem(new UnderlyingDictionary());
         var child = new UnderlyingDictionary();
-
-        this.ArrangeFileSystem(root);
 
         // ACT
         var result = Assert.Throws<CmdletProviderInvocationException>(() => this.PowerShell.AddCommand("New-Item")
@@ -315,10 +297,8 @@ public sealed class ContainerCmdletProviderTest : ItemCmdletProviderTestBase
     public void Powershell_creating_child_fails_with_non_dictionary()
     {
         // ARRANGE
-        var root = new UnderlyingDictionary();
+        var root = this.ArrangeFileSystem(new UnderlyingDictionary());
         var child = new UnderlyingDictionary();
-
-        this.ArrangeFileSystem(root);
 
         // ACT
         var result = Assert.Throws<CmdletProviderInvocationException>(() => this.PowerShell.AddCommand("New-Item")
@@ -340,12 +320,10 @@ public sealed class ContainerCmdletProviderTest : ItemCmdletProviderTestBase
     {
         // ARRANGE
         var child = new UnderlyingDictionary();
-        var root = new UnderlyingDictionary
+        var root = this.ArrangeFileSystem(new UnderlyingDictionary
         {
             ["child1"] = child
-        };
-
-        this.ArrangeFileSystem(root);
+        });
 
         // ACT
         var _ = this.PowerShell.AddCommand("Rename-Item")
@@ -373,13 +351,11 @@ public sealed class ContainerCmdletProviderTest : ItemCmdletProviderTestBase
             ["child1"] = new UnderlyingDictionary()
         };
 
-        var root = new UnderlyingDictionary
+        var root = this.ArrangeFileSystem(new UnderlyingDictionary
         {
             ["child1"] = child1,
             ["child2"] = new UnderlyingDictionary()
-        };
-
-        this.ArrangeFileSystem(root);
+        });
 
         // ACT
         var _ = this.PowerShell.AddCommand("Copy-Item")
@@ -397,38 +373,6 @@ public sealed class ContainerCmdletProviderTest : ItemCmdletProviderTestBase
     }
 
     [Fact]
-    public void Powershell_copy_child_with_new_name()
-    {
-        // ARRANGE
-        var child1 = new UnderlyingDictionary()
-        {
-            ["child1"] = new UnderlyingDictionary()
-        };
-
-        var root = new UnderlyingDictionary
-        {
-            ["child1"] = child1,
-            ["child2"] = new UnderlyingDictionary()
-        };
-
-        this.ArrangeFileSystem(root);
-
-        // ACT
-        var _ = this.PowerShell.AddCommand("Copy-Item")
-            .AddParameter("Path", @"test:\child1")
-            .AddParameter("Destination", @"test:\child2\newname")
-            .Invoke()
-            .ToArray();
-
-        // ASSERT
-        Assert.False(this.PowerShell.HadErrors);
-        Assert.True(root.TryGetValue<UnderlyingDictionary>("child2", out var child2));
-        Assert.True(child2!.TryGetValue<UnderlyingDictionary>("newname", out var copy_child1));
-        Assert.NotNull(copy_child1!);
-        Assert.NotSame(child1, copy_child1);
-    }
-
-    [Fact]
     public void Powershell_copies_child_recursive()
     {
         // ARRANGE
@@ -438,13 +382,11 @@ public sealed class ContainerCmdletProviderTest : ItemCmdletProviderTestBase
             ["data"] = 1,
         };
 
-        var root = new UnderlyingDictionary
+        var root = this.ArrangeFileSystem(new UnderlyingDictionary
         {
             ["child1"] = child1,
             ["child2"] = new UnderlyingDictionary()
-        };
-
-        this.ArrangeFileSystem(root);
+        });
 
         // ACT
         var _ = this.PowerShell.AddCommand("Copy-Item")
@@ -462,45 +404,6 @@ public sealed class ContainerCmdletProviderTest : ItemCmdletProviderTestBase
         Assert.NotSame(child1, copy_child1);
         Assert.True(copy_child1!.TryGetValue<UnderlyingDictionary>("grandchild", out var _));
         Assert.True(copy_child1!.TryGetValue<int>("data", out var data));
-        Assert.Equal(1, data);
-    }
-
-    [Fact]
-    public void Powershell_copies_child_item_with_new_name_and_parent_recursive()
-    {
-        // ARRANGE
-        var child1 = new UnderlyingDictionary()
-        {
-            ["grandchild"] = new UnderlyingDictionary(),
-            ["data"] = 1,
-        };
-
-        var root = new UnderlyingDictionary
-        {
-            ["child1"] = child1,
-            ["child2"] = new UnderlyingDictionary()
-        };
-
-        this.ArrangeFileSystem(root);
-
-        // ACT
-        var _ = this.PowerShell.AddCommand("Copy-Item")
-            .AddParameter("Path", @"test:\child1")
-            .AddParameter("Destination", @"test:\child2\parent\newname")
-            .AddParameter("Recurse")
-            .Invoke()
-            .ToArray();
-
-        // ASSERT
-        Assert.False(this.PowerShell.HadErrors);
-        Assert.True(root.TryGetValue<UnderlyingDictionary>("child2", out var child2));
-        Assert.True(child2!.TryGetValue<UnderlyingDictionary>("parent", out var parent));
-        Assert.True(parent!.TryGetValue<UnderlyingDictionary>("newname", out var newname));
-
-        Assert.NotNull(newname!);
-        Assert.NotSame(child1, newname);
-        Assert.True(newname!.TryGetValue<UnderlyingDictionary>("grandchild", out var _));
-        Assert.True(newname!.TryGetValue<int>("data", out var data));
         Assert.Equal(1, data);
     }
 

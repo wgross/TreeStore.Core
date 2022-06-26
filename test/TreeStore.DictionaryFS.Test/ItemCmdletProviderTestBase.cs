@@ -1,18 +1,20 @@
 ﻿using System.Collections.Generic;
 using TreeStore.DictionaryFS.Nodes;
 
-namespace TreeStore.DictionaryFS.Test.ItemCmdletProvider;
+namespace TreeStore.DictionaryFS.Test;
 
 public abstract class ItemCmdletProviderTestBase : PowerShellTestBase
 {
     /// <summary>
     /// Arranges a dictionary file system using the given data as root nodes payload.
     /// </summary>
-    public void ArrangeFileSystem(IDictionary<string, object?> data)
+    public IDictionary<string, object?> ArrangeFileSystem(IDictionary<string, object?> data)
     {
         DictionaryFsCmdletProvider.RootNodeProvider = _ => new DictionaryContainerAdapter(data);
 
         this.ArrangeFileSystem();
+
+        return data;
     }
 
     /// <summary>

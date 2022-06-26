@@ -1,9 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using TreeStore.DictionaryFS.Test.ItemCmdletProvider;
 using Xunit;
 
-namespace TreeStore.DictionaryFS.Test.NavigationCmdletProvider;
+namespace TreeStore.DictionaryFS.Test;
 
 [Collection(nameof(PowerShell))]
 public sealed class NavigationCmdletProviderTest : ItemCmdletProviderTestBase
@@ -14,15 +13,13 @@ public sealed class NavigationCmdletProviderTest : ItemCmdletProviderTestBase
     public void PowerShell_moves_node_to_child()
     {
         // ARRANGE
-        var root = new Dictionary<string, object?>
+        var root = this.ArrangeFileSystem(new Dictionary<string, object?>
         {
             ["child1"] = new Dictionary<string, object?>(),
             ["child2"] = new Dictionary<string, object?>(),
             ["property"] = "text"
-        };
+        });
         var child1 = root["child1"];
-
-        this.ArrangeFileSystem(root);
 
         // ACT
         this.PowerShell.AddCommand("Move-Item")
@@ -41,15 +38,13 @@ public sealed class NavigationCmdletProviderTest : ItemCmdletProviderTestBase
     public void PowerShell_moves_node_to_child_with_new_name()
     {
         // ARRANGE
-        var root = new Dictionary<string, object?>
+        var root = this.ArrangeFileSystem(new Dictionary<string, object?>
         {
             ["child1"] = new Dictionary<string, object?>(),
             ["child2"] = new Dictionary<string, object?>(),
             ["property"] = "text"
-        };
+        });
         var child1 = root["child1"];
-
-        this.ArrangeFileSystem(root);
 
         // ACT
         this.PowerShell.AddCommand("Move-Item")
@@ -68,15 +63,13 @@ public sealed class NavigationCmdletProviderTest : ItemCmdletProviderTestBase
     public void PowerShell_moves_node_to_grandchild_with_new_name()
     {
         // ARRANGE
-        var root = new Dictionary<string, object?>
+        var root = this.ArrangeFileSystem(new Dictionary<string, object?>
         {
             ["child1"] = new Dictionary<string, object?>(),
             ["child2"] = new Dictionary<string, object?>(),
             ["property"] = "text"
-        };
+        });
         var child1 = root["child1"];
-
-        this.ArrangeFileSystem(root);
 
         // ACT
         this.PowerShell.AddCommand("Move-Item")

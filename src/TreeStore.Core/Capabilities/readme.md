@@ -49,9 +49,9 @@ If TreeStore find the node and the node doesn't implement `IItemExists` true is 
 
 If a file system item has the semantic of having a 'value' these capability set the value or clear it. They don't depend on each other and can be implemented independently. There is no default behavior for this capabilities. If called and missing in the  payload an error is returned.
 
-## Implementing ContainerCmdletProvider
+## Implementing `ContainerCmdletProvider`
 
-PowerShells [ContainerCmdletProvider](https://docs.microsoft.com/en-us/dotnet/api/system.management.automation.provider.containercmdletprovider) extends the `ItemCmdletProvider` with the knowledge of Containers/Folders.
+PowerShells [`ContainerCmdletProvider`](https://docs.microsoft.com/en-us/dotnet/api/system.management.automation.provider.containercmdletprovider) extends the `ItemCmdletProvider` with the knowledge of Containers/Folders.
 This requires the capabilities:
 
 * `INewChildItem` - create a new child item under a parent node
@@ -63,7 +63,13 @@ This requires the capabilities:
 
 ### ICopyChildItem and ICopyChildItemRecursive
 
-If an recursive copy operation is requested `ICopyChildItemRecursive` may be implemented. Otherwise TreeStores provider nodes handle the recursion by invoking `ICopyChildItem` one by one. Also `ICopyChildItem` defines the methods for dynamic parameter definition for both operations.
+A recursive copy operation is handled by the `TreeStoreCmdletProviderBase`  by invoking the `ICopyChildItem` capability for each node of the source.  
 
-> [!NOTE] Implement `ICopyChildItemRecursive` for optimization 
+If the underlying data structures may handle this process more efficiently itself `ICopyChildItemRecursive` should be implemented to take control of the  process.  `ICopyChildItem` defines the methods for dynamic parameter definition for both operations.
+
+> [!NOTE] Implement `ICopyChildItemRecursive` for optimization or atomicity
 > If copying an item is costly (time or IO) this capability may be used to optimize the process in an payload specific way. This might be neccessary as well for concurrently used resources which require locks to avoid race conditions.
+
+### Implementing IPropertyCmdletProvider
+
+The capability `IGetItemProperty` suppprts PowerShells `Get-ItemProperty`  command. If the capability isn't implemented `TreeStoreCmdletProviderBase` will fall back to its own logic: The result of `IGetItem.GetItem` will projected to a new `PObject` containing only the properties requested by the caller.

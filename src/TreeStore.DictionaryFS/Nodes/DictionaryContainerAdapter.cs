@@ -91,7 +91,7 @@ namespace TreeStore.DictionaryFS.Nodes
         #region IGetItem
 
         /// <inheritdoc/>
-        PSObject? IGetItem.GetItem()
+        PSObject IGetItem.GetItem()
         {
             var pso = new PSObject();
             foreach (var item in this.Underlying)
@@ -137,7 +137,9 @@ namespace TreeStore.DictionaryFS.Nodes
         void IRemoveChildItem.RemoveChildItem(string childName, bool recurse)
         {
             // call only if recurse is true?
-            this.Underlying.Remove(childName);
+            if (this.Underlying.TryGetValue(childName, out var value))
+                if (value is IDictionary<string, object> dict)
+                    this.Underlying.Remove(childName);
         }
 
         #endregion IRemoveChildItem
@@ -162,6 +164,10 @@ namespace TreeStore.DictionaryFS.Nodes
             throw new ArgumentException(message: $"{value.GetType()} must implement IDictionary<string,object>", nameof(value));
         }
 
+        #endregion INewChildItem
+
+        #region IRenameChildItem
+
         ///<inheritdoc/>
         void IRenameChildItem.RenameChildItem(string childName, string newName)
         {
@@ -170,7 +176,7 @@ namespace TreeStore.DictionaryFS.Nodes
                     this.Underlying.Remove(childName);
         }
 
-        #endregion INewChildItem
+        #endregion IRenameChildItem
 
         #region IMoveChildItem
 

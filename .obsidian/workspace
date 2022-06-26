@@ -9,7 +9,7 @@
         "state": {
           "type": "markdown",
           "state": {
-            "file": "src/TreeStore.DictionaryFS/readme.md",
+            "file": "src/TreeStore.Core/Capabilities/readme.md",
             "mode": "source",
             "source": false
           }
@@ -40,7 +40,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "tag:#tag",
+                "query": "ICopyChildItem",
                 "matchingCase": false,
                 "explainSearch": false,
                 "collapseAll": false,
@@ -49,7 +49,8 @@
               }
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "horizontal",
@@ -69,7 +70,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "src/TreeStore.DictionaryFS/readme.md",
+                "file": "src/TreeStore.Core/Capabilities/readme.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -96,15 +97,15 @@
       }
     ],
     "direction": "horizontal",
-    "width": 100
+    "width": 274
   },
   "active": "b1feebf1350254e6",
   "lastOpenFiles": [
+    "src/TreeStore.Core/Capabilities/readme.md",
     "src/TreeStore.DictionaryFS/readme.md",
     "README.md",
     "submodules/PowerShell/docs/building/linux.md",
     "src/TreeStore.Core/Providers/readme.md",
-    "src/TreeStore.Core/Capabilities/readme.md",
     "ToDo.md",
     "src/TreeStore.Core/Nodes/readme.md",
     "().md"

@@ -1,15 +1,16 @@
 ﻿using System.Linq;
 using System.Management.Automation;
 using TreeStore.Core;
-using TreeStore.DictionaryFS.Test.ItemCmdletProvider;
 using Xunit;
 using UnderlyingDictionary = System.Collections.Generic.Dictionary<string, object?>;
 
-namespace TreeStore.DictionaryFS.Test.PropertyCmdletProvider;
+namespace TreeStore.DictionaryFS.Test;
 
 [Collection(nameof(PowerShell))]
 public class PropertyCmdletProviderTest : ItemCmdletProviderTestBase
 {
+    #region New-ItemProperty -Path -Name -Value
+
     [Fact]
     public void Powershell_creates_item_property()
     {
@@ -19,118 +20,117 @@ public class PropertyCmdletProviderTest : ItemCmdletProviderTestBase
         this.ArrangeFileSystem(root);
 
         // ACT
-        var _ = this.PowerShell.AddCommand("New-ItemProperty")
+        var result = this.PowerShell.AddCommand("New-ItemProperty")
             .AddParameter("Path", @"test:\")
             .AddParameter("Name", "data")
             .AddParameter("Value", "text")
+            .AddStatement()
+            .AddCommand("Get-Item")
+            .AddParameter("Path", @"test:\")
             .Invoke()
-            .ToArray();
+            .Single();
 
         // ASSERT
         Assert.False(this.PowerShell.HadErrors);
-        Assert.True(root.TryGetValue("data", out var value));
-        Assert.Equal("text", value);
+        Assert.Equal("text", result.Property<string>("data"));
     }
+
+    #endregion New-ItemProperty -Path -Name -Value
+
+    #region Clear-ItemProperty -Path -Name
 
     [Fact]
     public void PowerShell_clears_item_property_value()
     {
         // ARRANGE
-        var root = new UnderlyingDictionary
+        var root = this.ArrangeFileSystem(new UnderlyingDictionary
         {
             ["data"] = 1
-        };
-
-        this.ArrangeFileSystem(root);
+        });
 
         // ACT
-        var result = this.PowerShell.AddCommand("Clear-ItemProperty")
+        var result = this.PowerShell
+            .AddCommand("Clear-ItemProperty")
             .AddParameter("Path", @"test:\")
             .AddParameter("Name", "data")
+            .AddStatement()
+            .AddCommand("Get-Item")
+            .AddParameter("Path", @"test:\")
             .Invoke()
-            .ToArray();
+            .Single();
 
         // ASSERT
+        // property is gone
         Assert.False(this.PowerShell.HadErrors);
-        Assert.Empty(result);
-        Assert.Null(root["data"]);
+        Assert.Null(result.Property<object>("data"));
     }
+
+    #endregion Clear-ItemProperty -Path -Name
+
+    #region Get-ItemProperty -Path -Name
 
     [Fact]
     public void Powershell_gets_item_property()
     {
         // ARRANGE
-        var root = new UnderlyingDictionary
+        var root = this.ArrangeFileSystem(new UnderlyingDictionary
         {
-            ["data"] = 1
-        };
-
-        this.ArrangeFileSystem(root);
+            ["data"] = 1,
+            ["data_skipped"] = 2
+        });
 
         // ACT
         var result = this.PowerShell.AddCommand("Get-ItemProperty")
             .AddParameter("Path", @"test:\")
             .AddParameter("Name", "data")
             .Invoke()
-            .ToArray();
+            .Single();
 
         // ASSERT
+        // an object having the requested property only was returned
         Assert.False(this.PowerShell.HadErrors);
-        Assert.Equal(1, result.Single().Property<int>("data"));
-        Assert.True(result.Single().Property<bool>("PSIsContainer"));
-        Assert.Equal("test", result.Single().Property<PSDriveInfo>("PSDrive").Name);
-        Assert.Equal("DictionaryFS", result.Single().Property<ProviderInfo>("PSProvider").Name);
-        Assert.Equal(@"TreeStore.DictionaryFS\DictionaryFS::test:\", result.Single().Property<string>("PSPath"));
-        Assert.Equal("", result.Single().Property<string>("PSParentPath"));
+        Assert.Equal(1, result.Property<int>("data"));
+        Assert.True(result.Property<bool>("PSIsContainer"));
+        Assert.Equal("test", result.Property<PSDriveInfo>("PSDrive").Name);
+        Assert.Equal("DictionaryFS", result.Property<ProviderInfo>("PSProvider").Name);
+        Assert.Equal(@"TreeStore.DictionaryFS\DictionaryFS::test:\", result.Property<string>("PSPath"));
+        Assert.Equal("", result.Property<string>("PSParentPath"));
+
+        // the property data_skipped is missing in the result
+        Assert.DoesNotContain(result.Properties, p => p.Name == "data_skipped");
     }
+
+    #endregion Get-ItemProperty -Path -Name
+
+    #region Set-ItemProperty -Path -Name
 
     [Fact]
     public void Powershell_sets_item_property()
     {
         // ARRANGE
-        var root = new UnderlyingDictionary
+        var root = this.ArrangeFileSystem(new UnderlyingDictionary
         {
             ["data"] = 1
-        };
-
-        this.ArrangeFileSystem(root);
+        });
 
         // ACT
-        var _ = this.PowerShell.AddCommand("Set-ItemProperty")
+        var result = this.PowerShell.AddCommand("Set-ItemProperty")
             .AddParameter("Path", @"test:\")
             .AddParameter("Name", "data")
             .AddParameter("Value", "text")
-            .Invoke()
-            .ToArray();
-
-        // ASSERT
-        Assert.False(this.PowerShell.HadErrors);
-        Assert.True(root.TryGetValue("data", out var value));
-        Assert.Equal("text", value);
-    }
-
-    [Fact]
-    public void Powershell_removes_item_property()
-    {
-        // ARRANGE
-        var root = new UnderlyingDictionary
-        {
-            ["data"] = 1
-        };
-
-        this.ArrangeFileSystem(root);
-
-        // ACT
-        var _ = this.PowerShell.AddCommand("Remove-ItemProperty")
+            .AddStatement()
+            .AddCommand("Get-Item")
             .AddParameter("Path", @"test:\")
-            .AddParameter("Name", "data")
             .Invoke()
-            .ToArray();
+            .Single();
 
         // ASSERT
+        // value has changed
         Assert.False(this.PowerShell.HadErrors);
-        Assert.False(root.TryGetValue("data", out var _));
+        Assert.Equal("text", result.Property<string>("data"));
     }
+
+    #endregion Set-ItemProperty -Path -Name
 
     [Fact]
     public void Powershell_renames_item_property()

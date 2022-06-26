@@ -116,7 +116,7 @@ All [TreeStore capabilities](../TreeStore.Core/Capabilities/readme.md) are imple
 As an example the implementation of `IGetItem`:
 
 ```Csharp
-PSObject? IGetItem.GetItem()
+PSObject IGetItem.GetItem()
 {
     var pso = new PSObject();
     foreach (var item in this.Underlying)
@@ -133,7 +133,7 @@ object? GetItemParameters() => new RuntimeDefinedParameterDictionary();
 
 Alternatively you may just return `null`.
 
-To provide a dynamic parameters for an operation you have to override these methods and return a populated [RuntimeDefinedParameterDictionary](https://docs.microsoft.com/en-us/dotnet/api/system.management.automation.runtimedefinedparameterdictionary). Alternativly a class with annotated properties may be returned:
+To provide a dynamic parameters for an operation you have to override these methods and return a populated [RuntimeDefinedParameterDictionary](https://docs.microsoft.com/en-us/dotnet/api/system.management.automation.runtimedefinedparameterdictionary). Alternatively a class with annotated properties may be returned:
 
 ```csharp
 public class Parameters 
@@ -142,3 +142,13 @@ public class Parameters
     public string Parameter1 { get; set; }
 }
 ```
+
+# Test the Capability Implementation
+The tests for the node adapters is a straightforward xunit-test. No special preparation must be made as before in the tests of teh Cmdlet-Provider. 
+
+The methodology I'm using is:
+1. Create a Cmdlet-Provider test as an acceptance test inspecting correct behavior from the perspective from the PowerShell.
+2. Run the test -> test will fail
+3. Add a test for the required capability methods to the test cases for the provider node adapter. Go through all the edge cases at this test level until the implementation is sufficient. 
+4. return to the PowerShell test, run it again and it should be green now.
+5. Move to the next PowerShell uses case you want to support.
