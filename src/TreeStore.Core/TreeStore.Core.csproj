@@ -7,7 +7,7 @@
 
   <PropertyGroup>
   	<Authors>github.com/wgross</Authors>
-  	<VersionPrefix>0.9.3</VersionPrefix>
+  	<VersionPrefix>0.6.2</VersionPrefix>
   	<Description>Base classes for implementing PowerShell file system providers easily</Description>
   	<RepositoryUrl>http://github.com/wgross/TreeStore.Core</RepositoryUrl>
   	<PackageLicenseExpression>MIT</PackageLicenseExpression>

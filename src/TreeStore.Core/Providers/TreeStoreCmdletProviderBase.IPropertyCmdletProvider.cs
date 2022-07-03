@@ -1,7 +1,7 @@
-﻿using TreeStore.Core.Nodes;
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.Management.Automation;
 using System.Management.Automation.Provider;
+using TreeStore.Core.Nodes;
 
 namespace TreeStore.Core.Providers
 {
@@ -11,7 +11,7 @@ namespace TreeStore.Core.Providers
         {
             if (this.TryGetNodeByPath(path, out var providerNode))
             {
-                providerNode.ClearItemProperty(propertyToClear);
+                providerNode.ClearItemProperty(provider: this, propertyToClear);
             }
         }
 
@@ -25,7 +25,7 @@ namespace TreeStore.Core.Providers
         {
             if (this.TryGetNodeByPath(path, out var providerNode))
             {
-                var pso = providerNode.GetItemProperty(providerSpecificPickList);
+                var pso = providerNode.GetItemProperty(provider: this, providerSpecificPickList);
 
                 this.WriteItemObject(
                     item: pso,
@@ -44,7 +44,7 @@ namespace TreeStore.Core.Providers
         {
             if (this.TryGetNodeByPath(path, out var providerNode))
             {
-                providerNode.SetItemProperty(propertyValue);
+                providerNode.SetItemProperty(provider: this, propertyValue);
             }
         }
 

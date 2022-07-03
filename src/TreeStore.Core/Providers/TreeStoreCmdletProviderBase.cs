@@ -12,10 +12,10 @@ public abstract partial class TreeStoreCmdletProviderBase : NavigationCmdletProv
 {
     private TreeStoreDriveInfoBase DriveInfo => (TreeStoreDriveInfoBase)this.PSDriveInfo;
 
-    public static (bool exists, ProviderNode? node) TryGetChildNode(ContainerNode parentNode, string childName)
+    public (bool exists, ProviderNode? node) TryGetChildNode(ContainerNode parentNode, string childName)
     {
         var childNode = parentNode
-            .GetChildItems()
+            .GetChildItems(provider: this)
             .FirstOrDefault(n => StringComparer.OrdinalIgnoreCase.Equals(n.Name, childName));
 
         return (childNode is not null, childNode);
@@ -41,7 +41,7 @@ public abstract partial class TreeStoreCmdletProviderBase : NavigationCmdletProv
         return true;
     }
 
-    protected static bool TryGetNodeByPath<T>(ProviderNode startNode, string[] path, [NotNullWhen(returnValue: true)] out ProviderNode? providerNode, [NotNullWhen(returnValue: true)] out T? providerNodeCapbility) where T : class
+    protected bool TryGetNodeByPath<T>(ProviderNode startNode, string[] path, [NotNullWhen(returnValue: true)] out ProviderNode? providerNode, [NotNullWhen(returnValue: true)] out T? providerNodeCapbility) where T : class
     {
         providerNode = default;
         providerNodeCapbility = default;
@@ -51,14 +51,14 @@ public abstract partial class TreeStoreCmdletProviderBase : NavigationCmdletProv
         {
             cursor = cursor.node switch
             {
-                ContainerNode container => TryGetChildNode(container, pathItem),
+                ContainerNode container => this.TryGetChildNode(container, pathItem),
                 _ => (false, default)
             };
             if (!cursor.exists) return false;
         }
 
         providerNode = cursor.node;
-        // check if the underlying of the provider implemments the required capability
+        // check if the underlying of the provider implements the required capability
         providerNodeCapbility = cursor.node.Underlying as T;
         return providerNodeCapbility is not null;
     }
@@ -66,9 +66,9 @@ public abstract partial class TreeStoreCmdletProviderBase : NavigationCmdletProv
     protected ProviderNode GetDeepestNodeByPath(string path, out string[] missingPath)
         => GetDeepestNodeByPath(this.DriveInfo.RootNode, new PathTool().SplitProviderPath(path).path.items, out missingPath);
 
-    protected static ProviderNode GetDeepestNodeByPath(ProviderNode startNode, string[] path, out string[] missingPath)
+    protected ProviderNode GetDeepestNodeByPath(ProviderNode startNode, string[] path, out string[] missingPath)
     {
-        var traversal = TraversePathComplete(startNode, path).ToArray();
+        var traversal = this.TraversePathComplete(startNode, path).ToArray();
 
         // the whole path might not exists
         missingPath = traversal.SkipWhile(t => t.exists).Select(t => t.name).ToArray();
@@ -77,7 +77,7 @@ public abstract partial class TreeStoreCmdletProviderBase : NavigationCmdletProv
         return traversal.TakeWhile(t => t.node is not null).LastOrDefault().node ?? startNode;
     }
 
-    protected static IEnumerable<(string name, bool exists, ProviderNode? node)> TraversePathComplete(ProviderNode startNode, string[] path)
+    protected IEnumerable<(string name, bool exists, ProviderNode? node)> TraversePathComplete(ProviderNode startNode, string[] path)
     {
         (bool exists, ProviderNode? node) cursor = (true, startNode);
 
@@ -89,7 +89,7 @@ public abstract partial class TreeStoreCmdletProviderBase : NavigationCmdletProv
                 cursor = cursor.node switch
                 {
                     // you can only fetch child node from containers
-                    ContainerNode c => TryGetChildNode(c, pathItem),
+                    ContainerNode c => this.TryGetChildNode(c, pathItem),
 
                     // from leaf nodes, no child can be retrieved
                     _ => (false, null)
@@ -118,7 +118,7 @@ public abstract partial class TreeStoreCmdletProviderBase : NavigationCmdletProv
     {
         // PowerShell would wrap the underlying with a PSObject itself
         // but taking the PSObject from the node allows to provide additional properties
-        var psobject = node.GetItem();
+        var psobject = node.GetItem(provider: this);
         if (psobject is null)
             return;
 

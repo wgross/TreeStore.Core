@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Management.Automation.Provider;
 using TreeStore.Core.Capabilities;
 
 namespace TreeStore.Core.Nodes;
@@ -15,33 +16,33 @@ public record ContainerNode : ProviderNode
         : base(name, underlying)
     { }
 
-    public bool TryGetChildNode(string childName, [NotNullWhen(true)] out ProviderNode? childNode)
+    public bool TryGetChildNode(CmdletProvider provider, string childName, [NotNullWhen(true)] out ProviderNode? childNode)
     {
-        childNode = this.GetChildItems().FirstOrDefault(n => n.Name.Equals(childName, StringComparison.OrdinalIgnoreCase));
+        childNode = this.GetChildItems(provider).FirstOrDefault(n => n.Name.Equals(childName, StringComparison.OrdinalIgnoreCase));
         return childNode is not null;
     }
 
     #region IGetChildItem
 
     ///<inheritdoc/>
-    public IEnumerable<ProviderNode> GetChildItems()
-        => this.InvokeUnderlyingOrDefault<IGetChildItem>(getChildItems => getChildItems.GetChildItems());
+    public IEnumerable<ProviderNode> GetChildItems(CmdletProvider provider)
+        => this.InvokeUnderlyingOrDefault<IGetChildItem>(getChildItems => getChildItems.GetChildItems(provider));
 
     ///<inheritdoc/>
     public object? GetChildItemParameters(string path, bool recurse)
         => this.InvokeUnderlyingOrDefault<IGetChildItem>(getChildItems => getChildItems.GetChildItemParameters(path, recurse));
 
     ///<inheritdoc/>
-    public bool HasChildItems()
-        => this.InvokeUnderlyingOrDefault<IGetChildItem>(getChildItems => getChildItems.HasChildItems());
+    public bool HasChildItems(CmdletProvider provider)
+        => this.InvokeUnderlyingOrDefault<IGetChildItem>(getChildItems => getChildItems.HasChildItems(provider));
 
     #endregion IGetChildItem
 
     #region IRemoveChildItem
 
     ///<inheritdoc/>
-    public void RemoveChildItem(string childName, bool recurse)
-        => this.InvokeUnderlyingOrThrow<IRemoveChildItem>(removeChildItem => removeChildItem.RemoveChildItem(childName, recurse));
+    public void RemoveChildItem(CmdletProvider provider, string childName, bool recurse)
+        => this.InvokeUnderlyingOrThrow<IRemoveChildItem>(removeChildItem => removeChildItem.RemoveChildItem(provider, childName, recurse));
 
     ///<inheritdoc/>
     public object? RemoveChildItemParameters(string childName, bool recurse)
@@ -52,8 +53,8 @@ public record ContainerNode : ProviderNode
     #region INewChildItem
 
     ///<inheritdoc/>
-    public ProviderNode? NewChildItem(string childName, string? itemTypeName, object? value)
-        => this.InvokeUnderlyingOrThrow<INewChildItem>(newChildItem => newChildItem.NewChildItem(childName, itemTypeName, value));
+    public ProviderNode? NewChildItem(CmdletProvider provider, string childName, string? itemTypeName, object? value)
+        => this.InvokeUnderlyingOrThrow<INewChildItem>(newChildItem => newChildItem.NewChildItem(provider, childName, itemTypeName, value));
 
     ///<inheritdoc/>
     public object? NewChildItemParameters(string childName, string itemTypeName, object value)
@@ -64,8 +65,8 @@ public record ContainerNode : ProviderNode
     #region IRenameChildItem
 
     ///<inheritdoc/>
-    public void RenameChildItem(string childName, string newName)
-        => this.InvokeUnderlyingOrThrow<IRenameChildItem>(renameChildItem => renameChildItem.RenameChildItem(childName, newName));
+    public void RenameChildItem(CmdletProvider provider, string childName, string newName)
+        => this.InvokeUnderlyingOrThrow<IRenameChildItem>(renameChildItem => renameChildItem.RenameChildItem(provider, childName, newName));
 
     /// <inheritdoc/>
     public object? RenameChildItemParameters(string childName, string newName)
@@ -83,7 +84,7 @@ public record ContainerNode : ProviderNode
     /// <param name="nodeToCopy">node to copy. May be container of leaf</param>
     /// <param name="destination">path item under this which couldn't be resolved because they don't exist yet</param>
     /// <param name="recurse">Copy must include all child item of the <paramref name="nodeToCopy"/></param>
-    public void CopyChildItem(ProviderNode nodeToCopy, string[] destination, bool recurse)
+    public void CopyChildItem(CmdletProvider provider, ProviderNode nodeToCopy, string[] destination, bool recurse)
     {
         if (recurse)
         {
@@ -91,22 +92,22 @@ public record ContainerNode : ProviderNode
             {
                 // the underlying handles the operation itself.
 
-                copyChildItemRecursive.CopyChildItemRecursive(nodeToCopy, destination);
+                copyChildItemRecursive.CopyChildItemRecursive(provider, nodeToCopy, destination);
             }
             else if (this.TryGetUnderlyingService<ICopyChildItem>(out var copyChildItem) && nodeToCopy is ContainerNode containerToCopy)
             {
                 // the underlying can only handle coping without recursion.
                 // copy the source root, than invoke 'CopyChildItem(recurse:true)' on the child nodes.
 
-                var copiedNode = copyChildItem.CopyChildItem(containerToCopy, destination);
+                var copiedNode = copyChildItem.CopyChildItem(provider, containerToCopy, destination);
 
                 if (copiedNode is ContainerNode copiedContainerNode)
                 {
                     // copy the sources roots children
 
-                    foreach (var containerToCopyChild in containerToCopy.GetChildItems())
+                    foreach (var containerToCopyChild in containerToCopy.GetChildItems(provider))
                     {
-                        copiedContainerNode.CopyChildItem(containerToCopyChild, new[] { containerToCopyChild.Name }, recurse);
+                        copiedContainerNode.CopyChildItem(provider, containerToCopyChild, new[] { containerToCopyChild.Name }, recurse);
                     }
                 }
                 else
@@ -115,7 +116,7 @@ public record ContainerNode : ProviderNode
 
                     this.GetUnderlyingServiceOrThrow<ICopyChildItem>(out copyChildItem);
 
-                    copyChildItem.CopyChildItem(nodeToCopy, destination);
+                    copyChildItem.CopyChildItem(provider, nodeToCopy, destination);
                 }
             }
         }
@@ -124,7 +125,7 @@ public record ContainerNode : ProviderNode
             // the copy isn't recursive. Just call the simple copy operation at the source root.
             this.GetUnderlyingServiceOrThrow<ICopyChildItem>(out var copyChildItem);
 
-            copyChildItem.CopyChildItem(nodeToCopy, destination);
+            copyChildItem.CopyChildItem(provider, nodeToCopy, destination);
         }
     }
 
@@ -136,8 +137,8 @@ public record ContainerNode : ProviderNode
     #region IMoveChildItem
 
     // TODO: The provider gives the original parent to make it easier to remove the connection to the moved node. Necessary?
-    public void MoveChildItem(ContainerNode parentOfNodeToMove, ProviderNode nodeToMove, string[] destination)
-        => this.InvokeUnderlyingOrThrow<IMoveChildItem>(moveChildItem => moveChildItem.MoveChildItem(parentOfNodeToMove, nodeToMove, destination));
+    public void MoveChildItem(CmdletProvider provider, ContainerNode parentOfNodeToMove, ProviderNode nodeToMove, string[] destination)
+        => this.InvokeUnderlyingOrThrow<IMoveChildItem>(moveChildItem => moveChildItem.MoveChildItem(provider, parentOfNodeToMove, nodeToMove, destination));
 
     public object? MoveChildItemParameter(string name, string destination)
         => this.InvokeUnderlyingOrDefault<IMoveChildItem>(moveChildItem => moveChildItem.MoveChildItemParameters(name, destination));

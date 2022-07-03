@@ -1,4 +1,5 @@
 ﻿using System.Management.Automation;
+using System.Management.Automation.Provider;
 using TreeStore.Core.Nodes;
 
 namespace TreeStore.Core.Capabilities;
@@ -14,5 +15,5 @@ public interface ICopyItemProperty
     /// <summary>
     /// Copy the given item property
     /// </summary>
-    public void CopyItemProperty(ProviderNode sourceNode, string sourceProperty, string destinationProperty);
+    public void CopyItemProperty(CmdletProvider provider, ProviderNode sourceNode, string sourceProperty, string destinationProperty);
 }

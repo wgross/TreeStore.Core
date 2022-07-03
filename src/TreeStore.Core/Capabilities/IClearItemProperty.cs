@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Management.Automation;
+using System.Management.Automation.Provider;
 
 namespace TreeStore.Core.Capabilities;
 
@@ -14,5 +15,5 @@ public interface IClearItemProperty
     /// <summary>
     /// Removes the value from an item property.
     /// </summary>
-    public void ClearItemProperty(IEnumerable<string> propertiesToClear);
+    public void ClearItemProperty(CmdletProvider provider, IEnumerable<string> propertiesToClear);
 }

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Management.Automation;
+using System.Management.Automation.Provider;
 using TreeStore.Core.Capabilities;
 
 namespace TreeStore.Core.Nodes;
@@ -99,9 +100,9 @@ public abstract record ProviderNode
     public object? GetItemParameters()
         => this.InvokeUnderlyingOrDefault<IGetItem>(getItem => getItem.GetItemParameters());
 
-    public PSObject GetItem()
+    public PSObject GetItem(CmdletProvider provider)
     {
-        PSObject pso = (PSObject?)this.InvokeUnderlyingOrDefault<IGetItem>(gi => gi.GetItem()) ?? PSObject.AsPSObject(this.Underlying);
+        PSObject pso = (PSObject?)this.InvokeUnderlyingOrDefault<IGetItem>(gi => gi.GetItem(provider)) ?? PSObject.AsPSObject(this.Underlying);
 
         pso.Properties.Add(new PSNoteProperty("PSChildName", this.Name));
         return pso;
@@ -112,8 +113,8 @@ public abstract record ProviderNode
     #region ISetItem
 
     /// <inheritdoc/>
-    public void SetItem(object value)
-        => this.InvokeUnderlyingOrThrow<ISetItem>(setItem => setItem.SetItem(value));
+    public void SetItem(CmdletProvider provider, object value)
+        => this.InvokeUnderlyingOrThrow<ISetItem>(setItem => setItem.SetItem(provider, value));
 
     /// <inheritdoc/>
     public object? SetItemParameters()
@@ -124,8 +125,8 @@ public abstract record ProviderNode
     #region IClearItem
 
     /// <inheritdoc/>
-    public void ClearItem()
-        => this.InvokeUnderlyingOrThrow<IClearItem>(clearItem => clearItem.ClearItem());
+    public void ClearItem(CmdletProvider provider)
+        => this.InvokeUnderlyingOrThrow<IClearItem>(clearItem => clearItem.ClearItem(provider));
 
     /// <inheritdoc/>
     public object? ClearItemParameters()
@@ -136,31 +137,31 @@ public abstract record ProviderNode
     #region IItemExists
 
     /// <inheritdoc/>
-    public bool ItemExists()
-        => this.InvokeUnderlyingOrDefault<IItemExists>(itemExists => itemExists.ItemExists(), defaultValue: true);
+    public bool ItemExists(CmdletProvider provider)
+        => this.InvokeUnderlyingOrDefault<IItemExists>(itemExists => itemExists.ItemExists(provider), defaultValue: true);
 
     /// <inheritdoc/>
-    public object? ItemExistsParameters()
-        => this.InvokeUnderlyingOrDefault<IItemExists>(itemExists => itemExists.ItemExistsParameters());
+    public object? ItemExistsParameters(CmdletProvider provider)
+        => this.InvokeUnderlyingOrDefault<IItemExists>(itemExists => itemExists.ItemExistsParameters(provider));
 
     #endregion IItemExists
 
     #region IInvokeItem
 
     /// <inheritdoc/>
-    public void InvokeItem()
-        => this.InvokeUnderlyingOrThrow<IInvokeItem>(invokeItem => invokeItem.InvokeItem());
+    public void InvokeItem(CmdletProvider provider)
+        => this.InvokeUnderlyingOrThrow<IInvokeItem>(invokeItem => invokeItem.InvokeItem(provider));
 
     /// <inheritdoc/>
-    public object? InvokeItemParameters()
-        => this.InvokeUnderlyingOrDefault<IInvokeItem>(invokeItem => invokeItem.InvokeItemParameters());
+    public object? InvokeItemParameters(CmdletProvider provider)
+        => this.InvokeUnderlyingOrDefault<IInvokeItem>(invokeItem => invokeItem.InvokeItemParameters(provider));
 
     #endregion IInvokeItem
 
     #region IClearItemProperty
 
-    public void ClearItemProperty(IEnumerable<string> name)
-        => this.InvokeUnderlyingOrThrow<IClearItemProperty>(clearItemProperty => clearItemProperty.ClearItemProperty(name));
+    public void ClearItemProperty(CmdletProvider provider, IEnumerable<string> name)
+        => this.InvokeUnderlyingOrThrow<IClearItemProperty>(clearItemProperty => clearItemProperty.ClearItemProperty(provider, name));
 
     public object? ClearItemPropertyParameters(IEnumerable<string> name)
         => this.InvokeUnderlyingOrDefault<IClearItemProperty>(clearItemProperty => clearItemProperty.ClearItemPropertyParameters(name));
@@ -169,15 +170,15 @@ public abstract record ProviderNode
 
     #region IGetItemProperty
 
-    public PSObject GetItemProperty(IEnumerable<string>? providerSpecificPickList)
+    public PSObject GetItemProperty(CmdletProvider provider, IEnumerable<string>? providerSpecificPickList)
     {
-        if (this.TryInvokeUnderlyingOrDefault<IGetItemProperty>(getItemProperty => getItemProperty.GetItemProperty(providerSpecificPickList), out var result))
+        if (this.TryInvokeUnderlyingOrDefault<IGetItemProperty>(getItemProperty => getItemProperty.GetItemProperty(provider, providerSpecificPickList), out var result))
         {
             return (PSObject)result!;
         }
         else
         {
-            var psObject = this.GetItem();
+            var psObject = this.GetItem(provider);
             if (providerSpecificPickList is null || !providerSpecificPickList.Any())
                 return psObject;
 
@@ -199,8 +200,8 @@ public abstract record ProviderNode
 
     #region ISetItemProperty
 
-    public void SetItemProperty(PSObject propertyValue)
-        => this.InvokeUnderlyingOrThrow<ISetItemProperty>(setItemProperty => setItemProperty.SetItemProperty(propertyValue));
+    public void SetItemProperty(CmdletProvider provider, PSObject propertyValue)
+        => this.InvokeUnderlyingOrThrow<ISetItemProperty>(setItemProperty => setItemProperty.SetItemProperty(provider, propertyValue));
 
     public object? SetItemPropertyParameters(PSObject propertyValue)
         => this.InvokeUnderlyingOrDefault<ISetItemProperty>(setItemProperty => setItemProperty.SetItemPropertyParameters(propertyValue));
@@ -209,8 +210,8 @@ public abstract record ProviderNode
 
     #region ICopyItemProperty
 
-    public void CopyItemProperty(ProviderNode sourceNode, string sourcePropertyName, string destinationPropertyName)
-        => this.InvokeUnderlyingOrThrow<ICopyItemProperty>(copyItemProperty => copyItemProperty.CopyItemProperty(sourceNode, sourcePropertyName, destinationPropertyName));
+    public void CopyItemProperty(CmdletProvider provider, ProviderNode sourceNode, string sourcePropertyName, string destinationPropertyName)
+        => this.InvokeUnderlyingOrThrow<ICopyItemProperty>(copyItemProperty => copyItemProperty.CopyItemProperty(provider, sourceNode, sourcePropertyName, destinationPropertyName));
 
     public object? CopyItemPropertyParameters(string sourcePath, string sourceProperty, string destinationPath, string destinationProperty)
         => this.InvokeUnderlyingOrDefault<ICopyItemProperty>(copyItemProperty => copyItemProperty.CopyItemPropertyParameters(sourcePath, sourceProperty, destinationPath, destinationProperty));
@@ -219,8 +220,8 @@ public abstract record ProviderNode
 
     #region IRemoveItemProperty
 
-    public void RemoveItemProperty(string propertyName)
-        => this.InvokeUnderlyingOrThrow<IRemoveItemProperty>(remoteItemProperty => remoteItemProperty.RemoveItemProperty(propertyName));
+    public void RemoveItemProperty(CmdletProvider provider, string propertyName)
+        => this.InvokeUnderlyingOrThrow<IRemoveItemProperty>(remoteItemProperty => remoteItemProperty.RemoveItemProperty(provider, propertyName));
 
     public object? RemoveItemPropertyParameters(string propertyName)
         => this.InvokeUnderlyingOrDefault<IRemoveItemProperty>(remoteItemProperty => remoteItemProperty.RemoveItemPropertyParameters(propertyName));
@@ -229,8 +230,8 @@ public abstract record ProviderNode
 
     #region IMoveItemProperty
 
-    public void MoveItemProperty(ProviderNode sourceNode, string sourcePropertyName, string destinationPropertyName)
-        => this.InvokeUnderlyingOrThrow<IMoveItemProperty>(moveItemProperty => moveItemProperty.MoveItemProperty(sourceNode, sourcePropertyName, destinationPropertyName));
+    public void MoveItemProperty(CmdletProvider provider, ProviderNode sourceNode, string sourcePropertyName, string destinationPropertyName)
+        => this.InvokeUnderlyingOrThrow<IMoveItemProperty>(moveItemProperty => moveItemProperty.MoveItemProperty(provider, sourceNode, sourcePropertyName, destinationPropertyName));
 
     public object? MoveItemPropertyParameters(string sourcePath, string sourceProperty, string destinationPath, string destinationProperty)
        => this.InvokeUnderlyingOrDefault<IMoveItemProperty>(moveItemPropery => moveItemPropery.MoveItemPropertyParameters(sourcePath, sourceProperty, destinationPath, destinationProperty));
@@ -239,8 +240,8 @@ public abstract record ProviderNode
 
     #region INewItemProperty
 
-    public void NewItemProperty(string propertyName, string propertyTypeName, object? value)
-        => this.InvokeUnderlyingOrThrow<INewItemProperty>(newItemProperty => newItemProperty.NewItemProperty(propertyName, propertyTypeName, value));
+    public void NewItemProperty(CmdletProvider provider, string propertyName, string propertyTypeName, object? value)
+        => this.InvokeUnderlyingOrThrow<INewItemProperty>(newItemProperty => newItemProperty.NewItemProperty(provider, propertyName, propertyTypeName, value));
 
     public object? NewItemPropertyParameter(string propertyName, string propertyTypeName, object? value)
         => this.InvokeUnderlyingOrDefault<INewItemProperty>(newItemProperty => newItemProperty.NewItemPropertyParameters(propertyName, propertyTypeName, value));
@@ -249,8 +250,8 @@ public abstract record ProviderNode
 
     #region IRenameItemProperty
 
-    public void RenameItemProperty(string propertyName, string newName)
-        => this.InvokeUnderlyingOrThrow<IRenameItemProperty>(renameItemProperty => renameItemProperty.RenameItemProperty(propertyName, newName));
+    public void RenameItemProperty(CmdletProvider provider, string propertyName, string newName)
+        => this.InvokeUnderlyingOrThrow<IRenameItemProperty>(renameItemProperty => renameItemProperty.RenameItemProperty(provider, propertyName, newName));
 
     public object? RenameItemPropertyParameters(string propertyName, string newName)
         => this.InvokeUnderlyingOrDefault<IRenameItemProperty>(renameItemProperty => renameItemProperty.RenameItemPropertyParameters(propertyName, newName));

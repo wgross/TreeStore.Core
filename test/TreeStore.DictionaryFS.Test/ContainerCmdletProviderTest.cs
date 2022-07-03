@@ -27,6 +27,7 @@ public sealed class ContainerCmdletProviderTest : ItemCmdletProviderTestBase
         // ACT
         var result = this.PowerShell.AddCommand("Get-ChildItem")
             .AddParameter("Path", @"test:\")
+            .AddParameter("Force")
             .Invoke()
             .ToArray();
 

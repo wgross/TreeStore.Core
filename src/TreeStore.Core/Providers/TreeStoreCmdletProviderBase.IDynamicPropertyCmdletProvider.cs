@@ -8,7 +8,7 @@ namespace TreeStore.Core.Providers
         {
             if (this.TryGetNodeByPath(sourcePath, out var sourceNode) && this.TryGetNodeByPath(destinationPath, out var destinationNode))
             {
-                destinationNode.CopyItemProperty(sourceNode, sourceProperty, destinationProperty);
+                destinationNode.CopyItemProperty(provider: this, sourceNode, sourceProperty, destinationProperty);
             }
         }
 
@@ -22,7 +22,7 @@ namespace TreeStore.Core.Providers
         {
             if (this.TryGetNodeByPath(sourcePath, out var sourceNode) && this.TryGetNodeByPath(destinationPath, out var destinationNode))
             {
-                destinationNode.MoveItemProperty(sourceNode, sourceProperty, destinationProperty);
+                destinationNode.MoveItemProperty(provider: this, sourceNode, sourceProperty, destinationProperty);
             }
         }
 
@@ -36,7 +36,7 @@ namespace TreeStore.Core.Providers
         {
             if (this.TryGetNodeByPath(path, out var providerNode))
             {
-                providerNode.NewItemProperty(propertyName, propertyTypeName, value);
+                providerNode.NewItemProperty(provider: this, propertyName, propertyTypeName, value);
             }
         }
 
@@ -50,7 +50,7 @@ namespace TreeStore.Core.Providers
         {
             if (this.TryGetNodeByPath(path, out var providerNode))
             {
-                providerNode.RemoveItemProperty(propertyName);
+                providerNode.RemoveItemProperty(provider: this, propertyName);
             }
         }
 
@@ -69,7 +69,7 @@ namespace TreeStore.Core.Providers
         {
             if (this.TryGetNodeByPath(path, out var providerNode))
             {
-                providerNode.RenameItemProperty(sourceProperty, destinationProperty);
+                providerNode.RenameItemProperty(provider: this, sourceProperty, destinationProperty);
             }
         }
 

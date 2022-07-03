@@ -6,7 +6,7 @@ public partial class TreeStoreCmdletProviderBase
     {
         if (this.TryGetNodeByPath(path, out var node))
         {
-            node.ClearItem();
+            node.ClearItem(provider: this);
         }
     }
 
@@ -23,7 +23,7 @@ public partial class TreeStoreCmdletProviderBase
     {
         if (this.TryGetNodeByPath(path, out var node))
         {
-            node.SetItem(value);
+            node.SetItem(provider: this, value);
         }
     }
 
@@ -45,7 +45,7 @@ public partial class TreeStoreCmdletProviderBase
     {
         if (this.TryGetNodeByPath(path, out var node))
         {
-            node.InvokeItem();
+            node.InvokeItem(provider: this);
         }
     }
 
@@ -53,7 +53,7 @@ public partial class TreeStoreCmdletProviderBase
     {
         if (this.TryGetNodeByPath(path, out var node))
         {
-            return node.InvokeItemParameters();
+            return node.InvokeItemParameters(provider: this);
         }
         else return null;
     }
@@ -84,7 +84,7 @@ public partial class TreeStoreCmdletProviderBase
     {
         if (this.TryGetNodeByPath(path, out var node))
         {
-            return node.ItemExists();
+            return node.ItemExists(provider: this);
         }
         return false;
     }
@@ -93,7 +93,7 @@ public partial class TreeStoreCmdletProviderBase
     {
         if (this.TryGetNodeByPath(path, out var node))
         {
-            return node.ItemExistsParameters();
+            return node.ItemExistsParameters(provider: this);
         }
         else return null;
     }

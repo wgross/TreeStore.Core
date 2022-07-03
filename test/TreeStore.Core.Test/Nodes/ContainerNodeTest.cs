@@ -1,9 +1,10 @@
 ﻿using Moq;
-using TreeStore.Core.Capabilities;
-using TreeStore.Core.Nodes;
 using System;
 using System.Linq;
 using System.Management.Automation;
+using System.Management.Automation.Provider;
+using TreeStore.Core.Capabilities;
+using TreeStore.Core.Nodes;
 using Xunit;
 using static TreeStore.Core.Test.TestData;
 
@@ -12,6 +13,12 @@ namespace TreeStore.Core.Test.Nodes
     public class ContainerNodeTest : IDisposable
     {
         private readonly MockRepository mocks = new(MockBehavior.Strict);
+        private readonly Mock<CmdletProvider> providerMock;
+
+        public ContainerNodeTest()
+        {
+            this.providerMock = this.mocks.Create<CmdletProvider>();
+        }
 
         public void Dispose() => this.mocks.VerifyAll();
 
@@ -56,13 +63,13 @@ namespace TreeStore.Core.Test.Nodes
             // ARRANGE
             var getChildItem = this.mocks.Create<IGetChildItem>();
             getChildItem
-                .Setup(gci => gci.GetChildItems())
+                .Setup(gci => gci.GetChildItems(this.providerMock.Object))
                 .Returns(new[] { ArrangeNode("name", ServiceProvider()) });
 
             var node = ArrangeNode("", ServiceProvider(With<IGetChildItem>(getChildItem)));
 
             // ACT
-            var result = node.TryGetChildNode(name, out var childNode);
+            var result = node.TryGetChildNode(this.providerMock.Object, name, out var childNode);
 
             // ASSERT
             Assert.True(result);
@@ -75,13 +82,13 @@ namespace TreeStore.Core.Test.Nodes
             // ARRANGE
             var getChildItem = this.mocks.Create<IGetChildItem>();
             getChildItem
-                .Setup(gci => gci.GetChildItems())
+                .Setup(gci => gci.GetChildItems(this.providerMock.Object))
                 .Returns(new[] { ArrangeNode("unkown", ServiceProvider()) });
 
             var node = ArrangeNode("", ServiceProvider(With<IGetChildItem>(getChildItem)));
 
             // ACT
-            var result = node.TryGetChildNode("name", out var childNode);
+            var result = node.TryGetChildNode(this.providerMock.Object, "name", out var childNode);
 
             // ASSERT
             Assert.False(result);
@@ -96,12 +103,12 @@ namespace TreeStore.Core.Test.Nodes
             // ARRANGE
             var setItem = this.mocks.Create<ISetItem>();
             setItem
-                .Setup(gi => gi.SetItem(1));
+                .Setup(gi => gi.SetItem(this.providerMock.Object, 1));
 
             var node = ArrangeNode("name", ServiceProvider(With<ISetItem>(setItem)));
 
             // ACT
-            node.SetItem(1);
+            node.SetItem(this.providerMock.Object, 1);
         }
 
         [Fact]
@@ -111,7 +118,7 @@ namespace TreeStore.Core.Test.Nodes
             var node = ArrangeNode("name", ServiceProvider());
 
             // ACT
-            var result = Assert.Throws<PSNotSupportedException>(() => node.SetItem(1));
+            var result = Assert.Throws<PSNotSupportedException>(() => node.SetItem(this.providerMock.Object, 1));
 
             // ASSERT
             Assert.Equal("Node(name='name') doesn't provide an implementation of capability 'ISetItem'.", result.Message);
@@ -159,12 +166,12 @@ namespace TreeStore.Core.Test.Nodes
             // ARRANGE
             var clearItem = this.mocks.Create<IClearItem>();
             clearItem
-                .Setup(ci => ci.ClearItem());
+                .Setup(ci => ci.ClearItem(this.providerMock.Object));
 
             var node = ArrangeNode("name", ServiceProvider(With<IClearItem>(clearItem)));
 
             // ACT
-            node.ClearItem();
+            node.ClearItem(this.providerMock.Object);
         }
 
         [Fact]
@@ -174,7 +181,7 @@ namespace TreeStore.Core.Test.Nodes
             var node = ArrangeNode("name", ServiceProvider());
 
             // ACT
-            var result = Assert.Throws<PSNotSupportedException>(() => node.ClearItem());
+            var result = Assert.Throws<PSNotSupportedException>(() => node.ClearItem(this.providerMock.Object));
 
             // ASSERT
             Assert.Equal("Node(name='name') doesn't provide an implementation of capability 'IClearItem'.", result.Message);
@@ -223,7 +230,7 @@ namespace TreeStore.Core.Test.Nodes
             var node = ArrangeNode("name", ServiceProvider());
 
             // ACT
-            var result = node.ItemExists();
+            var result = node.ItemExists(this.providerMock.Object);
 
             // ASSERT
             Assert.True(result);
@@ -235,13 +242,13 @@ namespace TreeStore.Core.Test.Nodes
             // ARRANGE
             var itemExists = this.mocks.Create<IItemExists>();
             itemExists
-                .Setup(ii => ii.ItemExists())
+                .Setup(ii => ii.ItemExists(this.providerMock.Object))
                 .Returns(false);
 
             var node = ArrangeNode("name", ServiceProvider(With<IItemExists>(itemExists)));
 
             // ACT
-            var result = node.ItemExists();
+            var result = node.ItemExists(this.providerMock.Object);
 
             // ASSERT
             Assert.False(result);
@@ -254,13 +261,13 @@ namespace TreeStore.Core.Test.Nodes
             var parameters = new object();
             var itemExists = this.mocks.Create<IItemExists>();
             itemExists
-                .Setup(gi => gi.ItemExistsParameters())
+                .Setup(gi => gi.ItemExistsParameters(this.providerMock.Object))
                 .Returns(parameters);
 
             var node = ArrangeNode("name", ServiceProvider(With<IItemExists>(itemExists)));
 
             // ACT
-            var result = node.ItemExistsParameters();
+            var result = node.ItemExistsParameters(this.providerMock.Object);
 
             // ASSERT
             Assert.Same(parameters, result);
@@ -273,7 +280,7 @@ namespace TreeStore.Core.Test.Nodes
             var node = ArrangeNode("name", ServiceProvider());
 
             // ACT
-            var result = node.ItemExistsParameters();
+            var result = node.ItemExistsParameters(this.providerMock.Object);
 
             // ASSERT
             Assert.Null(result);
@@ -290,7 +297,7 @@ namespace TreeStore.Core.Test.Nodes
             var node = ArrangeNode("name", ServiceProvider());
 
             // ACT
-            var result = Assert.Throws<PSNotSupportedException>(() => node.InvokeItem());
+            var result = Assert.Throws<PSNotSupportedException>(() => node.InvokeItem(this.providerMock.Object));
 
             // ASSERT
             Assert.Equal("Node(name='name') doesn't provide an implementation of capability 'IInvokeItem'.", result.Message);
@@ -302,12 +309,12 @@ namespace TreeStore.Core.Test.Nodes
             // ARRANGE
             var itemExists = this.mocks.Create<IInvokeItem>();
             itemExists
-                .Setup(ii => ii.InvokeItem());
+                .Setup(ii => ii.InvokeItem(this.providerMock.Object));
 
             var node = ArrangeNode("name", ServiceProvider(With<IInvokeItem>(itemExists)));
 
             // ACT
-            node.InvokeItem();
+            node.InvokeItem(this.providerMock.Object);
         }
 
         [Fact]
@@ -317,13 +324,13 @@ namespace TreeStore.Core.Test.Nodes
             var parameters = new object();
             var itemExists = this.mocks.Create<IInvokeItem>();
             itemExists
-                .Setup(gi => gi.InvokeItemParameters())
+                .Setup(gi => gi.InvokeItemParameters(this.providerMock.Object))
                 .Returns(parameters);
 
             var node = ArrangeNode("name", ServiceProvider(With<IInvokeItem>(itemExists)));
 
             // ACT
-            var result = node.InvokeItemParameters();
+            var result = node.InvokeItemParameters(this.providerMock.Object);
 
             // ASSERT
             Assert.Same(parameters, result);
@@ -336,7 +343,7 @@ namespace TreeStore.Core.Test.Nodes
             var node = ArrangeNode("name", ServiceProvider());
 
             // ACT
-            var result = node.InvokeItemParameters();
+            var result = node.InvokeItemParameters(this.providerMock.Object);
 
             // ASSERT
             Assert.Null(result);
@@ -357,13 +364,13 @@ namespace TreeStore.Core.Test.Nodes
 
             var underlying = this.mocks.Create<IGetChildItem>();
             underlying
-                .Setup(u => u.GetChildItems())
+                .Setup(u => u.GetChildItems(this.providerMock.Object))
                 .Returns(childItems);
 
             var node = ArrangeNode("name", ServiceProvider(With<IGetChildItem>(underlying)));
 
             // ACT
-            var result = node.GetChildItems().ToArray();
+            var result = node.GetChildItems(this.providerMock.Object).ToArray();
 
             // ASSERT
             Assert.Equal(childItems, result);
@@ -376,7 +383,7 @@ namespace TreeStore.Core.Test.Nodes
             var node = ArrangeNode("name", ServiceProvider());
 
             // ACT
-            var result = node.GetChildItems().ToArray();
+            var result = node.GetChildItems(this.providerMock.Object).ToArray();
 
             // ASSERT
             Assert.Empty(result);
@@ -420,13 +427,13 @@ namespace TreeStore.Core.Test.Nodes
             // ARRANGE
             var underlying = this.mocks.Create<IGetChildItem>();
             underlying
-                .Setup(u => u.HasChildItems())
+                .Setup(u => u.HasChildItems(this.providerMock.Object))
                 .Returns(true);
 
             var node = ArrangeNode("name", ServiceProvider(With<IGetChildItem>(underlying)));
 
             // ACT
-            var result = node.HasChildItems();
+            var result = node.HasChildItems(this.providerMock.Object);
 
             // ASSERT
             Assert.True(result);
@@ -439,7 +446,7 @@ namespace TreeStore.Core.Test.Nodes
             var node = ArrangeNode("name", ServiceProvider());
 
             // ACT
-            var result = node.HasChildItems();
+            var result = node.HasChildItems(this.providerMock.Object);
 
             // ASSERT
             Assert.False(result);
@@ -457,12 +464,12 @@ namespace TreeStore.Core.Test.Nodes
             // ARRANGE
             var underlying = this.mocks.Create<IRemoveChildItem>();
             underlying
-                .Setup(u => u.RemoveChildItem("child1", recurse));
+                .Setup(u => u.RemoveChildItem(this.providerMock.Object, "child1", recurse));
 
             var node = ArrangeNode("name", ServiceProvider(With<IRemoveChildItem>(underlying)));
 
             // ACT
-            node.RemoveChildItem("child1", recurse);
+            node.RemoveChildItem(this.providerMock.Object, "child1", recurse);
         }
 
         [Theory]
@@ -474,7 +481,7 @@ namespace TreeStore.Core.Test.Nodes
             var node = ArrangeNode("name", ServiceProvider());
 
             // ACT
-            var result = Assert.Throws<PSNotSupportedException>(() => node.RemoveChildItem("child1", recurse));
+            var result = Assert.Throws<PSNotSupportedException>(() => node.RemoveChildItem(this.providerMock.Object, "child1", recurse));
 
             // ASSERT
             Assert.Equal("Node(name='name') doesn't provide an implementation of capability 'IRemoveChildItem'.", result.Message);
@@ -527,13 +534,13 @@ namespace TreeStore.Core.Test.Nodes
             var underlying = this.mocks.Create<INewChildItem>();
             var value = new object();
             underlying
-                .Setup(u => u.NewChildItem("child1", "itemTypeName", value))
+                .Setup(u => u.NewChildItem(this.providerMock.Object, "child1", "itemTypeName", value))
                 .Returns(new LeafNode("child1", ServiceProvider()));
 
             var node = ArrangeNode("name", ServiceProvider(With<INewChildItem>(underlying)));
 
             // ACT
-            node.NewChildItem("child1", "itemTypeName", value);
+            node.NewChildItem(this.providerMock.Object, "child1", "itemTypeName", value);
         }
 
         [Fact]
@@ -543,7 +550,7 @@ namespace TreeStore.Core.Test.Nodes
             var node = ArrangeNode("name", ServiceProvider());
 
             // ACT
-            var result = Assert.Throws<PSNotSupportedException>(() => node.NewChildItem("child1", "itemTypeValue", null));
+            var result = Assert.Throws<PSNotSupportedException>(() => node.NewChildItem(this.providerMock.Object, "child1", "itemTypeValue", null));
 
             // ASSERT
             Assert.Equal("Node(name='name') doesn't provide an implementation of capability 'INewChildItem'.", result.Message);
@@ -591,12 +598,12 @@ namespace TreeStore.Core.Test.Nodes
             // ARRANGE
             var underlying = this.mocks.Create<IRenameChildItem>();
             underlying
-                .Setup(u => u.RenameChildItem("name", "newName"));
+                .Setup(u => u.RenameChildItem(this.providerMock.Object, "name", "newName"));
 
             var node = ArrangeNode("name", ServiceProvider(With<IRenameChildItem>(underlying)));
 
             // ACT
-            node.RenameChildItem("name", "newName");
+            node.RenameChildItem(this.providerMock.Object, "name", "newName");
         }
 
         [Fact]
@@ -606,7 +613,7 @@ namespace TreeStore.Core.Test.Nodes
             var node = ArrangeNode("name", ServiceProvider());
 
             // ACT
-            var result = Assert.Throws<PSNotSupportedException>(() => node.RenameChildItem("name", "newName"));
+            var result = Assert.Throws<PSNotSupportedException>(() => node.RenameChildItem(this.providerMock.Object, "name", "newName"));
 
             // ASSERT
             Assert.Equal("Node(name='name') doesn't provide an implementation of capability 'IRenameChildItem'.", result.Message);
@@ -655,13 +662,13 @@ namespace TreeStore.Core.Test.Nodes
             // ARRANGE
             var underlying = this.mocks.Create<ICopyChildItemRecursive>();
             underlying
-                .Setup(u => u.CopyChildItemRecursive(It.IsAny<ProviderNode>(), new[] { "child", "grandchild" }))
+                .Setup(u => u.CopyChildItemRecursive(this.providerMock.Object, It.IsAny<ProviderNode>(), new[] { "child", "grandchild" }))
                 .Returns(new ContainerNode("name", ServiceProvider()));
 
             var node = ArrangeNode("name", ServiceProvider(With<ICopyChildItemRecursive>(underlying)));
 
             // ACT
-            node.CopyChildItem(new ContainerNode("name", ServiceProvider()), new[] { "child", "grandchild" }, true);
+            node.CopyChildItem(this.providerMock.Object, new ContainerNode("name", ServiceProvider()), new[] { "child", "grandchild" }, true);
         }
 
         [Fact]
@@ -670,13 +677,13 @@ namespace TreeStore.Core.Test.Nodes
             // ARRANGE
             var underlying = this.mocks.Create<ICopyChildItem>();
             underlying
-                .Setup(u => u.CopyChildItem(It.IsAny<ProviderNode>(), new[] { "child", "grandchild" }))
+                .Setup(u => u.CopyChildItem(this.providerMock.Object, It.IsAny<ProviderNode>(), new[] { "child", "grandchild" }))
                 .Returns(new ContainerNode("name", ServiceProvider()));
 
             var node = ArrangeNode("name", ServiceProvider(With<ICopyChildItem>(underlying)));
 
             // ACT
-            node.CopyChildItem(new ContainerNode("name", ServiceProvider()), new[] { "child", "grandchild" }, false);
+            node.CopyChildItem(this.providerMock.Object, new ContainerNode("name", ServiceProvider()), new[] { "child", "grandchild" }, false);
         }
 
         [Fact]
@@ -686,7 +693,7 @@ namespace TreeStore.Core.Test.Nodes
             var node = ArrangeNode("name", ServiceProvider());
 
             // ACT
-            var result = Assert.Throws<PSNotSupportedException>(() => node.CopyChildItem(new ContainerNode("name", ServiceProvider()), new[] { "child", "grandchild" }, false));
+            var result = Assert.Throws<PSNotSupportedException>(() => node.CopyChildItem(this.providerMock.Object, new ContainerNode("name", ServiceProvider()), new[] { "child", "grandchild" }, false));
 
             // ASSERT
             Assert.Equal("Node(name='name') doesn't provide an implementation of capability 'ICopyChildItem'.", result.Message);
@@ -737,13 +744,13 @@ namespace TreeStore.Core.Test.Nodes
             var destination = Array.Empty<string>();
             var underlying = this.mocks.Create<IMoveChildItem>();
             underlying
-                .Setup(u => u.MoveChildItem(parentOfNode, nodeToMove, destination))
+                .Setup(u => u.MoveChildItem(this.providerMock.Object, parentOfNode, nodeToMove, destination))
                 .Returns((LeafNode)null);
 
             var node = ArrangeNode("name", ServiceProvider(With<IMoveChildItem>(underlying)));
 
             // ACT
-            node.MoveChildItem(parentOfNode, nodeToMove, destination);
+            node.MoveChildItem(this.providerMock.Object, parentOfNode, nodeToMove, destination);
         }
 
         [Fact]
@@ -774,7 +781,7 @@ namespace TreeStore.Core.Test.Nodes
             var node = ArrangeNode("name", ServiceProvider());
 
             // ACT
-            var result = Assert.Throws<PSNotSupportedException>(() => node.MoveChildItem(parentOfNode, nodeToMove, destination: Array.Empty<string>()));
+            var result = Assert.Throws<PSNotSupportedException>(() => node.MoveChildItem(this.providerMock.Object, parentOfNode, nodeToMove, destination: Array.Empty<string>()));
 
             // ASSERT
             Assert.Equal("Node(name='name') doesn't provide an implementation of capability 'IMoveChildItem'.", result.Message);

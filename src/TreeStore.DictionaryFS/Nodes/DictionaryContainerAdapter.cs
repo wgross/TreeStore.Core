@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Management.Automation;
+using System.Management.Automation.Provider;
 using TreeStore.Core.Capabilities;
 using TreeStore.Core.Nodes;
 using IUnderlyingDictionary = System.Collections.Generic.IDictionary<string, object?>;
@@ -71,10 +72,10 @@ namespace TreeStore.DictionaryFS.Nodes
         #region IGetChildItem
 
         /// <inheritdoc/>
-        bool IGetChildItem.HasChildItems() => ((IGetChildItem)this).GetChildItems().Any();
+        bool IGetChildItem.HasChildItems(CmdletProvider provider) => ((IGetChildItem)this).GetChildItems(provider).Any();
 
         /// <inheritdoc/>
-        IEnumerable<ProviderNode> IGetChildItem.GetChildItems()
+        IEnumerable<ProviderNode> IGetChildItem.GetChildItems(CmdletProvider provider)
         {
             foreach (var item in this.Underlying)
             {
@@ -91,7 +92,7 @@ namespace TreeStore.DictionaryFS.Nodes
         #region IGetItem
 
         /// <inheritdoc/>
-        PSObject IGetItem.GetItem()
+        PSObject IGetItem.GetItem(CmdletProvider provider)
         {
             var pso = new PSObject();
             foreach (var item in this.Underlying)
@@ -103,7 +104,7 @@ namespace TreeStore.DictionaryFS.Nodes
 
         #region ISetItem
 
-        void ISetItem.SetItem(object? value)
+        void ISetItem.SetItem(CmdletProvider provider, object? value)
         {
             if (value is null)
             {
@@ -127,14 +128,14 @@ namespace TreeStore.DictionaryFS.Nodes
 
         #region IClearItem
 
-        void IClearItem.ClearItem() => this.Underlying.Clear();
+        void IClearItem.ClearItem(CmdletProvider provider) => this.Underlying.Clear();
 
         #endregion IClearItem
 
         #region IRemoveChildItem
 
         /// <inheritdoc/>
-        void IRemoveChildItem.RemoveChildItem(string childName, bool recurse)
+        void IRemoveChildItem.RemoveChildItem(CmdletProvider provider, string childName, bool recurse)
         {
             // call only if recurse is true?
             if (this.Underlying.TryGetValue(childName, out var value))
@@ -147,7 +148,7 @@ namespace TreeStore.DictionaryFS.Nodes
         #region INewChildItem
 
         ///<inheritdoc/>
-        ProviderNode? INewChildItem.NewChildItem(string childName, string? itemTypeName, object? value)
+        ProviderNode? INewChildItem.NewChildItem(CmdletProvider provider, string childName, string? itemTypeName, object? value)
         {
             if (value is null)
                 throw new ArgumentNullException(nameof(value));
@@ -169,7 +170,7 @@ namespace TreeStore.DictionaryFS.Nodes
         #region IRenameChildItem
 
         ///<inheritdoc/>
-        void IRenameChildItem.RenameChildItem(string childName, string newName)
+        void IRenameChildItem.RenameChildItem(CmdletProvider provider, string childName, string newName)
         {
             if (this.Underlying.TryGetValue(childName, out var childValue))
                 if (this.Underlying.TryAdd(newName, childValue))
@@ -180,7 +181,7 @@ namespace TreeStore.DictionaryFS.Nodes
 
         #region IMoveChildItem
 
-        ProviderNode? IMoveChildItem.MoveChildItem(ContainerNode parentOfNodeToMove, ProviderNode nodeToMove, string[] destination)
+        ProviderNode? IMoveChildItem.MoveChildItem(CmdletProvider provider, ContainerNode parentOfNodeToMove, ProviderNode nodeToMove, string[] destination)
         {
             if (nodeToMove.Underlying is DictionaryContainerAdapter underlyingDict)
             {
@@ -189,13 +190,13 @@ namespace TreeStore.DictionaryFS.Nodes
                     case 0:
                         // put node directly under this node
                         if (this.Underlying.TryAdd(nodeToMove.Name, underlyingDict.Underlying))
-                            parentOfNodeToMove.RemoveChildItem(nodeToMove.Name, recurse: true);
+                            parentOfNodeToMove.RemoveChildItem(provider, nodeToMove.Name, recurse: true);
                         return nodeToMove;
 
                     case 1:
                         // put node directly under this node with new name
                         if (this.Underlying.TryAdd(destination[0], underlyingDict.Underlying))
-                            parentOfNodeToMove.RemoveChildItem(nodeToMove.Name, recurse: true);
+                            parentOfNodeToMove.RemoveChildItem(provider, nodeToMove.Name, recurse: true);
                         return nodeToMove;
 
                     default:
@@ -205,7 +206,7 @@ namespace TreeStore.DictionaryFS.Nodes
                         {
                             // delegate the move operation recursively
                             var container = new ContainerNode(destination[0], new DictionaryContainerAdapter(newDict));
-                            container.MoveChildItem(parentOfNodeToMove, nodeToMove, destination[1..]);
+                            container.MoveChildItem(provider, parentOfNodeToMove, nodeToMove, destination[1..]);
                         }
                         return nodeToMove;
                 }
@@ -220,7 +221,7 @@ namespace TreeStore.DictionaryFS.Nodes
 
         #region ICopyChildITem
 
-        ProviderNode? ICopyChildItem.CopyChildItem(ProviderNode nodeToCopy, string[] destination)
+        ProviderNode? ICopyChildItem.CopyChildItem(CmdletProvider provider, ProviderNode nodeToCopy, string[] destination)
         {
             if (nodeToCopy.Underlying is DictionaryContainerAdapter underlyingDict)
             {
@@ -245,7 +246,7 @@ namespace TreeStore.DictionaryFS.Nodes
                         {
                             // delegate the copy operation recursively
                             var container = new DictionaryContainerAdapter(newDict);
-                            return ((ICopyChildItem)container).CopyChildItem(nodeToCopy, destination[1..]);
+                            return ((ICopyChildItem)container).CopyChildItem(provider, nodeToCopy, destination[1..]);
                         }
                         return null;
                 }
@@ -257,7 +258,7 @@ namespace TreeStore.DictionaryFS.Nodes
 
         #region IClearItemProperty
 
-        void IClearItemProperty.ClearItemProperty(IEnumerable<string> name)
+        void IClearItemProperty.ClearItemProperty(CmdletProvider provider, IEnumerable<string> name)
         {
             foreach (var n in name)
             {
@@ -277,7 +278,7 @@ namespace TreeStore.DictionaryFS.Nodes
 
         #region ISetItemProperty
 
-        void ISetItemProperty.SetItemProperty(PSObject psObject)
+        void ISetItemProperty.SetItemProperty(CmdletProvider provider, PSObject psObject)
         {
             foreach (var property in psObject.Properties)
             {
@@ -293,7 +294,7 @@ namespace TreeStore.DictionaryFS.Nodes
             }
         }
 
-        void ICopyItemProperty.CopyItemProperty(ProviderNode sourceNode, string sourcePropertyName, string destinationPropertyName)
+        void ICopyItemProperty.CopyItemProperty(CmdletProvider provider, ProviderNode sourceNode, string sourcePropertyName, string destinationPropertyName)
         {
             if (sourceNode.Underlying is DictionaryContainerAdapter underlyingDict)
             {
@@ -305,13 +306,13 @@ namespace TreeStore.DictionaryFS.Nodes
 
         #region IRemoveItemProperty
 
-        void IRemoveItemProperty.RemoveItemProperty(string propertyName) => this.Underlying.Remove(propertyName);
+        void IRemoveItemProperty.RemoveItemProperty(CmdletProvider provider, string propertyName) => this.Underlying.Remove(propertyName);
 
         #endregion IRemoveItemProperty
 
         #region IMoveItemProperty
 
-        void IMoveItemProperty.MoveItemProperty(ProviderNode sourceNode, string sourceProperty, string destinationProperty)
+        void IMoveItemProperty.MoveItemProperty(CmdletProvider provider, ProviderNode sourceNode, string sourceProperty, string destinationProperty)
         {
             if (sourceNode.Underlying is DictionaryContainerAdapter underlyingDict)
             {
@@ -325,13 +326,13 @@ namespace TreeStore.DictionaryFS.Nodes
 
         #region INewItemProperty
 
-        void INewItemProperty.NewItemProperty(string propertyName, string? propertyTypeName, object? value) => this.Underlying.Add(propertyName, value);
+        void INewItemProperty.NewItemProperty(CmdletProvider provider, string propertyName, string? propertyTypeName, object? value) => this.Underlying.Add(propertyName, value);
 
         #endregion INewItemProperty
 
         #region IRenameItemProperty
 
-        void IRenameItemProperty.RenameItemProperty(string sourceProperty, string destinationProperty)
+        void IRenameItemProperty.RenameItemProperty(CmdletProvider provider, string sourceProperty, string destinationProperty)
         {
             this.Underlying.Add(destinationProperty, this.Underlying[sourceProperty]);
         }

@@ -1,4 +1,5 @@
 ﻿using System.Management.Automation;
+using System.Management.Automation.Provider;
 
 namespace TreeStore.Core.Capabilities;
 
@@ -10,10 +11,11 @@ public interface IInvokeItem
     /// <summary>
     /// Dynamic parameters presented to PowerShell 'Invoke-Item' command
     /// </summary>
-    public object? InvokeItemParameters() => new RuntimeDefinedParameterDictionary();
+    /// <returns>empty <see cref="RuntimeDefinedParameterDictionary"/> by default</returns>
+    public object? InvokeItemParameters(CmdletProvider provider) => new RuntimeDefinedParameterDictionary();
 
     /// <summary>
     /// Implements the items invocation
     /// </summary>
-    public void InvokeItem();
+    public void InvokeItem(CmdletProvider provider);
 }

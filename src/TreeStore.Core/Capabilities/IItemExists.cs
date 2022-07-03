@@ -1,10 +1,11 @@
 ﻿using System.Management.Automation;
+using System.Management.Automation.Provider;
 
 namespace TreeStore.Core.Capabilities;
 
 public interface IItemExists
 {
-    public object? ItemExistsParameters() => new RuntimeDefinedParameterDictionary();
+    public object? ItemExistsParameters(CmdletProvider provider) => new RuntimeDefinedParameterDictionary();
 
-    public bool ItemExists() => true;
+    public bool ItemExists(CmdletProvider provider) => true;
 }

@@ -27,7 +27,7 @@ public partial class TreeStoreCmdletProviderBase
             invoke: sourceParentNode =>
             {
                 // first check that node to copy exists
-                if (!sourceParentNode.TryGetChildNode(childName!, out var nodeToCopy))
+                if (!sourceParentNode.TryGetChildNode(provider: this, childName!, out var nodeToCopy))
                     throw new InvalidOperationException($"Item '{path}' doesn't exist");
 
                 // find the deepest ancestor which serves as a destination to copy to
@@ -36,7 +36,7 @@ public partial class TreeStoreCmdletProviderBase
                 if (destinationAncestor is ContainerNode destinationAncestorContainer)
                 {
                     // destination ancestor is a container and might accept the copy
-                    destinationAncestorContainer.CopyChildItem(nodeToCopy, destination: missingPath, recurse);
+                    destinationAncestorContainer.CopyChildItem(provider: this, nodeToCopy, destination: missingPath, recurse);
                 }
                 else
                 {
@@ -71,9 +71,9 @@ public partial class TreeStoreCmdletProviderBase
 
     private void GetChildItems(ContainerNode parentContainer, string path, bool recurse, uint depth, Action<PSObject, string, string, bool> writeItemObject)
     {
-        foreach (var childGetItem in parentContainer.GetChildItems())
+        foreach (var childGetItem in parentContainer.GetChildItems(provider: this))
         {
-            var childItemPSObject = childGetItem.GetItem();
+            var childItemPSObject = childGetItem.GetItem(provider: this);
             if (childItemPSObject is not null)
             {
                 var childItemPath = Path.Join(path, childGetItem.Name);
@@ -113,7 +113,7 @@ public partial class TreeStoreCmdletProviderBase
             path: new PathTool().SplitProviderPath(path).path.items,
             invoke: n => n switch
             {
-                ContainerNode c => c.HasChildItems(),
+                ContainerNode c => c.HasChildItems(provider: this),
 
                 // LeafNodes never have children
                 _ => false
@@ -127,7 +127,7 @@ public partial class TreeStoreCmdletProviderBase
 
         this.InvokeContainerNodeOrDefault(
             path: parentPath,
-            invoke: c => c.RemoveChildItem(childName!, recurse),
+            invoke: c => c.RemoveChildItem(provider: this, childName!, recurse),
             fallback: () => base.RemoveItem(path, recurse));
     }
 
@@ -145,7 +145,7 @@ public partial class TreeStoreCmdletProviderBase
         var (parentPath, childName) = new PathTool().SplitParentPathAndChildName(path);
         if (TryGetNodeByPath<INewChildItem>(this.DriveInfo.RootNode, parentPath, out _, out var newChildItem))
         {
-            var resultNode = newChildItem.NewChildItem(childName!, itemTypeName, newItemValue);
+            var resultNode = newChildItem.NewChildItem(provider: this, childName!, itemTypeName, newItemValue);
             if (resultNode is not null)
             {
                 this.WriteProviderNode(path, resultNode);
@@ -167,7 +167,7 @@ public partial class TreeStoreCmdletProviderBase
         var (parentPath, childName) = new PathTool().SplitParentPathAndChildName(path);
         if (TryGetNodeByPath<IRenameChildItem>(this.DriveInfo.RootNode, parentPath, out _, out var renameChildItem))
         {
-            renameChildItem.RenameChildItem(childName!, newName);
+            renameChildItem.RenameChildItem(provider: this, childName!, newName); ;
         }
     }
 

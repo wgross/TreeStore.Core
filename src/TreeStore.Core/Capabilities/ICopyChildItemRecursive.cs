@@ -1,4 +1,5 @@
-﻿using TreeStore.Core.Nodes;
+﻿using System.Management.Automation.Provider;
+using TreeStore.Core.Nodes;
 
 namespace TreeStore.Core.Capabilities;
 
@@ -11,5 +12,5 @@ public interface ICopyChildItemRecursive : ICopyChildItem
     /// Creates a new child node at <paramref name="destination"/> from the given <paramref name="nodeToCopy"/>
     /// as a recursive copy
     /// </summary>
-    public ProviderNode? CopyChildItemRecursive(ProviderNode nodeToCopy, string[] destination);
+    public ProviderNode? CopyChildItemRecursive(CmdletProvider provider, ProviderNode nodeToCopy, string[] destination);
 }

@@ -1,4 +1,5 @@
 ﻿using System.Management.Automation;
+using System.Management.Automation.Provider;
 
 namespace TreeStore.Core.Capabilities;
 
@@ -7,13 +8,11 @@ public interface IRemoveItemProperty
     /// <summary>
     /// Returns custom parameters to be applied for the removal of item properties
     /// </summary>
-    /// <param name="properties"></param>
     /// <returns>empty <see cref="RuntimeDefinedParameterDictionary"/> by default</returns>
     public object? RemoveItemPropertyParameters(string property) => new RuntimeDefinedParameterDictionary();
 
     /// <summary>
     /// Removes the given item properties
     /// </summary>
-    /// <param name="properties"></param>
-    public void RemoveItemProperty(string property);
+    public void RemoveItemProperty(CmdletProvider provider, string property);
 }

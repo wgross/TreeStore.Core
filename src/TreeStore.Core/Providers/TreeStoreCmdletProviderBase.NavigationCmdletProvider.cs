@@ -1,5 +1,5 @@
-﻿using TreeStore.Core.Nodes;
-using System;
+﻿using System;
+using TreeStore.Core.Nodes;
 
 namespace TreeStore.Core.Providers
 {
@@ -30,7 +30,7 @@ namespace TreeStore.Core.Providers
                 path: parentPath,
                 invoke: sourceParentNode =>
                 {
-                    if (!sourceParentNode.TryGetChildNode(childName!, out var nodeToMove))
+                    if (!sourceParentNode.TryGetChildNode(provider: this, childName!, out var nodeToMove))
                         throw new InvalidOperationException($"Item '{path}' doesn't exist");
 
                     // find the deepest ancestor which serves as a destination to copy to
@@ -39,7 +39,7 @@ namespace TreeStore.Core.Providers
                     if (destinationAncestor is ContainerNode destinationAncestorContainer)
                     {
                         // destination ancestor is a container and might accept the move operation
-                        destinationAncestorContainer.MoveChildItem(sourceParentNode, nodeToMove, destination: missingPath);
+                        destinationAncestorContainer.MoveChildItem(provider: this, sourceParentNode, nodeToMove, destination: missingPath);
                     }
                     else
                     {

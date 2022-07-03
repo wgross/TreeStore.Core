@@ -1,10 +1,11 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Moq;
-using TreeStore.Core.Capabilities;
-using TreeStore.Core.Nodes;
 using System;
 using System.Linq;
 using System.Management.Automation;
+using System.Management.Automation.Provider;
+using TreeStore.Core.Capabilities;
+using TreeStore.Core.Nodes;
 using Xunit;
 using static TreeStore.Core.Test.TestData;
 
@@ -13,6 +14,12 @@ namespace TreeStore.Core.Test.Nodes
     public class LeafNodeTest : IDisposable
     {
         private readonly MockRepository mocks = new MockRepository(MockBehavior.Strict);
+        private readonly Mock<CmdletProvider> providerMock;
+
+        public LeafNodeTest()
+        {
+            this.providerMock = this.mocks.Create<CmdletProvider>();
+        }
 
         public void Dispose() => this.mocks.VerifyAll();
 
@@ -63,7 +70,7 @@ namespace TreeStore.Core.Test.Nodes
             var node = ArrangeLeafNode("name", new GetItemData());
 
             // ACT
-            var result = node.GetItem();
+            var result = node.GetItem(this.providerMock.Object);
 
             // ASSERT
             Assert.Equal("name", result.Property<string>("PSChildName"));
@@ -110,13 +117,13 @@ namespace TreeStore.Core.Test.Nodes
             var psObject = new PSObject();
             var getItem = this.mocks.Create<IGetItem>();
             getItem
-                .Setup(gi => gi.GetItem())
+                .Setup(gi => gi.GetItem(this.providerMock.Object))
                 .Returns(psObject);
 
             var node = ArrangeLeafNode("name", ServiceProvider(With<IGetItem>(getItem)));
 
             // ACT
-            var result = node.GetItem();
+            var result = node.GetItem(this.providerMock.Object);
 
             // ASSERT
             Assert.Same(psObject, result);
@@ -130,13 +137,13 @@ namespace TreeStore.Core.Test.Nodes
             var psObject = new PSObject();
             var getItem = this.mocks.Create<IGetItem>();
             getItem
-                .Setup(gi => gi.GetItem())
+                .Setup(gi => gi.GetItem(this.providerMock.Object))
                 .Returns(psObject);
 
             var node = ArrangeLeafNode("name", ServiceProvider(With<IGetItem>(getItem)));
 
             // ACT
-            var result = node.GetItem();
+            var result = node.GetItem(this.providerMock.Object);
 
             // ASSERT
             Assert.Same(psObject, result);
@@ -153,12 +160,12 @@ namespace TreeStore.Core.Test.Nodes
             // ARRANGE
             var clearItemProperty = this.mocks.Create<IClearItemProperty>();
             clearItemProperty
-                .Setup(cip => cip.ClearItemProperty(new[] { "property" }));
+                .Setup(cip => cip.ClearItemProperty(this.providerMock.Object, new[] { "property" }));
 
             var node = ContainerNode("name", sp => sp.AddSingleton(clearItemProperty.Object));
 
             // ACT
-            node.ClearItemProperty(new[] { "property" });
+            node.ClearItemProperty(this.providerMock.Object, new[] { "property" });
         }
 
         [Fact]
@@ -168,7 +175,7 @@ namespace TreeStore.Core.Test.Nodes
             var node = ContainerNode("name");
 
             // ACT
-            var result = Assert.Throws<PSNotSupportedException>(() => node.ClearItemProperty(new[] { "property" }));
+            var result = Assert.Throws<PSNotSupportedException>(() => node.ClearItemProperty(this.providerMock.Object, new[] { "property" }));
 
             // ASSERT
             Assert.Equal($"Node(name='name') doesn't provide an implementation of capability 'IClearItemProperty'.", result.Message);
@@ -228,13 +235,13 @@ namespace TreeStore.Core.Test.Nodes
 
             var getItemProperty = this.mocks.Create<IGetItemProperty>();
             getItemProperty
-                .Setup(gi => gi.GetItemProperty(new[] { "property" }))
+                .Setup(gi => gi.GetItemProperty(this.providerMock.Object, new[] { "property" }))
                 .Returns(pso);
 
             var node = LeafNode("name", With<IGetItemProperty>(getItemProperty));
 
             // ACT
-            var result = node.GetItemProperty(new[] { "property" });
+            var result = node.GetItemProperty(this.providerMock.Object, new[] { "property" });
 
             // ASSERT
             Assert.Equal(1, result.Properties.Single(p => p.Name.Equals("property")).Value);
@@ -247,7 +254,7 @@ namespace TreeStore.Core.Test.Nodes
             var node = new LeafNode("name", new GetItemPropertyData());
 
             // ACT
-            var result = node.GetItemProperty(null);
+            var result = node.GetItemProperty(this.providerMock.Object, null);
 
             // ASSERT
             Assert.Equal("name", result.Properties.ElementAt(0).Value);
@@ -262,7 +269,7 @@ namespace TreeStore.Core.Test.Nodes
             var node = new LeafNode("name", new GetItemPropertyData());
 
             // ACT
-            var result = node.GetItemProperty(new[] { "property", "unknown" });
+            var result = node.GetItemProperty(this.providerMock.Object, new[] { "property", "unknown" });
 
             // ASSERT
             Assert.Equal(1, result.Properties.Single().Value);
@@ -274,13 +281,13 @@ namespace TreeStore.Core.Test.Nodes
             // ARRANGE
             var getItemProperty = this.mocks.Create<IGetItemProperty>();
             getItemProperty
-                .Setup(gip => gip.GetItemProperty(new[] { "property" }))
+                .Setup(gip => gip.GetItemProperty(this.providerMock.Object, new[] { "property" }))
                 .Returns(new PSObject());
 
             var node = new LeafNode("name", ServiceProvider(With<IGetItemProperty>(getItemProperty)));
 
             // ACT
-            var result = node.GetItemProperty(new[] { "property" });
+            var result = node.GetItemProperty(this.providerMock.Object, new[] { "property" });
         }
 
         [Fact]
@@ -326,12 +333,12 @@ namespace TreeStore.Core.Test.Nodes
             var pso = new PSObject();
             var setItemProperty = this.mocks.Create<ISetItemProperty>();
             setItemProperty
-                .Setup(sip => sip.SetItemProperty(pso));
+                .Setup(sip => sip.SetItemProperty(this.providerMock.Object, pso));
 
             var node = new LeafNode("name", ServiceProvider(With<ISetItemProperty>(setItemProperty)));
 
             // ACT
-            node.SetItemProperty(pso);
+            node.SetItemProperty(this.providerMock.Object, pso);
         }
 
         [Fact]
@@ -342,7 +349,7 @@ namespace TreeStore.Core.Test.Nodes
             var node = new LeafNode("name", ServiceProvider());
 
             // ACT
-            var result = Assert.Throws<PSNotSupportedException>(() => node.SetItemProperty(pso));
+            var result = Assert.Throws<PSNotSupportedException>(() => node.SetItemProperty(this.providerMock.Object, pso));
 
             // ASSERT
             Assert.Equal($"Node(name='name') doesn't provide an implementation of capability 'ISetItemProperty'.", result.Message);
@@ -380,12 +387,12 @@ namespace TreeStore.Core.Test.Nodes
 
             var copyItemProperty = this.mocks.Create<ICopyItemProperty>();
             copyItemProperty
-                .Setup(sip => sip.CopyItemProperty(sourceNode, "sourceProperty", "destinationProperty"));
+                .Setup(sip => sip.CopyItemProperty(this.providerMock.Object, sourceNode, "sourceProperty", "destinationProperty"));
 
             var destinationNode = new LeafNode("name", ServiceProvider(With<ICopyItemProperty>(copyItemProperty)));
 
             // ACT
-            destinationNode.CopyItemProperty(sourceNode, "sourceProperty", "destinationProperty");
+            destinationNode.CopyItemProperty(this.providerMock.Object, sourceNode, "sourceProperty", "destinationProperty");
         }
 
         [Fact]
@@ -396,7 +403,7 @@ namespace TreeStore.Core.Test.Nodes
             var destinationNode = new LeafNode("name", ServiceProvider());
 
             // ACT
-            var result = Assert.Throws<PSNotSupportedException>(() => destinationNode.CopyItemProperty(sourceNode, "sourceProperty", "destinationProperty"));
+            var result = Assert.Throws<PSNotSupportedException>(() => destinationNode.CopyItemProperty(this.providerMock.Object, sourceNode, "sourceProperty", "destinationProperty"));
 
             // ASSERT
             Assert.Equal($"Node(name='name') doesn't provide an implementation of capability 'ICopyItemProperty'.", result.Message);
@@ -444,12 +451,12 @@ namespace TreeStore.Core.Test.Nodes
             // ARRANGE
             var removeItemProperty = this.mocks.Create<IRemoveItemProperty>();
             removeItemProperty
-                .Setup(sip => sip.RemoveItemProperty("propertyName"));
+                .Setup(sip => sip.RemoveItemProperty(this.providerMock.Object, "propertyName"));
 
             var node = new LeafNode("name", ServiceProvider(With<IRemoveItemProperty>(removeItemProperty)));
 
             // ACT
-            node.RemoveItemProperty("propertyName");
+            node.RemoveItemProperty(this.providerMock.Object, "propertyName");
         }
 
         [Fact]
@@ -459,7 +466,7 @@ namespace TreeStore.Core.Test.Nodes
             var node = new LeafNode("name", ServiceProvider());
 
             // ACT
-            var result = Assert.Throws<PSNotSupportedException>(() => node.RemoveItemProperty("propertyName"));
+            var result = Assert.Throws<PSNotSupportedException>(() => node.RemoveItemProperty(this.providerMock.Object, "propertyName"));
 
             // ASSERT
             Assert.Equal($"Node(name='name') doesn't provide an implementation of capability 'IRemoveItemProperty'.", result.Message);
@@ -509,12 +516,12 @@ namespace TreeStore.Core.Test.Nodes
 
             var moveItemProperty = this.mocks.Create<IMoveItemProperty>();
             moveItemProperty
-                .Setup(sip => sip.MoveItemProperty(sourceNode, "sourceProperty", "destinationProperty"));
+                .Setup(sip => sip.MoveItemProperty(this.providerMock.Object, sourceNode, "sourceProperty", "destinationProperty"));
 
             var destinationNode = new LeafNode("name", ServiceProvider(With<IMoveItemProperty>(moveItemProperty)));
 
             // ACT
-            destinationNode.MoveItemProperty(sourceNode, "sourceProperty", "destinationProperty");
+            destinationNode.MoveItemProperty(this.providerMock.Object, sourceNode, "sourceProperty", "destinationProperty");
         }
 
         [Fact]
@@ -525,7 +532,7 @@ namespace TreeStore.Core.Test.Nodes
             var destinationNode = new LeafNode("name", ServiceProvider());
 
             // ACT
-            var result = Assert.Throws<PSNotSupportedException>(() => destinationNode.MoveItemProperty(sourceNode, "sourceProperty", "destinationProperty"));
+            var result = Assert.Throws<PSNotSupportedException>(() => destinationNode.MoveItemProperty(this.providerMock.Object, sourceNode, "sourceProperty", "destinationProperty"));
 
             // ASSERT
             Assert.Equal($"Node(name='name') doesn't provide an implementation of capability 'IMoveItemProperty'.", result.Message);
@@ -575,12 +582,12 @@ namespace TreeStore.Core.Test.Nodes
             // ARRANGE
             var newItemProperty = this.mocks.Create<INewItemProperty>();
             newItemProperty
-                .Setup(sip => sip.NewItemProperty("propertyName", "propertyTypeName", "value"));
+                .Setup(sip => sip.NewItemProperty(this.providerMock.Object, "propertyName", "propertyTypeName", "value"));
 
             var node = new LeafNode("name", ServiceProvider(With<INewItemProperty>(newItemProperty)));
 
             // ACT
-            node.NewItemProperty("propertyName", "propertyTypeName", "value");
+            node.NewItemProperty(this.providerMock.Object, "propertyName", "propertyTypeName", "value");
         }
 
         [Fact]
@@ -590,7 +597,7 @@ namespace TreeStore.Core.Test.Nodes
             var node = new LeafNode("name", ServiceProvider());
 
             // ACT
-            var result = Assert.Throws<PSNotSupportedException>(() => node.NewItemProperty("propertyName", "properytTypeName", "value"));
+            var result = Assert.Throws<PSNotSupportedException>(() => node.NewItemProperty(this.providerMock.Object, "propertyName", "properytTypeName", "value"));
 
             // ASSERT
             Assert.Equal($"Node(name='name') doesn't provide an implementation of capability 'INewItemProperty'.", result.Message);
@@ -644,12 +651,12 @@ namespace TreeStore.Core.Test.Nodes
             // ARRANGE
             var renameItemProperty = this.mocks.Create<IRenameItemProperty>();
             renameItemProperty
-                .Setup(sip => sip.RenameItemProperty("propertyName", "newPropertyName"));
+                .Setup(sip => sip.RenameItemProperty(this.providerMock.Object, "propertyName", "newPropertyName"));
 
             var node = new LeafNode("name", ServiceProvider(With<IRenameItemProperty>(renameItemProperty)));
 
             // ACT
-            node.RenameItemProperty("propertyName", "newPropertyName");
+            node.RenameItemProperty(this.providerMock.Object, "propertyName", "newPropertyName");
         }
 
         [Fact]
@@ -659,7 +666,7 @@ namespace TreeStore.Core.Test.Nodes
             var node = new LeafNode("name", ServiceProvider());
 
             // ACT
-            var result = Assert.Throws<PSNotSupportedException>(() => node.RenameItemProperty("propertyName", "newPropertyName"));
+            var result = Assert.Throws<PSNotSupportedException>(() => node.RenameItemProperty(this.providerMock.Object, "propertyName", "newPropertyName"));
 
             // ASSERT
             Assert.Equal($"Node(name='name') doesn't provide an implementation of capability 'IRenameItemProperty'.", result.Message);
