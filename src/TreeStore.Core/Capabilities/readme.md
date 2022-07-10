@@ -1,5 +1,4 @@
 # TreeStore Capabilities
-
 Capabilities are interface contracts which are invoked by the file system provider nodes to process a PowerShell file system command.
 Most capabilities match to a single PowerShell command but some are used at multiple places.
 
@@ -14,16 +13,15 @@ To each method implementing a node operation the current instance of [ `CmdletPr
 and much more. 
 
 ### IGetChildItem
-Path traversal depends on the implementation of `IGetChildItem`  capability and is also used to implement  `Get-ChildItem` command.
+Path traversal depends on the implementation of `IGetChildItem`  capability and is also used to implement  `Get-ChildItem` command. Implementation of this interfaces also separates the leaves form the containers. If the capability is available the node is considered a container. If the capability is missing is must be a leaf node. 
 
-There is s special case for invocation of `Get-ChildItem`: `Get-ChildItem -Name` only provides the names of the child items instead of the whole 'item'. PowerShells `ContainerProviderBase` provides a method to implement the case separately. TreeStore maps invocation to `GetChildNames` and `GetChildNamesDynamicParameters` to the implementation of `GetChildItems`.
+There is s special case for invocation of `Get-ChildItem`: `Get-ChildItem -Name` only provides the names of the child items instead of the whole 'item'. PowerShells `ContainerProviderBase` provides a method to implement the case separately. TreeStore maps invocation to `GetChildNames` and `GetChildNamesDynamicParameters` to the implementation of `IGetChildItems` and extracts the name by itself.
 
 A future improvement would be:
 - [ ] Provide an `IGetChildNames` capability
-	- [ ] Fallback to `IGetChildItem` capability if `IGetChildNames` is missing
+	- [ ] and fall back to `IGetChildItem` capability if `IGetChildNames` is missing
 
 ## Implementing ItemCmdletProvider
-
 PowerShells [ItemCmdletProvider](https://docs.microsoft.com/en-us/dotnet/api/system.management.automation.provider.itemcmdletprovider) is the simplest PowerShell cmdlet provider base classes. To support it completely the capabilities below are required:
 
 * `IClearItem` - Clear the content of a file system item
@@ -72,3 +70,4 @@ If the underlying data structures may handle this process more efficiently itsel
 
 ### Implementing IPropertyCmdletProvider
 The capability `IGetItemProperty` supports PowerShells `Get-ItemProperty`  command. If the capability isn't implemented `TreeStoreCmdletProviderBase` will fall back to its own logic: The result of `IGetItem.GetItem` will projected to a new `PObject` containing only the properties requested by the caller.
+

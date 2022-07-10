@@ -4,7 +4,7 @@ using TreeStore.Core.Nodes;
 using Xunit;
 using static TreeStore.Core.Test.TestData;
 
-namespace TreeStore.Core.Test.Nodes
+namespace TreeStore.Core.Test
 {
     public class RootNodeTest
     {

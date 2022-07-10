@@ -1,7 +1,7 @@
 ﻿using Moq;
 using System;
 
-namespace TreeStore.Core.Test.Nodes
+namespace TreeStore.Core.Test
 {
     public class ProviderNodeTest : IDisposable
     {

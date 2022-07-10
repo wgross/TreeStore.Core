@@ -1,8 +1,8 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Management.Automation;
 using System.Management.Automation.Provider;
 using TreeStore.Core.Capabilities;
 
@@ -62,11 +62,7 @@ public record ContainerNode : ProviderNode
                 if (!result.Created)
                     return null;
 
-                var getChildItem = result.NodeServices!.GetService<IGetChildItem>();
-                if (getChildItem is null)
-                    return null;  // each node has to know if there are child items or not.
-
-                if (getChildItem.HasChildItems(this.CmdletProvider))
+                if (result.NodeServices.IsContainer())
                 {
                     return new ContainerNode(this.CmdletProvider, result.Name, result.NodeServices!);
                 }
@@ -119,29 +115,28 @@ public record ContainerNode : ProviderNode
                 // the underlying can only handle coping without recursion.
                 // copy the source root, than invoke 'CopyChildItem(recurse:true)' on the child nodes.
                 var copied = copyChildItem.CopyChildItem(this.CmdletProvider, containerToCopy, destination);
+                if (copied is null)
+                    this.CmdletProvider.ThrowTerminatingError(new(
+                        exception: new InvalidOperationException($"{nameof(ICopyChildItem.CopyChildItem)} failed to copy {nodeToCopy.Name}"),
+                        errorId: "copy-1",
+                        errorCategory: ErrorCategory.InvalidOperation,
+                        targetObject: null));
 
-                // no null check? I hope this isn't too optimistic...
+                // copy the sources roots children
+                var copiedContainerNode = new ContainerNode(this.CmdletProvider, copied.Name, copied.NodeServices!);
 
-                var copiedNodeHasChildren = copied.NodeServices.GetService<IGetChildItem>();
-
-                if (copiedNodeHasChildren is not null && copiedNodeHasChildren.HasChildItems(this.CmdletProvider))
+                foreach (var containerToCopyChild in containerToCopy.GetChildItems(this.CmdletProvider))
                 {
-                    var copiedContainerNode = new ContainerNode(this.CmdletProvider, copied.Name, copied.NodeServices);
-                    // copy the sources roots children
-
-                    foreach (var containerToCopyChild in containerToCopy.GetChildItems(this.CmdletProvider))
-                    {
-                        copiedContainerNode.CopyChildItem(containerToCopyChild, new[] { containerToCopyChild.Name }, recurse);
-                    }
+                    copiedContainerNode.CopyChildItem(containerToCopyChild, new[] { containerToCopyChild.Name }, recurse);
                 }
-                else
-                {
-                    // the child isn't a container. use single copy operation than w/o recursion.
+            }
+            else
+            {
+                // the child isn't a container. use single copy operation than w/o recursion.
 
-                    this.GetUnderlyingServiceOrThrow<ICopyChildItem>(out copyChildItem);
+                this.GetUnderlyingServiceOrThrow<ICopyChildItem>(out copyChildItem);
 
-                    copyChildItem.CopyChildItem(this.CmdletProvider, nodeToCopy, destination);
-                }
+                copyChildItem.CopyChildItem(this.CmdletProvider, nodeToCopy, destination);
             }
         }
         else

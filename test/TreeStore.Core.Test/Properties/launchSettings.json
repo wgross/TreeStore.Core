@@ -3,6 +3,11 @@
     "WSL": {
       "commandName": "WSL2",
       "distributionName": ""
+    },
+    "dotnet test": {
+      "commandName": "Executable",
+      "executablePath": "dotnet",
+      "commandLineArgs": "test TreeStore.Core.Test.csproj"
     }
   }
 }

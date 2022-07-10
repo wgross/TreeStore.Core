@@ -348,8 +348,8 @@ public class DictionaryContainerAdapterTest
 
         // ASSERT
         Assert.NotNull(result);
+        Assert.True(result is NewChildItemResult);
         Assert.Equal("container1", result!.Name);
-        Assert.True(result is ContainerNode);
         Assert.True(underlying.TryGetValue("container1", out var added));
         Assert.Same(value, added);
     }
@@ -372,8 +372,8 @@ public class DictionaryContainerAdapterTest
 
         // ASSERT
         Assert.NotNull(result);
+        Assert.True(result is NewChildItemResult);
         Assert.Equal("container1", result!.Name);
-        Assert.True(result is ContainerNode);
         Assert.True(underlying.TryGetValue("container1", out var added));
         Assert.Same(value, added);
     }
@@ -552,7 +552,8 @@ public class DictionaryContainerAdapterTest
 
         // ACT
         // copy child1 under child2 as 'child1'
-        var result = dst.GetRequiredService<ICopyChildItem>().CopyChildItem(this.providerMock.Object, rootNode.GetChildItems(this.providerMock.Object).Single(n => n.Name == "child1"), destination: Array.Empty<string>());
+        var result = dst.GetRequiredService<ICopyChildItem>().CopyChildItem(this.providerMock.Object,
+            rootNode.GetChildItems(this.providerMock.Object).Single(n => n.Name == "child1"), destination: Array.Empty<string>());
         var r = result.Name;
 
         // ASSERT
@@ -560,13 +561,17 @@ public class DictionaryContainerAdapterTest
         Assert.IsType<CopyChildItemResult>(result);
         Assert.Equal("child1", result.Name);
 
+        // inspect destination: child2/child1 exists but notthe grandchild
         Assert.NotNull(root.AsDictionary("child2").AsDictionary("child1"));
         Assert.NotSame(nodeToCopy, root.AsDictionary("child2").AsDictionary("child1"));
         Assert.Same(root.AsDictionary("child2").AsDictionary("child1"), ((DictionaryContainerAdapter)result.NodeServices).Underlying);
-
-        Assert.Same(nodeToCopy, root.AsDictionary("child1"));
-        Assert.Equal(1, root.AsDictionary("child2").AsDictionary("child1")["data"]);
         Assert.False(root.AsDictionary("child2").AsDictionary("child1").TryGetValue("grandchild", out var _));
+        Assert.Equal(1, root.AsDictionary("child2").AsDictionary("child1")["data"]);
+
+        // source is still intact
+        Assert.Same(nodeToCopy, root.AsDictionary("child1"));
+        Assert.True(root.AsDictionary("child1").TryGetValue("grandchild", out var _));
+        Assert.Equal(1, root.AsDictionary("child1")["data"]);
     }
 
     [Fact]
@@ -591,11 +596,16 @@ public class DictionaryContainerAdapterTest
         var result = dst.GetRequiredService<ICopyChildItem>().CopyChildItem(this.providerMock.Object, rootNode.GetChildItems(this.providerMock.Object).Single(n => n.Name == "child1"), destination: new string[] { "newname" });
 
         // ASSERT
+        // inspect destination: /child2/newname exists, grandchild wasn't copied
         Assert.NotNull(root.AsDictionary("child2").AsDictionary("newname"));
         Assert.NotSame(nodeToCopy, root.AsDictionary("child2").AsDictionary("newname"));
-        Assert.Same(nodeToCopy, root.AsDictionary("child1"));
         Assert.Equal(1, root.AsDictionary("child2").AsDictionary("newname")["data"]);
         Assert.False(root.AsDictionary("child2").AsDictionary("newname").TryGetValue("grandchild", out var _));
+
+        // source is still intact
+        Assert.Same(nodeToCopy, root.AsDictionary("child1"));
+        Assert.True(root.AsDictionary("child1").TryGetValue("grandchild", out var _));
+        Assert.Equal(1, root.AsDictionary("child1")["data"]);
     }
 
     [Fact]
@@ -617,15 +627,20 @@ public class DictionaryContainerAdapterTest
 
         // ACT
         // copy child1 under child2 as 'child1'
-        var result = dst.GetRequiredService<ICopyChildItem>().CopyChildItem(this.providerMock.Object, rootNode.GetChildItems(this.providerMock.Object).Single(n => n.Name == "child1"), destination: new string[] { "newparent", "newname" });
+        var result = dst.GetRequiredService<ICopyChildItem>().CopyChildItem(this.providerMock.Object,
+            rootNode.GetChildItems(this.providerMock.Object).Single(n => n.Name == "child1"), destination: new string[] { "newparent", "newname" });
 
         // ASSERT
+        // inspect destination child2/newparent/newname exists, grandchild doesn't
         Assert.NotNull(root.AsDictionary("child2").AsDictionary("newparent").AsDictionary("newname"));
         Assert.NotSame(nodeToCopy, root.AsDictionary("child2").AsDictionary("newparent").AsDictionary("newname"));
-        Assert.NotSame(nodeToCopy, root.AsDictionary("child2").AsDictionary("newparent").AsDictionary("newname"));
-        Assert.Same(nodeToCopy, root.AsDictionary("child1"));
         Assert.Equal(1, root.AsDictionary("child2").AsDictionary("newparent").AsDictionary("newname")["data"]);
         Assert.False(root.AsDictionary("child2").AsDictionary("newparent").AsDictionary("newname").TryGetValue("grandchild", out var _));
+
+        // source is still intact
+        Assert.Same(nodeToCopy, root.AsDictionary("child1"));
+        Assert.True(root.AsDictionary("child1").TryGetValue("grandchild", out var _));
+        Assert.Equal(1, root.AsDictionary("child1")["data"]);
     }
 
     #endregion ICopyChildItem

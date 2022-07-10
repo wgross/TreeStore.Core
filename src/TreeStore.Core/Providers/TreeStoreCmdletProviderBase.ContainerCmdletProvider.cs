@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using System;
+﻿using System;
 using System.IO;
 using System.Management.Automation;
 using TreeStore.Core.Capabilities;
@@ -152,9 +151,7 @@ public partial class TreeStoreCmdletProviderBase
             if (!result.Created)
                 return;
 
-            var getChildItem = result.NodeServices!.GetService<IGetChildItem>();
-
-            if (getChildItem is not null && getChildItem.HasChildItems(provider: this))
+            if (result.NodeServices.IsContainer())
             {
                 this.WriteProviderNode(path, new ContainerNode(provider: this, result.Name, result.NodeServices!));
             }
