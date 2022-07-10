@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.DependencyInjection;
+using System;
 using System.IO;
 using System.Management.Automation;
 using TreeStore.Core.Capabilities;
@@ -14,7 +15,7 @@ public partial class TreeStoreCmdletProviderBase
     }
 
     /// <summary>
-    /// Implements the copying of a provider item.
+    /// Implements the copying of a this.CmdletProvider item.
     /// The existence of the child node <paramref name="path"/> has been verified in <see cref="ItemExists(string)"/>.
     /// th destination path <paramref name="destination"/> is unverified.
     /// </summary>
@@ -27,7 +28,7 @@ public partial class TreeStoreCmdletProviderBase
             invoke: sourceParentNode =>
             {
                 // first check that node to copy exists
-                if (!sourceParentNode.TryGetChildNode(provider: this, childName!, out var nodeToCopy))
+                if (!sourceParentNode.TryGetChildNode(childName!, out var nodeToCopy))
                     throw new InvalidOperationException($"Item '{path}' doesn't exist");
 
                 // find the deepest ancestor which serves as a destination to copy to
@@ -36,7 +37,7 @@ public partial class TreeStoreCmdletProviderBase
                 if (destinationAncestor is ContainerNode destinationAncestorContainer)
                 {
                     // destination ancestor is a container and might accept the copy
-                    destinationAncestorContainer.CopyChildItem(provider: this, nodeToCopy, destination: missingPath, recurse);
+                    destinationAncestorContainer.CopyChildItem(nodeToCopy, destination: missingPath, recurse);
                 }
                 else
                 {
@@ -79,10 +80,10 @@ public partial class TreeStoreCmdletProviderBase
                 var childItemPath = Path.Join(path, childGetItem.Name);
                 writeItemObject(childItemPSObject, childItemPath, childGetItem.Name, childGetItem is ContainerNode);
 
-                //TODO: recurse in cmdlet provider will be slow if the underlying model could optimize fetching of data.
+                //TODO: recurse in cmdlet this.CmdletProvider will be slow if the underlying model could optimize fetching of data.
                 // alternatives:
                 // - let first container pull in the whole operation -> change IGetChildItems to GetChildItems( bool recurse, uint depth)
-                // - notify first container of incoming request so it can prepare the fetch: IPrepareGetChildItems: Prepare(bool recurse, uint depth) then resurce in provider
+                // - notify first container of incoming request so it can prepare the fetch: IPrepareGetChildItems: Prepare(bool recurse, uint depth) then resurce in this.CmdletProvider
                 //   General solution would be to introduce a call context to allow an impl. to inspect the original request.
                 if (recurse && depth > 0 && childGetItem is ContainerNode childContainer)
                     this.GetChildItems(childContainer, childItemPath, recurse, depth - 1, writeItemObject);
@@ -127,7 +128,7 @@ public partial class TreeStoreCmdletProviderBase
 
         this.InvokeContainerNodeOrDefault(
             path: parentPath,
-            invoke: c => c.RemoveChildItem(provider: this, childName!, recurse),
+            invoke: c => c.RemoveChildItem(childName!, recurse),
             fallback: () => base.RemoveItem(path, recurse));
     }
 
@@ -143,12 +144,23 @@ public partial class TreeStoreCmdletProviderBase
     protected override void NewItem(string path, string itemTypeName, object newItemValue)
     {
         var (parentPath, childName) = new PathTool().SplitParentPathAndChildName(path);
-        if (TryGetNodeByPath<INewChildItem>(this.DriveInfo.RootNode, parentPath, out _, out var newChildItem))
+        if (TryGetNodeByPath<INewChildItem>(this.DriveInfo.RootNode(provider: this), parentPath, out _, out var newChildItem))
         {
-            var resultNode = newChildItem.NewChildItem(provider: this, childName!, itemTypeName, newItemValue);
-            if (resultNode is not null)
+            var result = newChildItem.NewChildItem(provider: this, childName!, itemTypeName, newItemValue);
+            if (result is null)
+                return;
+            if (!result.Created)
+                return;
+
+            var getChildItem = result.NodeServices!.GetService<IGetChildItem>();
+
+            if (getChildItem is not null && getChildItem.HasChildItems(provider: this))
             {
-                this.WriteProviderNode(path, resultNode);
+                this.WriteProviderNode(path, new ContainerNode(provider: this, result.Name, result.NodeServices!));
+            }
+            else
+            {
+                this.WriteProviderNode(path, new LeafNode(provider: this, result.Name, result.NodeServices!));
             }
         }
     }
@@ -165,7 +177,7 @@ public partial class TreeStoreCmdletProviderBase
     protected override void RenameItem(string path, string newName)
     {
         var (parentPath, childName) = new PathTool().SplitParentPathAndChildName(path);
-        if (TryGetNodeByPath<IRenameChildItem>(this.DriveInfo.RootNode, parentPath, out _, out var renameChildItem))
+        if (TryGetNodeByPath<IRenameChildItem>(this.DriveInfo.RootNode(provider: this), parentPath, out _, out var renameChildItem))
         {
             renameChildItem.RenameChildItem(provider: this, childName!, newName); ;
         }

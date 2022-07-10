@@ -12,5 +12,5 @@ public interface ICopyChildItemRecursive : ICopyChildItem
     /// Creates a new child node at <paramref name="destination"/> from the given <paramref name="nodeToCopy"/>
     /// as a recursive copy
     /// </summary>
-    public ProviderNode? CopyChildItemRecursive(CmdletProvider provider, ProviderNode nodeToCopy, string[] destination);
+    public CopyChildItemResult CopyChildItemRecursive(CmdletProvider provider, ProviderNode nodeToCopy, string[] destination);
 }

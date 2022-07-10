@@ -1,11 +1,12 @@
 ﻿using System;
+using System.Management.Automation.Provider;
 
-namespace TreeStore.Core.Nodes; 
+namespace TreeStore.Core.Nodes;
 
 public sealed record RootNode : ContainerNode
 {
-    public RootNode(IServiceProvider data)
-        : base(name: string.Empty, data)
+    public RootNode(CmdletProvider provider, IServiceProvider data)
+        : base(provider, name: string.Empty, data)
     {
     }
 }

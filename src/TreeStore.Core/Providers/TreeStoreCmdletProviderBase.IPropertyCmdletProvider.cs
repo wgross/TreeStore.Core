@@ -11,7 +11,7 @@ namespace TreeStore.Core.Providers
         {
             if (this.TryGetNodeByPath(path, out var providerNode))
             {
-                providerNode.ClearItemProperty(provider: this, propertyToClear);
+                providerNode.ClearItemProperty(propertyToClear);
             }
         }
 
@@ -25,7 +25,7 @@ namespace TreeStore.Core.Providers
         {
             if (this.TryGetNodeByPath(path, out var providerNode))
             {
-                var pso = providerNode.GetItemProperty(provider: this, providerSpecificPickList);
+                var pso = providerNode.GetItemProperty(providerSpecificPickList);
 
                 this.WriteItemObject(
                     item: pso,
@@ -44,7 +44,7 @@ namespace TreeStore.Core.Providers
         {
             if (this.TryGetNodeByPath(path, out var providerNode))
             {
-                providerNode.SetItemProperty(provider: this, propertyValue);
+                providerNode.SetItemProperty(propertyValue);
             }
         }
 

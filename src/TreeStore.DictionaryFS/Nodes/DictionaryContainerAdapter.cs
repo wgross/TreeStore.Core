@@ -40,7 +40,7 @@ namespace TreeStore.DictionaryFS.Nodes
 
         public IUnderlyingDictionary Underlying { get; }
 
-        public (bool exists, ProviderNode? node) TryGetChildNode(string childName)
+        public (bool Exists, IServiceProvider NodeServices) TryGetChildNode(string childName)
         {
             if (this.Underlying.TryGetValue(childName, out var childData))
             {
@@ -48,15 +48,13 @@ namespace TreeStore.DictionaryFS.Nodes
                 {
                     if (childData is IDictionary<string, object> childDict)
                     {
-                        return (true, new ContainerNode(childName, new DictionaryContainerAdapter(childDict!)));
+                        return (true, new DictionaryContainerAdapter(childDict!));
                     }
                 }
             }
 
             return (false, default);
         }
-
-        public ProviderNode ToProviderNode(string name, IUnderlyingDictionary dict) => new ContainerNode(name, new DictionaryContainerAdapter(dict));
 
         #region IServiceProvider
 
@@ -82,7 +80,7 @@ namespace TreeStore.DictionaryFS.Nodes
                 if (item.Value is not null)
                 {
                     if (item.Value is IDictionary<string, object> dict)
-                        yield return new ContainerNode(item.Key, new DictionaryContainerAdapter(dict!));
+                        yield return new ContainerNode(provider, item.Key, new DictionaryContainerAdapter(dict!));
                 }
             }
         }
@@ -148,18 +146,16 @@ namespace TreeStore.DictionaryFS.Nodes
         #region INewChildItem
 
         ///<inheritdoc/>
-        ProviderNode? INewChildItem.NewChildItem(CmdletProvider provider, string childName, string? itemTypeName, object? value)
+        NewChildItemResult INewChildItem.NewChildItem(CmdletProvider provider, string childName, string? itemTypeName, object? value)
         {
             if (value is null)
                 throw new ArgumentNullException(nameof(value));
 
             if (value is IDictionary<string, object> dict)
             {
-                var container = new ContainerNode(childName, new DictionaryContainerAdapter(dict!));
-
                 this.Underlying.Add(childName, value);
 
-                return container;
+                return new(true, childName, new DictionaryContainerAdapter(dict!));
             }
 
             throw new ArgumentException(message: $"{value.GetType()} must implement IDictionary<string,object>", nameof(value));
@@ -181,23 +177,23 @@ namespace TreeStore.DictionaryFS.Nodes
 
         #region IMoveChildItem
 
-        ProviderNode? IMoveChildItem.MoveChildItem(CmdletProvider provider, ContainerNode parentOfNodeToMove, ProviderNode nodeToMove, string[] destination)
+        MoveChildItemResult IMoveChildItem.MoveChildItem(CmdletProvider provider, ContainerNode parentOfNodeToMove, ProviderNode nodeToMove, string[] destination)
         {
-            if (nodeToMove.Underlying is DictionaryContainerAdapter underlyingDict)
+            if (nodeToMove.NodeServiceProvider is DictionaryContainerAdapter underlyingDict)
             {
                 switch (destination.Length)
                 {
                     case 0:
                         // put node directly under this node
                         if (this.Underlying.TryAdd(nodeToMove.Name, underlyingDict.Underlying))
-                            parentOfNodeToMove.RemoveChildItem(provider, nodeToMove.Name, recurse: true);
-                        return nodeToMove;
+                            parentOfNodeToMove.RemoveChildItem(nodeToMove.Name, recurse: true);
+                        return new(true, nodeToMove.Name, underlyingDict);
 
                     case 1:
                         // put node directly under this node with new name
                         if (this.Underlying.TryAdd(destination[0], underlyingDict.Underlying))
-                            parentOfNodeToMove.RemoveChildItem(provider, nodeToMove.Name, recurse: true);
-                        return nodeToMove;
+                            parentOfNodeToMove.RemoveChildItem(nodeToMove.Name, recurse: true);
+                        return new(true, nodeToMove.Name, underlyingDict);
 
                     default:
                         // put node directly under the new node in between
@@ -205,10 +201,10 @@ namespace TreeStore.DictionaryFS.Nodes
                         if (this.Underlying.TryAdd(destination[0], newDict))
                         {
                             // delegate the move operation recursively
-                            var container = new ContainerNode(destination[0], new DictionaryContainerAdapter(newDict));
-                            container.MoveChildItem(provider, parentOfNodeToMove, nodeToMove, destination[1..]);
+                            var container = new ContainerNode(provider, destination[0], new DictionaryContainerAdapter(newDict));
+                            container.MoveChildItem(parentOfNodeToMove, nodeToMove, destination[1..]);
                         }
-                        return nodeToMove;
+                        return new(true, nodeToMove.Name, new DictionaryContainerAdapter(underlyingDict));
                 }
             }
             else
@@ -221,23 +217,25 @@ namespace TreeStore.DictionaryFS.Nodes
 
         #region ICopyChildITem
 
-        ProviderNode? ICopyChildItem.CopyChildItem(CmdletProvider provider, ProviderNode nodeToCopy, string[] destination)
+        CopyChildItemResult ICopyChildItem.CopyChildItem(CmdletProvider provider, ProviderNode nodeToCopy, string[] destination)
         {
-            if (nodeToCopy.Underlying is DictionaryContainerAdapter underlyingDict)
+            if (nodeToCopy.NodeServiceProvider is DictionaryContainerAdapter underlyingDict)
             {
                 switch (destination.Length)
                 {
                     case 0:
                         // put node directly under this node
                         if (this.Underlying.TryAdd(nodeToCopy.Name, underlyingDict.Underlying.CloneShallow()))
-                            return ToProviderNode(nodeToCopy.Name, (IUnderlyingDictionary)this.Underlying[nodeToCopy.Name]!);
-                        return null;
+                            return new(true, nodeToCopy.Name, new DictionaryContainerAdapter((IUnderlyingDictionary)this.Underlying[nodeToCopy.Name]!));
+
+                        return new(false, null, null);
 
                     case 1:
                         // put node directly under this node with new name
                         if (this.Underlying.TryAdd(destination[0], underlyingDict.Underlying.CloneShallow()))
-                            return ToProviderNode(destination[0], (IUnderlyingDictionary)this.Underlying[destination[0]]!);
-                        return null;
+                            return new(true, destination[0], new DictionaryContainerAdapter((IUnderlyingDictionary)this.Underlying[destination[0]]!));
+
+                        return new(false, null, null);
 
                     default:
                         // put node directly under the new node in between
@@ -248,10 +246,11 @@ namespace TreeStore.DictionaryFS.Nodes
                             var container = new DictionaryContainerAdapter(newDict);
                             return ((ICopyChildItem)container).CopyChildItem(provider, nodeToCopy, destination[1..]);
                         }
-                        return null;
+
+                        return new(false, null, null);
                 }
             }
-            return null;
+            return new(false, null, null);
         }
 
         #endregion ICopyChildITem
@@ -296,7 +295,7 @@ namespace TreeStore.DictionaryFS.Nodes
 
         void ICopyItemProperty.CopyItemProperty(CmdletProvider provider, ProviderNode sourceNode, string sourcePropertyName, string destinationPropertyName)
         {
-            if (sourceNode.Underlying is DictionaryContainerAdapter underlyingDict)
+            if (sourceNode.NodeServiceProvider is DictionaryContainerAdapter underlyingDict)
             {
                 this.Underlying[destinationPropertyName] = underlyingDict.Underlying[sourcePropertyName];
             }
@@ -314,7 +313,7 @@ namespace TreeStore.DictionaryFS.Nodes
 
         void IMoveItemProperty.MoveItemProperty(CmdletProvider provider, ProviderNode sourceNode, string sourceProperty, string destinationProperty)
         {
-            if (sourceNode.Underlying is DictionaryContainerAdapter underlyingDict)
+            if (sourceNode.NodeServiceProvider is DictionaryContainerAdapter underlyingDict)
             {
                 var sourceValue = underlyingDict.Underlying[sourceProperty];
                 if (underlyingDict.Underlying.Remove(sourceProperty))

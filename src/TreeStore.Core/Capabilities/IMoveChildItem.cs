@@ -1,8 +1,14 @@
-﻿using System.Management.Automation;
+﻿using System;
+using System.Management.Automation;
 using System.Management.Automation.Provider;
 using TreeStore.Core.Nodes;
 
 namespace TreeStore.Core.Capabilities;
+
+/// <summary>
+/// Communicate the copying of a node (successful or failed) to the invoking provider.
+/// </summary>
+public record class MoveChildItemResult(bool Created, string? Name, IServiceProvider? NodeServices);
 
 public interface IMoveChildItem
 {
@@ -15,5 +21,5 @@ public interface IMoveChildItem
     /// <summary>
     /// Move the node <paramref name="nodeToMove"/> as a child under 'this' node.
     /// </summary>
-    public ProviderNode? MoveChildItem(CmdletProvider provider, ContainerNode parentOfNodeToMove, ProviderNode nodeToMove, string[] destination);
+    public MoveChildItemResult MoveChildItem(CmdletProvider provider, ContainerNode parentOfNodeToMove, ProviderNode nodeToMove, string[] destination);
 }

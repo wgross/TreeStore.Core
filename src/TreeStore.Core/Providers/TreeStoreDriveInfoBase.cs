@@ -1,6 +1,7 @@
-﻿using TreeStore.Core.Nodes;
-using System;
+﻿using System;
 using System.Management.Automation;
+using System.Management.Automation.Provider;
+using TreeStore.Core.Nodes;
 
 namespace TreeStore.Core.Providers
 {
@@ -14,6 +15,6 @@ namespace TreeStore.Core.Providers
 
         private readonly Func<string, IServiceProvider> rootNodeProvider;
 
-        public RootNode RootNode => new RootNode(this.rootNodeProvider(this.Name));
+        public RootNode RootNode(CmdletProvider provider) => new RootNode(provider, this.rootNodeProvider(this.Name));
     }
 }

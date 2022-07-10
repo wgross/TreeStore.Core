@@ -1,8 +1,14 @@
-﻿using System.Management.Automation;
+﻿using System;
+using System.Management.Automation;
 using System.Management.Automation.Provider;
 using TreeStore.Core.Nodes;
 
 namespace TreeStore.Core.Capabilities;
+
+/// <summary>
+/// Communicate the copying of a node (successful or failed) to the invoking provider.
+/// </summary>
+public record class CopyChildItemResult(bool Created, string? Name, IServiceProvider? NodeServices);
 
 public interface ICopyChildItem
 {
@@ -15,5 +21,5 @@ public interface ICopyChildItem
     /// <summary>
     /// Creates a new child node at <paramref name="destination"/> from the given <paramref name="nodeToCopy"/>
     /// </summary>
-    public ProviderNode? CopyChildItem(CmdletProvider provider, ProviderNode nodeToCopy, string[] destination);
+    public CopyChildItemResult CopyChildItem(CmdletProvider provider, ProviderNode nodeToCopy, string[] destination);
 }

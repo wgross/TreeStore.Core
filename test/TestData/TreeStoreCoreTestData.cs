@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using System;
+using System.Management.Automation.Provider;
 using TreeStore.Core.Nodes;
 
 namespace TreeStore.Core.Test;
@@ -28,15 +29,15 @@ public static class TestData
             return sp => sp.AddSingleton<T>((T)capability);
     }
 
-    public static ContainerNode ContainerNode(string name, params Action<ServiceCollection>[] setup)
+    public static ContainerNode ContainerNode(CmdletProvider provider, string name, params Action<ServiceCollection>[] setup)
     {
-        return new ContainerNode(name, ServiceProvider(setup));
+        return new ContainerNode(provider, name, ServiceProvider(setup));
     }
 
-    public static LeafNode LeafNode(string name, params Action<ServiceCollection>[] setup)
+    public static LeafNode LeafNode(CmdletProvider provider, string name, params Action<ServiceCollection>[] setup)
     {
-        return new LeafNode(name, ServiceProvider(setup));
+        return new LeafNode(provider, name, ServiceProvider(setup));
     }
 
-    public static LeafNode ArrangeLeafNode(string name, IServiceProvider sp) => new(name, sp);
+    public static LeafNode ArrangeLeafNode(CmdletProvider provider, string name, IServiceProvider sp) => new(provider, name, sp);
 }

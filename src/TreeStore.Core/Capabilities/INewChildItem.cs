@@ -1,8 +1,13 @@
-﻿using System.Management.Automation;
+﻿using System;
+using System.Management.Automation;
 using System.Management.Automation.Provider;
-using TreeStore.Core.Nodes;
 
 namespace TreeStore.Core.Capabilities;
+
+/// <summary>
+/// Communicate the creation of a node (successful or failed) to the invoking provider.
+/// </summary>
+public record class NewChildItemResult(bool Created, string? Name, IServiceProvider? NodeServices);
 
 public interface INewChildItem
 {
@@ -14,6 +19,6 @@ public interface INewChildItem
 
     /// <summary>
     /// Creates a new child named <paramref name="childName"/>
-    /// </summary>    
-    public ProviderNode? NewChildItem(CmdletProvider provider, string childName, string? itemTypeName, object? newItemValue);
+    /// </summary>
+    public NewChildItemResult NewChildItem(CmdletProvider provider, string childName, string? itemTypeName, object? newItemValue);
 }

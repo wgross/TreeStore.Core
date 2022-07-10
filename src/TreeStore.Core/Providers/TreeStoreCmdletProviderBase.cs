@@ -27,7 +27,7 @@ public abstract partial class TreeStoreCmdletProviderBase : NavigationCmdletProv
     protected bool TryGetNodeByPath(string[] path, [NotNullWhen(returnValue: true)] out ProviderNode? pathNode)
     {
         pathNode = default;
-        (bool exists, ProviderNode? node) traversal = (true, this.DriveInfo.RootNode);
+        (bool exists, ProviderNode? node) traversal = (true, this.DriveInfo.RootNode(provider: this));
         foreach (var pathItem in path)
         {
             traversal = traversal.node switch
@@ -58,13 +58,13 @@ public abstract partial class TreeStoreCmdletProviderBase : NavigationCmdletProv
         }
 
         providerNode = cursor.node;
-        // check if the underlying of the provider implements the required capability
-        providerNodeCapbility = cursor.node.Underlying as T;
+        // check if the underlying of the this.CmdletProvider implements the required capability
+        providerNodeCapbility = cursor.node.NodeServiceProvider as T;
         return providerNodeCapbility is not null;
     }
 
     protected ProviderNode GetDeepestNodeByPath(string path, out string[] missingPath)
-        => GetDeepestNodeByPath(this.DriveInfo.RootNode, new PathTool().SplitProviderPath(path).path.items, out missingPath);
+        => GetDeepestNodeByPath(this.DriveInfo.RootNode(provider: this), new PathTool().SplitProviderPath(path).path.items, out missingPath);
 
     protected ProviderNode GetDeepestNodeByPath(ProviderNode startNode, string[] path, out string[] missingPath)
     {

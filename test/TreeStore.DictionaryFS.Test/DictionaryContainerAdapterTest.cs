@@ -20,7 +20,7 @@ public class DictionaryContainerAdapterTest
     private readonly MockRepository mocks = new(MockBehavior.Strict);
     private readonly Mock<CmdletProvider> providerMock;
 
-    private static DictionaryContainerAdapter ArrangeContainerAdapter(IUnderlyingDictionary dictionary)
+    private DictionaryContainerAdapter ArrangeContainerAdapter(IUnderlyingDictionary dictionary)
     {
         return new DictionaryContainerAdapter(dictionary);
     }
@@ -36,18 +36,18 @@ public class DictionaryContainerAdapterTest
     public void TryGetChildItem_gets_child_dictionary_container_by_name()
     {
         // ARRANGE
+        var child = new UnderlyingDictionary();
         var node = ArrangeContainerAdapter(new UnderlyingDictionary
             {
-                { "container", new UnderlyingDictionary() }
+                { "container",  child}
             });
 
         // ACT
         var result = node.TryGetChildNode("container");
 
         // ASSERT
-        Assert.True(result.exists);
-        Assert.Equal("container", result.node!.Name);
-        Assert.True(result.node is ContainerNode);
+        Assert.True(result.Exists);
+        Assert.Same(child, ((DictionaryContainerAdapter)result.NodeServices).Underlying);
     }
 
     [Fact]
@@ -63,7 +63,7 @@ public class DictionaryContainerAdapterTest
         var result = node.TryGetChildNode("data");
 
         // ASSERT
-        Assert.False(result.exists);
+        Assert.False(result.Exists);
     }
 
     #endregion IContainerItem
@@ -473,7 +473,7 @@ public class DictionaryContainerAdapterTest
         };
 
         var nodetoMove = root.AsDictionary("child1");
-        var rootNode = new RootNode(ArrangeContainerAdapter(root));
+        var rootNode = new RootNode(this.providerMock.Object, ArrangeContainerAdapter(root));
         var dst = ArrangeContainerAdapter(root.AsDictionary("child2"));
 
         // ACT
@@ -495,7 +495,7 @@ public class DictionaryContainerAdapterTest
             ["child2"] = new UnderlyingDictionary()
         };
         var nodetoMove = root.AsDictionary("child1");
-        var rootNode = new RootNode(ArrangeContainerAdapter(root));
+        var rootNode = new RootNode(this.providerMock.Object, ArrangeContainerAdapter(root));
         var dst = ArrangeContainerAdapter(root.AsDictionary("child2"));
 
         // ACT
@@ -517,7 +517,7 @@ public class DictionaryContainerAdapterTest
             ["child2"] = new UnderlyingDictionary()
         };
         var nodetoMove = root.AsDictionary("child1");
-        var rootNode = new RootNode(ArrangeContainerAdapter(root));
+        var rootNode = new RootNode(this.providerMock.Object, ArrangeContainerAdapter(root));
         var dst = ArrangeContainerAdapter(root.AsDictionary("child2"));
 
         // ACT
@@ -547,19 +547,22 @@ public class DictionaryContainerAdapterTest
             ["child2"] = new UnderlyingDictionary()
         };
         var nodeToCopy = root.AsDictionary("child1");
-        var rootNode = new RootNode(ArrangeContainerAdapter(root));
+        var rootNode = new RootNode(this.providerMock.Object, ArrangeContainerAdapter(root));
         var dst = ArrangeContainerAdapter(root.AsDictionary("child2"));
 
         // ACT
         // copy child1 under child2 as 'child1'
         var result = dst.GetRequiredService<ICopyChildItem>().CopyChildItem(this.providerMock.Object, rootNode.GetChildItems(this.providerMock.Object).Single(n => n.Name == "child1"), destination: Array.Empty<string>());
+        var r = result.Name;
 
         // ASSERT
         // child1 was created as container node
-        Assert.IsType<ContainerNode>(result);
+        Assert.IsType<CopyChildItemResult>(result);
+        Assert.Equal("child1", result.Name);
+
         Assert.NotNull(root.AsDictionary("child2").AsDictionary("child1"));
         Assert.NotSame(nodeToCopy, root.AsDictionary("child2").AsDictionary("child1"));
-        Assert.Same(root.AsDictionary("child2").AsDictionary("child1"), ((DictionaryContainerAdapter)result!.Underlying).Underlying);
+        Assert.Same(root.AsDictionary("child2").AsDictionary("child1"), ((DictionaryContainerAdapter)result.NodeServices).Underlying);
 
         Assert.Same(nodeToCopy, root.AsDictionary("child1"));
         Assert.Equal(1, root.AsDictionary("child2").AsDictionary("child1")["data"]);
@@ -580,7 +583,7 @@ public class DictionaryContainerAdapterTest
             ["child2"] = new UnderlyingDictionary()
         };
         var nodeToCopy = root.AsDictionary("child1");
-        var rootNode = new RootNode(ArrangeContainerAdapter(root));
+        var rootNode = new RootNode(this.providerMock.Object, ArrangeContainerAdapter(root));
         var dst = ArrangeContainerAdapter(root.AsDictionary("child2"));
 
         // ACT
@@ -609,7 +612,7 @@ public class DictionaryContainerAdapterTest
             ["child2"] = new UnderlyingDictionary()
         };
         var nodeToCopy = root.AsDictionary("child1");
-        var rootNode = new RootNode(ArrangeContainerAdapter(root));
+        var rootNode = new RootNode(this.providerMock.Object, ArrangeContainerAdapter(root));
         var dst = ArrangeContainerAdapter(root.AsDictionary("child2"));
 
         // ACT
@@ -780,17 +783,17 @@ public class DictionaryContainerAdapterTest
         // ARRANGE
         var child = new UnderlyingDictionary();
         var childAdapter = ArrangeContainerAdapter(child);
-        var childNode = new LeafNode("child1", childAdapter);
+        var childNode = new LeafNode(this.providerMock.Object, "child1", childAdapter);
 
         var root = new UnderlyingDictionary
         {
             ["data1"] = "text",
             ["child"] = child
         };
-        var rootNode = new RootNode(ArrangeContainerAdapter(root));
+        var rootNode = new RootNode(this.providerMock.Object, ArrangeContainerAdapter(root));
 
         // ACT
-        childNode.CopyItemProperty(this.providerMock.Object, rootNode, "data1", "data1");
+        childNode.CopyItemProperty(rootNode, "data1", "data1");
 
         // ASSERT
         Assert.True(child.TryGetValue("data1", out var value));
@@ -828,17 +831,17 @@ public class DictionaryContainerAdapterTest
         // ARRANGE
         var child = new UnderlyingDictionary();
         var childAdapter = ArrangeContainerAdapter(child);
-        var childNode = new LeafNode("child1", childAdapter);
+        var childNode = new LeafNode(this.providerMock.Object, "child1", childAdapter);
 
         var root = new UnderlyingDictionary
         {
             ["data1"] = "text",
             ["child"] = child
         };
-        var rootNode = new RootNode(ArrangeContainerAdapter(root));
+        var rootNode = new RootNode(this.providerMock.Object, ArrangeContainerAdapter(root));
 
         // ACT
-        childNode.MoveItemProperty(this.providerMock.Object, rootNode, "data1", "data1");
+        childNode.MoveItemProperty(rootNode, "data1", "data1");
 
         // ASSERT
         Assert.False(root.TryGetValue("data1", out var _));
