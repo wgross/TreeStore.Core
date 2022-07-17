@@ -1,7 +1,4 @@
-﻿using System;
-using System.Management.Automation.Provider;
-
-namespace TreeStore.Core.Nodes;
+﻿namespace TreeStore.Core.Nodes;
 
 /// <summary>
 /// Represents a <see cref="ProviderNode"/> without child nodes.

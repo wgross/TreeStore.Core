@@ -1,7 +1,4 @@
-﻿using System.Management.Automation;
-using System.Management.Automation.Provider;
-
-namespace TreeStore.Core.Capabilities;
+﻿namespace TreeStore.Core.Capabilities;
 
 /// <summary>
 /// Implement PowerShell 'Invoke-Item' command

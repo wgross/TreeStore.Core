@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Management.Automation;
-using System.Management.Automation.Provider;
-using TreeStore.Core.Nodes;
+﻿using TreeStore.Core.Nodes;
 
 namespace TreeStore.Core.Capabilities;
 

@@ -1,7 +1,4 @@
-﻿using System;
-using System.Management.Automation;
-
-namespace TreeStore.DictionaryFS;
+﻿namespace TreeStore.DictionaryFS;
 
 public sealed class DictionaryFsDriveInfo : TreeStore.Core.Providers.TreeStoreDriveInfoBase
 {

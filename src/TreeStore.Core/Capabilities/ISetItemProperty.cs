@@ -1,7 +1,4 @@
-﻿using System.Management.Automation;
-using System.Management.Automation.Provider;
-
-namespace TreeStore.Core.Capabilities;
+﻿namespace TreeStore.Core.Capabilities;
 
 public interface ISetItemProperty
 {
@@ -9,7 +6,7 @@ public interface ISetItemProperty
     /// Returns custom parameters to be applied for the setting of item properties in
     /// </summary>
     /// <returns>empty <see cref="RuntimeDefinedParameterDictionary"/> by default</returns>
-    public object? SetItemPropertyParameters( PSObject properties) => new RuntimeDefinedParameterDictionary();
+    public object? SetItemPropertyParameters(PSObject properties) => new RuntimeDefinedParameterDictionary();
 
     /// <summary>
     /// Set the given item properties

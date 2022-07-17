@@ -1,7 +1,4 @@
-﻿using System;
-using System.Management.Automation.Provider;
-
-namespace TreeStore.Core.Nodes;
+﻿namespace TreeStore.Core.Nodes;
 
 public sealed record RootNode : ContainerNode
 {

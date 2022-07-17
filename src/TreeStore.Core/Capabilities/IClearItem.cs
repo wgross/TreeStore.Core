@@ -1,7 +1,4 @@
-﻿using System.Management.Automation;
-using System.Management.Automation.Provider;
-
-namespace TreeStore.Core.Capabilities;
+﻿namespace TreeStore.Core.Capabilities;
 
 /// <summary>
 /// Clear the content of a file system item

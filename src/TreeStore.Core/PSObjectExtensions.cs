@@ -1,6 +1,4 @@
-﻿using System.Management.Automation;
-
-namespace TreeStore.Core;
+﻿namespace TreeStore.Core;
 
 public static class PSObjectExtensions
 {
