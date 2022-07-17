@@ -1,20 +1,22 @@
 ﻿using System;
 using System.Management.Automation;
-using System.Management.Automation.Provider;
-using TreeStore.Core.Nodes;
 
 namespace TreeStore.Core.Providers
 {
+    /// <summary>
+    /// Base class for a <see cref="PSDriveInfo"/> implementation used by the TreeStore base provider.
+    /// It extends <sse cref="PSDriveInfo"/> with a method to create the root nodes <see cref="IServiceProvider"/>.
+    /// </summary>
     public abstract class TreeStoreDriveInfoBase : PSDriveInfo
     {
-        protected TreeStoreDriveInfoBase(PSDriveInfo driveInfo, Func<string, IServiceProvider> rootNodeProvider)
+        protected TreeStoreDriveInfoBase(PSDriveInfo driveInfo)
             : base(driveInfo)
         {
-            this.rootNodeProvider = rootNodeProvider;
         }
 
-        private readonly Func<string, IServiceProvider> rootNodeProvider;
-
-        public RootNode RootNode(CmdletProvider provider) => new RootNode(provider, this.rootNodeProvider(this.Name));
+        /// <summary>
+        /// returns the <see cref="IServiceProvider"/> instance representing the root node.
+        /// </summary>
+        protected internal abstract IServiceProvider GetRootNodeProvider();
     }
 }

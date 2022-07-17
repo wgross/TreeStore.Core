@@ -143,7 +143,7 @@ public partial class TreeStoreCmdletProviderBase
     protected override void NewItem(string path, string itemTypeName, object newItemValue)
     {
         var (parentPath, childName) = new PathTool().SplitParentPathAndChildName(path);
-        if (TryGetNodeByPath<INewChildItem>(this.DriveInfo.RootNode(provider: this), parentPath, out _, out var newChildItem))
+        if (TryGetNodeByPath<INewChildItem>(this.RootNode(), parentPath, out _, out var newChildItem))
         {
             var result = newChildItem.NewChildItem(provider: this, childName!, itemTypeName, newItemValue);
             if (result is null)
@@ -174,7 +174,7 @@ public partial class TreeStoreCmdletProviderBase
     protected override void RenameItem(string path, string newName)
     {
         var (parentPath, childName) = new PathTool().SplitParentPathAndChildName(path);
-        if (TryGetNodeByPath<IRenameChildItem>(this.DriveInfo.RootNode(provider: this), parentPath, out _, out var renameChildItem))
+        if (TryGetNodeByPath<IRenameChildItem>(this.RootNode(), parentPath, out _, out var renameChildItem))
         {
             renameChildItem.RenameChildItem(provider: this, childName!, newName); ;
         }

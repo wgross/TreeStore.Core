@@ -10,7 +10,13 @@ namespace TreeStore.Core.Providers;
 
 public abstract partial class TreeStoreCmdletProviderBase : NavigationCmdletProvider
 {
-    private TreeStoreDriveInfoBase DriveInfo => (TreeStoreDriveInfoBase)this.PSDriveInfo;
+    private TreeStoreDriveInfoBase TreeStoreDriveInfo => (TreeStoreDriveInfoBase)this.PSDriveInfo;
+
+    /// <summary>
+    /// Create a <see cref="RootNode"/> instance from the <see cref="IServiceProvider"/> representing the root nodes
+    /// payload
+    /// </summary>
+    private RootNode RootNode() => new RootNode(this, this.TreeStoreDriveInfo.GetRootNodeProvider());
 
     public (bool exists, ProviderNode? node) TryGetChildNode(ContainerNode parentNode, string childName)
     {
@@ -27,7 +33,7 @@ public abstract partial class TreeStoreCmdletProviderBase : NavigationCmdletProv
     protected bool TryGetNodeByPath(string[] path, [NotNullWhen(returnValue: true)] out ProviderNode? pathNode)
     {
         pathNode = default;
-        (bool exists, ProviderNode? node) traversal = (true, this.DriveInfo.RootNode(provider: this));
+        (bool exists, ProviderNode? node) traversal = (true, this.RootNode());
         foreach (var pathItem in path)
         {
             traversal = traversal.node switch
@@ -64,7 +70,7 @@ public abstract partial class TreeStoreCmdletProviderBase : NavigationCmdletProv
     }
 
     protected ProviderNode GetDeepestNodeByPath(string path, out string[] missingPath)
-        => GetDeepestNodeByPath(this.DriveInfo.RootNode(provider: this), new PathTool().SplitProviderPath(path).path.items, out missingPath);
+        => GetDeepestNodeByPath(this.RootNode(), new PathTool().SplitProviderPath(path).path.items, out missingPath);
 
     protected ProviderNode GetDeepestNodeByPath(ProviderNode startNode, string[] path, out string[] missingPath)
     {
