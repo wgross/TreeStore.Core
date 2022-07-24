@@ -442,3 +442,6 @@ $RECYCLE.BIN/
 !.vscode/extensions.json
 /.testcoverage
 /.testresults
+
+# Ignore Obsidian Vault State
+.obsidian
