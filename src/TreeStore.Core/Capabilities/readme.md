@@ -1,6 +1,5 @@
 # TreeStore Capabilities
-Capabilities are interface contracts which are invoked by the file system provider nodes to process a PowerShell file system command.
-Most capabilities match to a single PowerShell command but some are used at multiple places.
+Capabilities are interface contracts which are invoked by the file system provider nodes to process a PowerShell file system command. Most capabilities match to a single PowerShell command but some are used at multiple places.
 
 ## Path Traversal
 Path traversal means that a PowerShell provider path is mapped to a TreeStore provider node (leaf or container). It is necessary that the names of nodes are unique under a parent node. Traversal of a path always uses the names and no other properties of the nodes payload to identify every node.
@@ -9,8 +8,7 @@ Path traversal means that a PowerShell provider path is mapped to a TreeStore pr
 To each method implementing a node operation the current instance of [ `CmdletProvider`](https://docs.microsoft.com/en-us/dotnet/api/system.management.automation.provider.cmdletprovider) is given. This allows the nodes code to access many of the file system current state and functions like:
 - Dynamic Parameters of the current invocation (Property `DynamicParameters`)
 - Output messages to the user (methods `WriteDebug`, `WriteVerbose` etc. )
-- Read common parameters values (properties `Filter`,`Force`,`Include`)
-and much more. 
+- Read common parameters values (properties `Filter`, `Force`, `Include`)
 
 ### IGetChildItem
 Path traversal depends on the implementation of `IGetChildItem`  capability and is also used to implement  `Get-ChildItem` command. Implementation of this interfaces also separates the leaves form the containers. If the capability is available the node is considered a container. If the capability is missing is must be a leaf node. 
@@ -21,7 +19,7 @@ A future improvement would be:
 - [ ] Provide an `IGetChildNames` capability
 	- [ ] and fall back to `IGetChildItem` capability if `IGetChildNames` is missing
 
-## Implementing ItemCmdletProvider
+## Implementing `ItemCmdletProvider`
 PowerShells [ItemCmdletProvider](https://docs.microsoft.com/en-us/dotnet/api/system.management.automation.provider.itemcmdletprovider) is the simplest PowerShell cmdlet provider base classes. To support it completely the capabilities below are required:
 
 * `IClearItem` - Clear the content of a file system item
@@ -68,6 +66,25 @@ If the underlying data structures may handle this process more efficiently itsel
 > [!NOTE] Implement `ICopyChildItemRecursive` for optimization or atomicity
 > If copying an item is costly (time or IO) this capability may be used to optimize the process in an payload specific way. This might be neccessary as well for concurrently used resources which require locks to avoid race conditions.
 
-### Implementing IPropertyCmdletProvider
+### Implementing `NavigationCmdletProvider`
+PowerShells [`NavigationCmdletProvider`](https://docs.microsoft.com/en-us/dotnet/api/system.management.automation.provider.navigationcmdletprovider) extends the `ContainerCmdleProvoder` with the knowledge of hieratchy of Items and Containers. 
+
+This requires the capability: `IMoveChildItem` 
+
+### Implementing `IPropertyCmdletProvider`
 The capability `IGetItemProperty` supports PowerShells `Get-ItemProperty`  command. If the capability isn't implemented `TreeStoreCmdletProviderBase` will fall back to its own logic: The result of `IGetItem.GetItem` will projected to a new `PObject` containing only the properties requested by the caller.
+
+This requires the capabilities:
+- `ISetItemProperty`
+- `IClearItemProperty`
+- `IGetItemProperty`
+
+### Implementing `IDynamicPropertyCmdletProvider`
+This requires the capabilities:
+- `INewItemProperty`
+- `IRemoveItemProperty`
+- `ICopyItemProperty`
+- `IMoveItemProperty`
+- `IRenameItemProperty`
+
 

@@ -1,9 +1,4 @@
-﻿using System;
-using System.Management.Automation;
-using System.Management.Automation.Provider;
-using TreeStore.Core.Providers;
-
-namespace TreeStore.DictionaryFS;
+﻿namespace TreeStore.DictionaryFS;
 
 /// <summary>
 /// Publishes the command provider for Dictionary FS to the PowerShell. The provider name will be <see cref="DictionaryFsCmdletProvider.Id"/>.

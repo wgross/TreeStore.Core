@@ -12,7 +12,6 @@ For PowerShell Debugging the PowerShell project is referenced as a submodule. Th
 ## Core Concepts
 
 ### The Cmdlet Provider
-
 The provider (implemented by [TreeStoreCmdletProviderBase](./src/TreeStoreCmdletProviderBase/Providers/PowershellFileSystemDriveInfo.cs)) inherits from PowerShells `NavigationCmdletProvider` which enables the use of all item Cmdlets PowerShell provides for file system access.
 
 In addition it implements the `IDynamicPropertyCmdletProvider` which enables interaction with dynamic properties (`New-,Remove-,Copy- and Move-ItemProperty`) and `IPropertyCmdletProvider` for non-dynamic item property interaction.
@@ -20,7 +19,6 @@ In addition it implements the `IDynamicPropertyCmdletProvider` which enables int
 The provider is only meant to be a base for a new custom provider and doesn't implements a working file system itself. The sample implementation of [DictionaryFS](./src/TreeStore.DictionaryFS/readme.md) shows how a file system may reuse it parts from the base provider.
 
 ### Path Traversal and Provider Nodes
-
 A file system is a hierarchical data structures made from `ProviderNode` instances. Each node has a reference to a user provider data structure called 'payload'. Each payload instance may decide dynamically if it provides an implementation of a file system operation. Read more about [./src/TreeStore.Core/Nodes](src/TreeStore.Core/Nodes/readme.md).
 
 TreeStore.Core simply traverses the path and delegates the execution of the operation to the  identified node:
@@ -54,7 +52,7 @@ sequenceDiagram
 4. The capability is invoked 
 
 ### Provider Node Capabilities
-Starting with the root node a implementation of a `IServiceProvider` has to be provided.
+Each node has a reference to a user provider data structure called 'payload'. This payload must implement `IServiceProvider` which is used by the TreeStore provider to ask for 'Capabilties'.
 
 If a nodes operation is called by the PowerShell provider the provider node will ask the payloads service provider for the required capability interfaces to process the invocation.
 If the capability was provided it is called otherwise the node defaults.
@@ -76,9 +74,9 @@ class Payload : IServiceProvider,
 
     // implement a provider node capability (doesn't has to be an explicit interface implementation)
 
-    bool IGetChildItem.HasChildItems() {..}
+    bool IGetChildItem.HasChildItems(CmdletProvider provider) {..}
 
-    IEnumerable<ProviderNode> IGetChildItem.GetChildItems() {..}
+    IEnumerable<ProviderNode> IGetChildItem.GetChildItems(CmdletProvider provider) {..}
 }
 ```
 

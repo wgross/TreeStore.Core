@@ -1,6 +1,4 @@
-﻿using TreeStore.Core.Capabilities;
-using TreeStore.Core.Nodes;
-using IUnderlyingDictionary = System.Collections.Generic.IDictionary<string, object?>;
+﻿using IUnderlyingDictionary = System.Collections.Generic.IDictionary<string, object?>;
 
 namespace TreeStore.DictionaryFS.Nodes
 {

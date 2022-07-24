@@ -54,7 +54,7 @@ sequenceDiagram
 ```
 
 ## Create a Test Skeleton for the Cmdlet Provider
-The test project for the DictionaryFS provides a base class for xunit tests which contains the common code to arrange a dictionary file system to run tests against. The common code includes:
+The test project for the `DictionaryFS` provides a base class for xunit tests which contains the common code to arrange a dictionary file system to run tests against. The common code includes:
 - Create a PowerShell instance to be used in each test case [PowerShellTestBase](../../test/TreeStore.DictionaryFS.Test/PowerShellTestBase.cs).
 - Loading of the PowerShell module and creation of a drive to test in: [ItemCmdletProviderTestBase](../../test/TreeStore.DictionaryFS.Test/ItemCmdletProvider/ItemCmdletProviderTestBase.cs)
 
@@ -144,7 +144,7 @@ public class Parameters
 ```
 
 # Test the Capability Implementation
-The tests for the node adapters is a straightforward xunit-test. No special preparation must be made as before in the tests of teh Cmdlet-Provider. 
+The tests for the node adapters is a straightforward xunit-test. No special preparation must be made as before in the tests of the Cmdlet-Provider. 
 
 The methodology I'm using is:
 1. Create a Cmdlet-Provider test as an acceptance test inspecting correct behavior from the perspective from the PowerShell.
@@ -152,3 +152,7 @@ The methodology I'm using is:
 3. Add a test for the required capability methods to the test cases for the provider node adapter. Go through all the edge cases at this test level until the implementation is sufficient. 
 4. return to the PowerShell test, run it again and it should be green now.
 5. Move to the next PowerShell uses case you want to support.
+
+> [!Note] Not everything can be tested at the Capability implementation
+> 
+> All functions depending on dynamic parameters of special Parameters like 'Force' for example can be tested at the component test level. The `CmdleProvider` instance isn't easily mocked because with a framework like 'Moq': it doesn't provide overridable methods for important parts. This may require a framework like 'Microsoft Fakes'. I'm moving these test at the integration test level where PowerShell commands are invoked.
