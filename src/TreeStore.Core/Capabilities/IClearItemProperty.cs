@@ -11,5 +11,5 @@ public interface IClearItemProperty
     /// <summary>
     /// Removes the value from an item property.
     /// </summary>
-    public void ClearItemProperty(CmdletProvider provider, IEnumerable<string> propertiesToClear);
+    public void ClearItemProperty(ICmdletProvider provider, IEnumerable<string> propertiesToClear);
 }

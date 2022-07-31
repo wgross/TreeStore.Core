@@ -14,7 +14,7 @@ public partial class TreeStoreCmdletProviderBase
     }
 
     /// <summary>
-    /// Implements the copying of a this.CmdletProvider item.
+    /// Implements the copying of a this.ICmdletProvider item.
     /// The existence of the child node <paramref name="path"/> has been verified in <see cref="ItemExists(string)"/>.
     /// th destination path <paramref name="destination"/> is unverified.
     /// </summary>
@@ -79,10 +79,10 @@ public partial class TreeStoreCmdletProviderBase
                 var childItemPath = Path.Join(path, childGetItem.Name);
                 writeItemObject(childItemPSObject, childItemPath, childGetItem.Name, childGetItem is ContainerNode);
 
-                //TODO: recurse in cmdlet this.CmdletProvider will be slow if the underlying model could optimize fetching of data.
+                //TODO: recurse in cmdlet this.ICmdletProvider will be slow if the underlying model could optimize fetching of data.
                 // alternatives:
                 // - let first container pull in the whole operation -> change IGetChildItems to GetChildItems( bool recurse, uint depth)
-                // - notify first container of incoming request so it can prepare the fetch: IPrepareGetChildItems: Prepare(bool recurse, uint depth) then resurce in this.CmdletProvider
+                // - notify first container of incoming request so it can prepare the fetch: IPrepareGetChildItems: Prepare(bool recurse, uint depth) then resurce in this.ICmdletProvider
                 //   General solution would be to introduce a call context to allow an impl. to inspect the original request.
                 if (recurse && depth > 0 && childGetItem is ContainerNode childContainer)
                     this.GetChildItems(childContainer, childItemPath, recurse, depth - 1, writeItemObject);

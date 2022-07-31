@@ -7,7 +7,7 @@ namespace TreeStore.Core.Nodes;
 /// </summary>
 public record ContainerNode : ProviderNode
 {
-    public ContainerNode(CmdletProvider provider, string? name, IServiceProvider underlying)
+    public ContainerNode(ICmdletProvider provider, string? name, IServiceProvider underlying)
         : base(provider, name, underlying)
     { }
 
@@ -20,7 +20,7 @@ public record ContainerNode : ProviderNode
     #region IGetChildItem
 
     ///<inheritdoc/>
-    public IEnumerable<ProviderNode> GetChildItems(CmdletProvider provider)
+    public IEnumerable<ProviderNode> GetChildItems(ICmdletProvider provider)
         => this.InvokeUnderlyingOrDefault<IGetChildItem>(getChildItems => getChildItems.GetChildItems(this.CmdletProvider));
 
     ///<inheritdoc/>
@@ -28,7 +28,7 @@ public record ContainerNode : ProviderNode
         => this.InvokeUnderlyingOrDefault<IGetChildItem>(getChildItems => getChildItems.GetChildItemParameters(path, recurse));
 
     ///<inheritdoc/>
-    public bool HasChildItems(CmdletProvider provider)
+    public bool HasChildItems(ICmdletProvider provider)
         => this.InvokeUnderlyingOrDefault<IGetChildItem>(getChildItems => getChildItems.HasChildItems(this.CmdletProvider));
 
     #endregion IGetChildItem
@@ -88,7 +88,7 @@ public record ContainerNode : ProviderNode
 
     /// <summary>
     /// The copy request receives the destination node and the reminder of the destination path which could not be
-    /// resolved from the file system this.CmdletProvider. It is up to the node implementation to decide if the remaining path items should be created
+    /// resolved from the file system this.ICmdletProvider. It is up to the node implementation to decide if the remaining path items should be created
     /// on the fly
     /// </summary>
     /// <param name="nodeToCopy">node to copy. May be container of leaf</param>
@@ -149,7 +149,7 @@ public record ContainerNode : ProviderNode
 
     #region IMoveChildItem
 
-    // TODO: The this.CmdletProvider gives the original parent to make it easier to remove the connection to the moved node. Necessary?
+    // TODO: The this.ICmdletProvider gives the original parent to make it easier to remove the connection to the moved node. Necessary?
     public void MoveChildItem(ContainerNode parentOfNodeToMove, ProviderNode nodeToMove, string[] destination)
         => this.InvokeUnderlyingOrThrow<IMoveChildItem>(moveChildItem => moveChildItem.MoveChildItem(this.CmdletProvider, parentOfNodeToMove, nodeToMove, destination));
 

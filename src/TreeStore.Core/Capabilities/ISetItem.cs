@@ -13,5 +13,5 @@ public interface ISetItem
     /// <summary>
     /// Implements setting the items value.
     /// </summary>
-    public void SetItem(CmdletProvider provider, object? value);
+    public void SetItem(ICmdletProvider provider, object? value);
 }

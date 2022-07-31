@@ -2,7 +2,7 @@
 
 public sealed record RootNode : ContainerNode
 {
-    public RootNode(CmdletProvider provider, IServiceProvider data)
+    public RootNode(ICmdletProvider provider, IServiceProvider data)
         : base(provider, name: string.Empty, data)
     {
     }

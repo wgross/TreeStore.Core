@@ -74,9 +74,9 @@ class Payload : IServiceProvider,
 
     // implement a provider node capability (doesn't has to be an explicit interface implementation)
 
-    bool IGetChildItem.HasChildItems(CmdletProvider provider) {..}
+    bool IGetChildItem.HasChildItems(ICmdletProvider provider) {..}
 
-    IEnumerable<ProviderNode> IGetChildItem.GetChildItems(CmdletProvider provider) {..}
+    IEnumerable<ProviderNode> IGetChildItem.GetChildItems(ICmdletProvider provider) {..}
 }
 ```
 

@@ -9,10 +9,10 @@ public interface IInvokeItem
     /// Dynamic parameters presented to PowerShell 'Invoke-Item' command
     /// </summary>
     /// <returns>empty <see cref="RuntimeDefinedParameterDictionary"/> by default</returns>
-    public object? InvokeItemParameters(CmdletProvider provider) => new RuntimeDefinedParameterDictionary();
+    public object? InvokeItemParameters(ICmdletProvider provider) => new RuntimeDefinedParameterDictionary();
 
     /// <summary>
     /// Implements the items invocation
     /// </summary>
-    public void InvokeItem(CmdletProvider provider);
+    public void InvokeItem(ICmdletProvider provider);
 }

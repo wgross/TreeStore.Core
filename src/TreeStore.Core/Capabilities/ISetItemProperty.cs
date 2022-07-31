@@ -11,5 +11,5 @@ public interface ISetItemProperty
     /// <summary>
     /// Set the given item properties
     /// </summary>
-    public void SetItemProperty(CmdletProvider provider, PSObject properties);
+    public void SetItemProperty(ICmdletProvider provider, PSObject properties);
 }

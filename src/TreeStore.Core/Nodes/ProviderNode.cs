@@ -1,11 +1,8 @@
-﻿
-using TreeStore.Core.Capabilities;
-
-namespace TreeStore.Core.Nodes;
+﻿namespace TreeStore.Core.Nodes;
 
 public abstract record ProviderNode
 {
-    protected ProviderNode(CmdletProvider provider, string? name, IServiceProvider underlying)
+    protected ProviderNode(ICmdletProvider provider, string? name, IServiceProvider underlying)
     {
         ArgumentNullException.ThrowIfNull(provider, nameof(this.CmdletProvider));
         ArgumentNullException.ThrowIfNull(name, nameof(name));
@@ -15,7 +12,7 @@ public abstract record ProviderNode
         this.Name = name;
         this.NodeServiceProvider = underlying;
     }
-    public CmdletProvider CmdletProvider { get; }
+    public ICmdletProvider CmdletProvider { get; }
 
     public IServiceProvider NodeServiceProvider { get; }
 
@@ -97,7 +94,7 @@ public abstract record ProviderNode
     public object? GetItemParameters()
         => this.InvokeUnderlyingOrDefault<IGetItem>(getItem => getItem.GetItemParameters());
 
-    public PSObject GetItem(CmdletProvider provider)
+    public PSObject GetItem(ICmdletProvider provider)
     {
         PSObject pso = (PSObject?)this.InvokeUnderlyingOrDefault<IGetItem>(gi => gi.GetItem(this.CmdletProvider)) ?? PSObject.AsPSObject(this.NodeServiceProvider);
 
@@ -122,7 +119,7 @@ public abstract record ProviderNode
     #region IClearItem
 
     /// <inheritdoc/>
-    public void ClearItem(CmdletProvider provider)
+    public void ClearItem(ICmdletProvider provider)
         => this.InvokeUnderlyingOrThrow<IClearItem>(clearItem => clearItem.ClearItem(this.CmdletProvider));
 
     /// <inheritdoc/>
@@ -134,11 +131,11 @@ public abstract record ProviderNode
     #region IItemExists
 
     /// <inheritdoc/>
-    public bool ItemExists(CmdletProvider provider)
+    public bool ItemExists(ICmdletProvider provider)
         => this.InvokeUnderlyingOrDefault<IItemExists>(itemExists => itemExists.ItemExists(this.CmdletProvider), defaultValue: true);
 
     /// <inheritdoc/>
-    public object? ItemExistsParameters(CmdletProvider provider)
+    public object? ItemExistsParameters(ICmdletProvider provider)
         => this.InvokeUnderlyingOrDefault<IItemExists>(itemExists => itemExists.ItemExistsParameters(this.CmdletProvider));
 
     #endregion IItemExists
@@ -146,11 +143,11 @@ public abstract record ProviderNode
     #region IInvokeItem
 
     /// <inheritdoc/>
-    public void InvokeItem(CmdletProvider provider)
+    public void InvokeItem(ICmdletProvider provider)
         => this.InvokeUnderlyingOrThrow<IInvokeItem>(invokeItem => invokeItem.InvokeItem(this.CmdletProvider));
 
     /// <inheritdoc/>
-    public object? InvokeItemParameters(CmdletProvider provider)
+    public object? InvokeItemParameters(ICmdletProvider provider)
         => this.InvokeUnderlyingOrDefault<IInvokeItem>(invokeItem => invokeItem.InvokeItemParameters(this.CmdletProvider));
 
     #endregion IInvokeItem

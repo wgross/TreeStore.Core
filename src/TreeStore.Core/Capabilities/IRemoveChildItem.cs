@@ -11,5 +11,5 @@ public interface IRemoveChildItem
     /// <summary>
     /// removes the child item specify by <paramref name="childName"/>
     /// </summary>
-    public void RemoveChildItem(CmdletProvider provider, string childName, bool recurse);
+    public void RemoveChildItem(ICmdletProvider provider, string childName, bool recurse);
 }

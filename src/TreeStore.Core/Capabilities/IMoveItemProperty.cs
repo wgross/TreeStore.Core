@@ -13,5 +13,5 @@ public interface IMoveItemProperty
     /// <summary>
     /// Move the given item property
     /// </summary>
-    public void MoveItemProperty(CmdletProvider provider, ProviderNode sourceNode, string sourceProperty, string destinationProperty);
+    public void MoveItemProperty(ICmdletProvider provider, ProviderNode sourceNode, string sourceProperty, string destinationProperty);
 }

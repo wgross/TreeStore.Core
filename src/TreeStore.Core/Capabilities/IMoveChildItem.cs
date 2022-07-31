@@ -18,5 +18,5 @@ public interface IMoveChildItem
     /// <summary>
     /// Move the node <paramref name="nodeToMove"/> as a child under 'this' node.
     /// </summary>
-    public MoveChildItemResult MoveChildItem(CmdletProvider provider, ContainerNode parentOfNodeToMove, ProviderNode nodeToMove, string[] destination);
+    public MoveChildItemResult MoveChildItem(ICmdletProvider provider, ContainerNode parentOfNodeToMove, ProviderNode nodeToMove, string[] destination);
 }

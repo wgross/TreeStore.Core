@@ -1,6 +1,6 @@
 # Provider Nodes
 
-The PowerShell this.CmdletProvider base traverses a path to find a node instance representing the file system item identified by the path. 
+The PowerShell CmdletProvider base traverses a path to find a node instance representing the file system item identified by the path. 
 
 ```mermaid
 classDiagram
@@ -60,4 +60,4 @@ When called the node will ask with `GetService(typeof(<capability>)` for at leas
 - ISetItem
 - ISetItemProperty
 
-If the nodes service this.CmdletProvider delivers an instance of these service types it will be called otherwise the node will fall back to its default behavior. Capability are explained at [../Capabilities](../Capabilities/readme.md)
+If the nodes service provider delivers an instance of these service types it will be called otherwise the node will fall back to its default behavior. Capability are explained at [../Capabilities](../Capabilities/readme.md)

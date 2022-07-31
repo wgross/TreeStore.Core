@@ -12,5 +12,5 @@ public interface IRenameChildItem
     /// Renames a new child named <paramref name="childName"/> to <paramref name="newName"/>
     /// </summary>
     /// <returns>the resulting <see cref="ProviderNode"/> or null</returns>
-    public void RenameChildItem(CmdletProvider provider, string childName, string newName);
+    public void RenameChildItem(ICmdletProvider provider, string childName, string newName);
 }

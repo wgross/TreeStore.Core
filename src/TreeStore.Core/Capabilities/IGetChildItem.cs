@@ -16,10 +16,10 @@ public interface IGetChildItem
     /// <summary>
     /// Determines if this node has child nodes.
     /// </summary>
-    public bool HasChildItems(CmdletProvider provider);
+    public bool HasChildItems(ICmdletProvider provider);
 
     /// <summary>
     /// Enumerates all child <see cref="ProviderNode"/>
     /// </summary>
-    public IEnumerable<ProviderNode> GetChildItems(CmdletProvider provider);
+    public IEnumerable<ProviderNode> GetChildItems(ICmdletProvider provider);
 }

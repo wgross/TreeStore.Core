@@ -64,7 +64,7 @@ public abstract partial class TreeStoreCmdletProviderBase : NavigationCmdletProv
         }
 
         providerNode = cursor.node;
-        // check if the underlying of the this.CmdletProvider implements the required capability
+        // check if the underlying of the this.ICmdletProvider implements the required capability
         providerNodeCapbility = cursor.node.NodeServiceProvider as T;
         return providerNodeCapbility is not null;
     }

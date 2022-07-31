@@ -14,5 +14,5 @@ public interface IGetItem
     /// <summary>
     /// Creates a <see cref="PSObject"/> wrapping the implementing class of this interface in the <see cref="PowerShell"/> pipe.
     /// </summary>
-    public PSObject GetItem(CmdletProvider provider);
+    public PSObject GetItem(ICmdletProvider provider);
 }

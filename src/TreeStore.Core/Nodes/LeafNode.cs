@@ -5,7 +5,7 @@
 /// </summary>
 public sealed record LeafNode : ProviderNode
 {
-    public LeafNode(CmdletProvider provider, string? name, IServiceProvider underlyingProperties)
+    public LeafNode(ICmdletProvider provider, string? name, IServiceProvider underlyingProperties)
         : base(provider, name, underlyingProperties)
     { }
 }

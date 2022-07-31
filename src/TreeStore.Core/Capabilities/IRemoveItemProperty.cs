@@ -11,5 +11,5 @@ public interface IRemoveItemProperty
     /// <summary>
     /// Removes the given item properties
     /// </summary>
-    public void RemoveItemProperty(CmdletProvider provider, string property);
+    public void RemoveItemProperty(ICmdletProvider provider, string property);
 }

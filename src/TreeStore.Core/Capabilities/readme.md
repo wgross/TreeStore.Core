@@ -4,11 +4,19 @@ Capabilities are interface contracts which are invoked by the file system provid
 ## Path Traversal
 Path traversal means that a PowerShell provider path is mapped to a TreeStore provider node (leaf or container). It is necessary that the names of nodes are unique under a parent node. Traversal of a path always uses the names and no other properties of the nodes payload to identify every node.
 
-## CmdletProvider Parameter
+## ICmdletProvider Parameter
 To each method implementing a node operation the current instance of [ `CmdletProvider`](https://docs.microsoft.com/en-us/dotnet/api/system.management.automation.provider.cmdletprovider) is given. This allows the nodes code to access many of the file system current state and functions like:
 - Dynamic Parameters of the current invocation (Property `DynamicParameters`)
 - Output messages to the user (methods `WriteDebug`, `WriteVerbose` etc. )
 - Read common parameters values (properties `Filter`, `Force`, `Include`)
+
+To improve testability of implementation of the nodes payload the `CmdletProvider` is represented by a interface which mirrors the `CmdletProvider`s public methods and properties. Interface can be mocked easily with libraries like `Moq` and this allows to test node behavior which relies in `CmdletProvider` properties like `Force` or calling methods like `WriteInformation` if necessary.
+
+Set a mock up like this:
+```csharp
+var cmdletProviderMock = new Mock<ICmdletProvider>();
+cmdlerProviderMock.Setup(m => m.Force).Returns(true);
+```
 
 ### IGetChildItem
 Path traversal depends on the implementation of `IGetChildItem`  capability and is also used to implement  `Get-ChildItem` command. Implementation of this interfaces also separates the leaves form the containers. If the capability is available the node is considered a container. If the capability is missing is must be a leaf node. 

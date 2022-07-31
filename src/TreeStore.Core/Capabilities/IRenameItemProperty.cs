@@ -11,5 +11,5 @@ public interface IRenameItemProperty
     /// <summary>
     /// Rename the given item properties
     /// </summary>
-    public void RenameItemProperty(CmdletProvider provider, string sourceProperty, string destinationProperty);
+    public void RenameItemProperty(ICmdletProvider provider, string sourceProperty, string destinationProperty);
 }

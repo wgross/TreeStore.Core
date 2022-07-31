@@ -11,5 +11,5 @@ public interface IGetItemProperty
     /// <summary>
     /// Removes the value from an item property.
     /// </summary>
-    public PSObject GetItemProperty(CmdletProvider provider, IEnumerable<string>? properties);
+    public PSObject GetItemProperty(ICmdletProvider provider, IEnumerable<string>? properties);
 }

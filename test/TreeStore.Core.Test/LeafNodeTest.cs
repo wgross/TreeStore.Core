@@ -6,6 +6,7 @@ using System.Management.Automation;
 using System.Management.Automation.Provider;
 using TreeStore.Core.Capabilities;
 using TreeStore.Core.Nodes;
+using TreeStore.Core.Providers;
 using Xunit;
 using static TreeStore.Core.Test.TestData;
 
@@ -14,11 +15,11 @@ namespace TreeStore.Core.Test
     public class LeafNodeTest : IDisposable
     {
         private readonly MockRepository mocks = new MockRepository(MockBehavior.Strict);
-        private readonly Mock<CmdletProvider> providerMock;
+        private readonly Mock<ICmdletProvider> providerMock;
 
         public LeafNodeTest()
         {
-            this.providerMock = this.mocks.Create<CmdletProvider>();
+            this.providerMock = this.mocks.Create<ICmdletProvider>();
         }
 
         public void Dispose() => this.mocks.VerifyAll();

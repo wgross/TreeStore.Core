@@ -13,5 +13,5 @@ public interface ICopyItemProperty
     /// <summary>
     /// Copy the given item property
     /// </summary>
-    public void CopyItemProperty(CmdletProvider provider, ProviderNode sourceNode, string sourceProperty, string destinationProperty);
+    public void CopyItemProperty(ICmdletProvider provider, ProviderNode sourceNode, string sourceProperty, string destinationProperty);
 }

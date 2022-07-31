@@ -2,7 +2,7 @@
 
 public interface IItemExists
 {
-    public object? ItemExistsParameters(CmdletProvider provider) => new RuntimeDefinedParameterDictionary();
+    public object? ItemExistsParameters(ICmdletProvider provider) => new RuntimeDefinedParameterDictionary();
 
-    public bool ItemExists(CmdletProvider provider) => true;
+    public bool ItemExists(ICmdletProvider provider) => true;
 }

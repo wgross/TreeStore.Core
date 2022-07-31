@@ -4,10 +4,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Management.Automation;
-using System.Management.Automation.Provider;
 using TreeStore.Core;
 using TreeStore.Core.Capabilities;
 using TreeStore.Core.Nodes;
+using TreeStore.Core.Providers;
 using TreeStore.DictionaryFS.Nodes;
 using Xunit;
 using IUnderlyingDictionary = System.Collections.Generic.IDictionary<string, object?>;
@@ -18,7 +18,7 @@ namespace TreeStore.DictionaryFS.Test;
 public class DictionaryContainerAdapterTest
 {
     private readonly MockRepository mocks = new(MockBehavior.Strict);
-    private readonly Mock<CmdletProvider> providerMock;
+    private readonly Mock<ICmdletProvider> providerMock;
 
     private DictionaryContainerAdapter ArrangeContainerAdapter(IUnderlyingDictionary dictionary)
     {
@@ -27,7 +27,7 @@ public class DictionaryContainerAdapterTest
 
     public DictionaryContainerAdapterTest()
     {
-        this.providerMock = this.mocks.Create<CmdletProvider>();
+        this.providerMock = this.mocks.Create<ICmdletProvider>();
     }
 
     #region IContainerItem

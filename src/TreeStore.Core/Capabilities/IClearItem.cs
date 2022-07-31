@@ -14,5 +14,5 @@ public interface IClearItem
     /// <summary>
     /// Clear the content of the file system item.
     /// </summary>
-    public void ClearItem(CmdletProvider provider);
+    public void ClearItem(ICmdletProvider provider);
 }

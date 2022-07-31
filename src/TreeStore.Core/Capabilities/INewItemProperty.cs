@@ -13,5 +13,5 @@ public interface INewItemProperty
     /// Creates a new item property named <paramref name="propertyName"/> having the type <paramref name="propertyTypeName"/>.
     /// The property receives the initial value of <paramref name="value"/>.
     /// </summary>
-    public void NewItemProperty(CmdletProvider provider, string propertyName, string? propertyTypeName, object? value);
+    public void NewItemProperty(ICmdletProvider provider, string propertyName, string? propertyTypeName, object? value);
 }
