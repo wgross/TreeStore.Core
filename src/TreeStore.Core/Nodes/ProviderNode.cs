@@ -45,6 +45,20 @@ public abstract record ProviderNode
         return invoke(service);
     }
 
+    protected IContentReader? InvokeUnderlyingOrThrow<T>(Func<T, IContentReader?> invoke) where T : class
+    {
+        this.GetUnderlyingServiceOrThrow<T>(out var service);
+
+        return invoke(service);
+    }
+
+    protected IContentWriter? InvokeUnderlyingOrThrow<T>(Func<T, IContentWriter?> invoke) where T : class
+    {
+        this.GetUnderlyingServiceOrThrow<T>(out var service);
+
+        return invoke(service);
+    }
+
     protected IEnumerable<ProviderNode> InvokeUnderlyingOrDefault<T>(Func<T, IEnumerable<ProviderNode>> invoke) where T : class
     {
         return (this.TryGetUnderlyingService<T>(out var service))
@@ -119,7 +133,7 @@ public abstract record ProviderNode
     #region IClearItem
 
     /// <inheritdoc/>
-    public void ClearItem(ICmdletProvider provider)
+    public void ClearItem()
         => this.InvokeUnderlyingOrThrow<IClearItem>(clearItem => clearItem.ClearItem(this.CmdletProvider));
 
     /// <inheritdoc/>
@@ -251,4 +265,34 @@ public abstract record ProviderNode
         => this.InvokeUnderlyingOrDefault<IRenameItemProperty>(renameItemProperty => renameItemProperty.RenameItemPropertyParameters(propertyName, newName));
 
     #endregion IRenameItemProperty
+
+    #region IClearItemContent
+
+    public void ClearItemContent()
+        => this.InvokeUnderlyingOrThrow<IClearItemContent>(clearItemContent => clearItemContent.ClearItemContent(this.CmdletProvider));
+
+    public object? ClearItemContentParameters()
+        => this.InvokeUnderlyingOrDefault<IClearItemContent>(moveChildItem => moveChildItem.ClearItemContentParameters());
+
+    #endregion IClearItemContent
+
+    #region IGetItemContent
+
+    public IContentReader? GetItemContentReader()
+        => this.InvokeUnderlyingOrThrow<IGetItemContent>(getItemContent => getItemContent.GetItemContentReader(this.CmdletProvider));
+
+    public object? GetItemContentParameters()
+        => this.InvokeUnderlyingOrDefault<IGetItemContent>(getItemContent => getItemContent.GetItemContentParameters());
+
+    #endregion IGetItemContent
+
+    #region ISetItemContent
+
+    public IContentWriter? GetItemContentWriter()
+        => this.InvokeUnderlyingOrThrow<ISetItemContent>(moveChildItem => moveChildItem.GetItemContentWriter(this.CmdletProvider));
+
+    public object? SetItemContentParameters()
+        => this.InvokeUnderlyingOrDefault<ISetItemContent>(moveChildItem => moveChildItem.SetItemContentParameters());
+
+    #endregion ISetItemContent
 }

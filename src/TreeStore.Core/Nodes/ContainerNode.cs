@@ -1,6 +1,4 @@
-﻿using TreeStore.Core.Capabilities;
-
-namespace TreeStore.Core.Nodes;
+﻿namespace TreeStore.Core.Nodes;
 
 /// <summary>
 /// A <see cref="ProviderNode"/> which may have child nodes.
@@ -153,8 +151,10 @@ public record ContainerNode : ProviderNode
     public void MoveChildItem(ContainerNode parentOfNodeToMove, ProviderNode nodeToMove, string[] destination)
         => this.InvokeUnderlyingOrThrow<IMoveChildItem>(moveChildItem => moveChildItem.MoveChildItem(this.CmdletProvider, parentOfNodeToMove, nodeToMove, destination));
 
-    public object? MoveChildItemParameter(string name, string destination)
+    public object? MoveChildItemParameters(string name, string destination)
         => this.InvokeUnderlyingOrDefault<IMoveChildItem>(moveChildItem => moveChildItem.MoveChildItemParameters(name, destination));
 
     #endregion IMoveChildItem
+
+    
 }

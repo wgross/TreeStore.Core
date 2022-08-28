@@ -52,7 +52,7 @@ namespace TreeStore.Core.Providers
         protected override object? MoveItemDynamicParameters(string path, string destination)
             => this.InvokeContainerNodeOrDefault(
                 path: new PathTool().SplitProviderPath(path).path.items,
-                invoke: c => c.MoveChildItemParameter(path, destination),
+                invoke: c => c.MoveChildItemParameters(path, destination),
                 fallback: () => base.MoveItemDynamicParameters(path, destination));
 
         protected override string MakePath(string parent, string child) => base.MakePath(parent, child);

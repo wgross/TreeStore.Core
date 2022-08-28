@@ -172,7 +172,7 @@ namespace TreeStore.Core.Test
             var node = this.ArrangeNode("name", ServiceProvider(With<IClearItem>(clearItem)));
 
             // ACT
-            node.ClearItem(this.providerMock.Object);
+            node.ClearItem();
         }
 
         [Fact]
@@ -182,7 +182,7 @@ namespace TreeStore.Core.Test
             var node = this.ArrangeNode("name", ServiceProvider());
 
             // ACT
-            var result = Assert.Throws<PSNotSupportedException>(() => node.ClearItem(this.providerMock.Object));
+            var result = Assert.Throws<PSNotSupportedException>(() => node.ClearItem());
 
             // ASSERT
             Assert.Equal("Node(name='name') doesn't provide an implementation of capability 'IClearItem'.", result.Message);
@@ -790,7 +790,7 @@ namespace TreeStore.Core.Test
             var node = this.ArrangeNode("name", ServiceProvider(With<IMoveChildItem>(underlying)));
 
             // ACT
-            var result = node.MoveChildItemParameter("name", "destination");
+            var result = node.MoveChildItemParameters("name", "destination");
 
             // ASSERT
             Assert.Same(parameters, result);
@@ -818,12 +818,202 @@ namespace TreeStore.Core.Test
             var node = this.ArrangeNode("name", ServiceProvider());
 
             // ACT
-            var result = node.MoveChildItemParameter("name", "destination");
+            var result = node.MoveChildItemParameters("name", "destination");
 
             // ASSERT
             Assert.Null(result);
         }
 
         #endregion IMoveChildItem
+
+        #region IClearItemContent
+
+        [Fact]
+        public void ClearItemContent_invokes_underlying()
+        {
+            // ARRANGE
+            var underlying = this.mocks.Create<IClearItemContent>();
+            underlying
+              .Setup(u => u.ClearItemContent(this.providerMock.Object));
+
+            var node = this.ArrangeNode("name", ServiceProvider(With<IClearItemContent>(underlying)));
+
+            // ACT
+            node.ClearItemContent();
+        }
+
+        [Fact]
+        public void ClearItemContentParameters_invokes_underlying()
+        {
+            // ARRANGE
+            var parameters = new object();
+            var underlying = this.mocks.Create<IClearItemContent>();
+            underlying
+                .Setup(u => u.ClearItemContentParameters())
+                .Returns(parameters);
+
+            var node = this.ArrangeNode("name", ServiceProvider(With<IClearItemContent>(underlying)));
+
+            // ACT
+            node.ClearItemContentParameters();
+        }
+
+        [Fact]
+        public void ClearItemContent_defaults_to_exception()
+        {
+            // ARRANGE
+            var node = this.ArrangeNode("name", ServiceProvider());
+
+            // ACT
+            var result = Assert.Throws<PSNotSupportedException>(() => node.ClearItemContent());
+
+            // ASSERT
+            Assert.Equal("Node(name='name') doesn't provide an implementation of capability 'IClearItemContent'.", result.Message);
+        }
+
+        [Fact]
+        public void ClearItemContentParameters_defaults_to_null()
+        {
+            // ARRANGE
+            var node = this.ArrangeNode("name", ServiceProvider());
+
+            // ACT
+            var result = node.ClearItemContentParameters();
+
+            // ASSEERT
+            Assert.Null(result);
+        }
+
+        #endregion IClearItemContent
+
+        #region IGetItemContent
+
+        [Fact]
+        public void GetItemContent_invokes_underlying()
+        {
+            // ARRANGE
+            var underlying = this.mocks.Create<IGetItemContent>();
+            var contentReader = Mock.Of<IContentReader>();
+            underlying
+              .Setup(u => u.GetItemContentReader(this.providerMock.Object))
+              .Returns(contentReader);
+
+            var node = this.ArrangeNode("name", ServiceProvider(With<IGetItemContent>(underlying)));
+
+            // ACT
+            var result = node.GetItemContentReader();
+
+            // ASSERT
+            Assert.Same(contentReader, result);
+        }
+
+        [Fact]
+        public void GetItemContentParameters_invokes_underlying()
+        {
+            // ARRANGE
+            var parameters = new object();
+            var underlying = this.mocks.Create<IGetItemContent>();
+            underlying
+                .Setup(u => u.GetItemContentParameters())
+                .Returns(parameters);
+
+            var node = this.ArrangeNode("name", ServiceProvider(With<IGetItemContent>(underlying)));
+
+            // ACT
+            node.GetItemContentParameters();
+        }
+
+        [Fact]
+        public void GetItemContent_defaults_to_exception()
+        {
+            // ARRANGE
+            var node = this.ArrangeNode("name", ServiceProvider());
+
+            // ACT
+            var result = Assert.Throws<PSNotSupportedException>(() => node.GetItemContentReader());
+
+            // ASSERT
+            Assert.Equal("Node(name='name') doesn't provide an implementation of capability 'IGetItemContent'.", result.Message);
+        }
+
+        [Fact]
+        public void GetItemContentParameters_defaults_to_null()
+        {
+            // ARRANGE
+            var node = this.ArrangeNode("name", ServiceProvider());
+
+            // ACT
+            var result = node.GetItemContentParameters();
+
+            // ASSEERT
+            Assert.Null(result);
+        }
+
+        #endregion IGetItemContent
+
+        #region ISetItemContent
+
+        [Fact]
+        public void SetItemContent_invokes_underlying()
+        {
+            // ARRANGE
+            var underlying = this.mocks.Create<ISetItemContent>();
+            var contentReader = Mock.Of<IContentWriter>();
+            underlying
+              .Setup(u => u.GetItemContentWriter(this.providerMock.Object))
+              .Returns(contentReader);
+
+            var node = this.ArrangeNode("name", ServiceProvider(With<ISetItemContent>(underlying)));
+
+            // ACT
+            var result = node.GetItemContentWriter();
+
+            // ASSERT
+            Assert.Same(contentReader, result);
+        }
+
+        [Fact]
+        public void SetItemContentParameters_invokes_underlying()
+        {
+            // ARRANGE
+            var parameters = new object();
+            var underlying = this.mocks.Create<ISetItemContent>();
+            underlying
+                .Setup(u => u.SetItemContentParameters())
+                .Returns(parameters);
+
+            var node = this.ArrangeNode("name", ServiceProvider(With<ISetItemContent>(underlying)));
+
+            // ACT
+            node.SetItemContentParameters();
+        }
+
+        [Fact]
+        public void SetItemContent_defaults_to_exception()
+        {
+            // ARRANGE
+            var node = this.ArrangeNode("name", ServiceProvider());
+
+            // ACT
+            var result = Assert.Throws<PSNotSupportedException>(() => node.GetItemContentWriter());
+
+            // ASSERT
+            Assert.Equal("Node(name='name') doesn't provide an implementation of capability 'ISetItemContent'.", result.Message);
+        }
+
+        [Fact]
+        public void SetItemContentParameters_defaults_to_null()
+        {
+            // ARRANGE
+            var node = this.ArrangeNode("name", ServiceProvider());
+
+            // ACT
+            var result = node.SetItemContentParameters();
+
+            // ASSEERT
+            Assert.Null(result);
+        }
+
+        #endregion ISetItemContent
     }
 }

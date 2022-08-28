@@ -6,7 +6,7 @@ public partial class TreeStoreCmdletProviderBase
     {
         if (this.TryGetNodeByPath(path, out var node))
         {
-            node.ClearItem(provider: this);
+            node.ClearItem();
         }
     }
 
