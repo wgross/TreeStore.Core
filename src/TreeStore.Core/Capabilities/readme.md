@@ -75,7 +75,7 @@ If the underlying data structures may handle this process more efficiently itsel
 > If copying an item is costly (time or IO) this capability may be used to optimize the process in an payload specific way. This might be neccessary as well for concurrently used resources which require locks to avoid race conditions.
 
 ### Implementing `NavigationCmdletProvider`
-PowerShells [`NavigationCmdletProvider`](https://docs.microsoft.com/en-us/dotnet/api/system.management.automation.provider.navigationcmdletprovider) extends the `ContainerCmdleProvoder` with the knowledge of hieratchy of Items and Containers. 
+PowerShells [`NavigationCmdletProvider`](https://docs.microsoft.com/en-us/dotnet/api/system.management.automation.provider.navigationcmdletprovider) extends the `ContainerCmdleProvider` with the knowledge of hierarchy of Items and Containers. 
 
 This requires the capability: `IMoveChildItem` 
 
@@ -88,11 +88,19 @@ This requires the capabilities:
 - `IGetItemProperty`
 
 ### Implementing `IDynamicPropertyCmdletProvider`
-This requires the capabilities:
+For supporting PowerShell `*-ItemProperty*` commands which modify properties dynamically these capabilities: are required:
 - `INewItemProperty`
 - `IRemoveItemProperty`
 - `ICopyItemProperty`
 - `IMoveItemProperty`
 - `IRenameItemProperty`
 
+## Implementing `IContentProvider`
+Supporting PowerShells `*-Content` commands is optional and works a bit different than the other providers at least for treading and writing content. PowerShell will ask for a reader or writer implementation (`IContentReader`, `IContentWriter`) to interact with. It will ask for 'blocks' of information to read an d write. Th implementation has to decide what such a 'block' of information is. 
 
+Not all capabilities have to be implemented:
+- `IClearItemContent`
+- `IGetItemContent`
+- `ISetItemContent`
+
+As for the reader and writer implementations: It seems that PowerShell only call the `Read(long readcont)` and the `Writer(IList)` method. `Seek(..)` seems to be reserved for the internal file system provider.
