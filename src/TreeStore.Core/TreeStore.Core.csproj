@@ -3,11 +3,14 @@
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <Nullable>enable</Nullable>
+	<LangVersion>latest</LangVersion>
+	<IsPackable>true</IsPackable>
   </PropertyGroup>
 
   <PropertyGroup>
+    <!-- Nuget package properties -->
   	<Authors>github.com/wgross</Authors>
-  	<VersionPrefix>0.2.0</VersionPrefix>
+  	<VersionPrefix>0.3.2</VersionPrefix>
   	<Description>Base class provider for implementing PowerShell file system/cmdlet providers</Description>
   	<RepositoryUrl>http://github.com/wgross/TreeStore.Core</RepositoryUrl>
   	<PackageLicenseExpression>MIT</PackageLicenseExpression>
