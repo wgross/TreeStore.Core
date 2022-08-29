@@ -155,6 +155,4 @@ public record ContainerNode : ProviderNode
         => this.InvokeUnderlyingOrDefault<IMoveChildItem>(moveChildItem => moveChildItem.MoveChildItemParameters(name, destination));
 
     #endregion IMoveChildItem
-
-    
 }

@@ -1,7 +1,4 @@
-﻿using System;
-using System.IO;
-using System.Management.Automation;
-using TreeStore.Core.Capabilities;
+﻿using System.IO;
 using TreeStore.Core.Nodes;
 
 namespace TreeStore.Core.Providers;
@@ -73,7 +70,7 @@ public partial class TreeStoreCmdletProviderBase
     {
         foreach (var childGetItem in parentContainer.GetChildItems(provider: this))
         {
-            var childItemPSObject = childGetItem.GetItem(provider: this);
+            var childItemPSObject = childGetItem.GetItem();
             if (childItemPSObject is not null)
             {
                 var childItemPath = Path.Join(path, childGetItem.Name);
@@ -143,21 +140,21 @@ public partial class TreeStoreCmdletProviderBase
     protected override void NewItem(string path, string itemTypeName, object newItemValue)
     {
         var (parentPath, childName) = new PathTool().SplitParentPathAndChildName(path);
-        if (TryGetNodeByPath<INewChildItem>(this.RootNode(), parentPath, out _, out var newChildItem))
-        {
-            var result = newChildItem.NewChildItem(provider: this, childName!, itemTypeName, newItemValue);
-            if (result is null)
-                return;
-            if (!result.Created)
-                return;
 
-            if (result.NodeServices.IsContainer())
+        if (this.TryGetNodeByPath(parentPath, out var parentNode))
+        {
+            if (parentNode is ContainerNode parentContainer)
             {
-                this.WriteProviderNode(path, new ContainerNode(provider: this, result.Name, result.NodeServices!));
-            }
-            else
-            {
-                this.WriteProviderNode(path, new LeafNode(provider: this, result.Name, result.NodeServices!));
+                var result = parentContainer.NewChildItem(childName!, itemTypeName, newItemValue);
+
+                if (result is not null and ContainerNode container)
+                {
+                    this.WriteProviderNode(path, container);
+                }
+                else if (result is not null and LeafNode leaf)
+                {
+                    this.WriteProviderNode(path, leaf);
+                }
             }
         }
     }
@@ -174,9 +171,12 @@ public partial class TreeStoreCmdletProviderBase
     protected override void RenameItem(string path, string newName)
     {
         var (parentPath, childName) = new PathTool().SplitParentPathAndChildName(path);
-        if (TryGetNodeByPath<IRenameChildItem>(this.RootNode(), parentPath, out _, out var renameChildItem))
+        if (this.TryGetNodeByPath(parentPath, out var providerNode))
         {
-            renameChildItem.RenameChildItem(provider: this, childName!, newName); ;
+            if (providerNode is ContainerNode parentContainer)
+            {
+                parentContainer.RenameChildItem(childName!, newName);
+            }
         }
     }
 

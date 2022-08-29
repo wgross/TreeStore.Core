@@ -65,6 +65,34 @@ public sealed class ItemCmdletProviderTest : ItemCmdletProviderTestBase
     }
 
     [Fact]
+    public void Powershell_reads_root_child_node_with_providerqualified_path()
+    {
+        // ARRANGE
+        var root = this.ArrangeFileSystem(new UnderlyingDictionary
+        {
+            ["item"] = new UnderlyingDictionary()
+        });
+
+        // ACT
+        var result = this.PowerShell.AddCommand("Get-Item")
+            .AddParameter("Path", @"TreeStore.DictionaryFS\DictionaryFS::test:\item")
+            .Invoke()
+            .ToArray();
+
+        // ASSERT
+        Assert.False(this.PowerShell.HadErrors);
+
+        var psobject = result.Single();
+
+        Assert.Equal("item", psobject.Property<string>("PSChildName"));
+        Assert.True(psobject.Property<bool>("PSIsContainer"));
+        Assert.True(psobject.PropertyIsNull("PSDrive"));
+        Assert.Equal("DictionaryFS", psobject.Property<ProviderInfo>("PSProvider").Name);
+        Assert.Equal(@"TreeStore.DictionaryFS\DictionaryFS::test:\item", psobject.Property<string>("PSPath"));
+        Assert.Equal(@"TreeStore.DictionaryFS\DictionaryFS::test:", psobject.Property<string>("PSParentPath"));
+    }
+
+    [Fact]
     public void Powershell_reads_root_grandchild_node()
     {
         // ARRANGE
@@ -96,6 +124,91 @@ public sealed class ItemCmdletProviderTest : ItemCmdletProviderTestBase
     }
 
     #endregion Get-Item -Path
+
+    #region Get-Item -Path (File system provider)
+
+    [Fact]
+    public void Powershell_reads_root_child_node_from_filesystem_provider()
+    {
+        // ARRANGE
+        var root = this.ArrangeFileSystem(new UnderlyingDictionary
+        {
+            ["item"] = new UnderlyingDictionary()
+        });
+
+        // ACT
+        var result = this.PowerShell.AddCommand("Get-Item")
+            .AddParameter("Path", @"c:\temp")
+            .Invoke()
+            .ToArray();
+
+        // ASSERT
+        Assert.False(this.PowerShell.HadErrors);
+
+        var psobject = result.Single();
+
+        Assert.Equal("temp", psobject.Property<string>("PSChildName"));
+        Assert.True(psobject.Property<bool>("PSIsContainer"));
+        Assert.Equal("C", psobject.Property<PSDriveInfo>("PSDrive").Name);
+        Assert.Equal("FileSystem", psobject.Property<ProviderInfo>("PSProvider").Name);
+        Assert.Equal(@"Microsoft.PowerShell.Core\FileSystem::C:\temp", psobject.Property<string>("PSPath"));
+        Assert.Equal(@"Microsoft.PowerShell.Core\FileSystem::C:\", psobject.Property<string>("PSParentPath"));
+    }
+
+    [Fact]
+    public void Powershell_reads_root_child_node_from_filesystem_provider_with_providerqualified_path()
+    {
+        // ARRANGE
+        var root = this.ArrangeFileSystem(new UnderlyingDictionary
+        {
+            ["item"] = new UnderlyingDictionary()
+        });
+
+        // ACT
+        var result = this.PowerShell.AddCommand("Get-Item")
+            .AddParameter("Path", @"Microsoft.PowerShell.Core\FileSystem::c:\temp")
+            .Invoke()
+            .ToArray();
+
+        // ASSERT
+        Assert.False(this.PowerShell.HadErrors);
+
+        var psobject = result.Single();
+
+        Assert.Equal("temp", psobject.Property<string>("PSChildName"));
+        Assert.True(psobject.Property<bool>("PSIsContainer"));
+        Assert.True(psobject.PropertyIsNull("PSDrive"));
+        Assert.Equal("FileSystem", psobject.Property<ProviderInfo>("PSProvider").Name);
+        Assert.Equal(@"Microsoft.PowerShell.Core\FileSystem::c:\temp", psobject.Property<string>("PSPath"));
+        Assert.Equal(@"Microsoft.PowerShell.Core\FileSystem::c:\", psobject.Property<string>("PSParentPath"));
+    }
+
+    #endregion Get-Item -Path (File system provider)
+
+    #region Resolve-Path -Path
+
+    [Fact]
+    public void Powershell_resolves_root_node_path()
+    {
+        // ARRANGE
+        this.ArrangeFileSystem(new UnderlyingDictionary());
+
+        // ACT
+        var result = this.PowerShell.AddCommand("Resolve-Path")
+            .AddParameter("Path", @"test:\")
+            .Invoke()
+            .Single();
+
+        // ASSERT
+        Assert.False(this.PowerShell.HadErrors);
+
+        Assert.IsType<PathInfo>(result.BaseObject);
+
+        Assert.Equal("test", result.Property<PSDriveInfo>("Drive").Name);
+        Assert.Equal("DictionaryFS", result.Property<ProviderInfo>("Provider").Name);
+    }
+
+    #endregion Resolve-Path -Path
 
     #region Set-Item -Path
 

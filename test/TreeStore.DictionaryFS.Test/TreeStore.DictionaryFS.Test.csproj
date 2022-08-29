@@ -30,13 +30,21 @@
     </PackageReference>
   </ItemGroup>
 
-  <ItemGroup>
-	<PackageReference Include="Microsoft.PowerShell.SDK" Version="7.2.4" />
-    <ProjectReference Include="..\..\src\TreeStore.DictionaryFS\TreeStore.DictionaryFS.csproj" />
-    <!--
-	<ProjectReference Include="..\..\submodules\PowerShell\src\Microsoft.PowerShell.Commands.Diagnostics\Microsoft.PowerShell.Commands.Diagnostics.csproj" />
-    <ProjectReference Include="..\..\submodules\PowerShell\src\Microsoft.PowerShell.SDK\Microsoft.PowerShell.SDK.csproj" />
+	<ItemGroup>
+		<ProjectReference Include="..\..\src\TreeStore.DictionaryFS\TreeStore.DictionaryFS.csproj" />
+	</ItemGroup>
+
+	<!-- PowerShell as Nuget package -->
+	<!--
+	<ItemGroup>
+		<PackageReference Include="Microsoft.PowerShell.SDK" Version="7.2.4" />
+	</ItemGroup>
 	-->
-  </ItemGroup>
+
+	<!--PowerShell as submodule-->
+	<ItemGroup>
+		<ProjectReference Include="..\..\submodules\PowerShell\src\Microsoft.PowerShell.Commands.Diagnostics\Microsoft.PowerShell.Commands.Diagnostics.csproj" />
+		<ProjectReference Include="..\..\submodules\PowerShell\src\Microsoft.PowerShell.SDK\Microsoft.PowerShell.SDK.csproj" />
+	</ItemGroup>
 
 </Project>

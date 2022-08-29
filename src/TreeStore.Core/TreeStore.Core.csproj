@@ -25,15 +25,16 @@
   </ItemGroup>
 
   <!-- reference PowerShell packages -->
+<!--
   <ItemGroup>
   	<PackageReference Include="System.Management.Automation" Version="7.2.4" />
   </ItemGroup>
-	
-  <!-- reference the PowerShell project from 'submodules'
+  -->	
+  <!-- reference the PowerShell project from 'submodules'-->
+
   <ItemGroup>
     <ProjectReference Include="..\..\submodules\PowerShell\src\Microsoft.WSMan.Management\Microsoft.WSMan.Management.csproj" />
     <ProjectReference Include="..\..\submodules\PowerShell\src\System.Management.Automation\System.Management.Automation.csproj" />
   </ItemGroup>
-  -->
-
+  
 </Project>

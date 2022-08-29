@@ -108,7 +108,7 @@ public abstract record ProviderNode
     public object? GetItemParameters()
         => this.InvokeUnderlyingOrDefault<IGetItem>(getItem => getItem.GetItemParameters());
 
-    public PSObject GetItem(ICmdletProvider provider)
+    public PSObject GetItem()
     {
         PSObject pso = (PSObject?)this.InvokeUnderlyingOrDefault<IGetItem>(gi => gi.GetItem(this.CmdletProvider)) ?? PSObject.AsPSObject(this.NodeServiceProvider);
 
@@ -145,11 +145,11 @@ public abstract record ProviderNode
     #region IItemExists
 
     /// <inheritdoc/>
-    public bool ItemExists(ICmdletProvider provider)
+    public bool ItemExists()
         => this.InvokeUnderlyingOrDefault<IItemExists>(itemExists => itemExists.ItemExists(this.CmdletProvider), defaultValue: true);
 
     /// <inheritdoc/>
-    public object? ItemExistsParameters(ICmdletProvider provider)
+    public object? ItemExistsParameters()
         => this.InvokeUnderlyingOrDefault<IItemExists>(itemExists => itemExists.ItemExistsParameters(this.CmdletProvider));
 
     #endregion IItemExists
@@ -157,11 +157,11 @@ public abstract record ProviderNode
     #region IInvokeItem
 
     /// <inheritdoc/>
-    public void InvokeItem(ICmdletProvider provider)
+    public void InvokeItem()
         => this.InvokeUnderlyingOrThrow<IInvokeItem>(invokeItem => invokeItem.InvokeItem(this.CmdletProvider));
 
     /// <inheritdoc/>
-    public object? InvokeItemParameters(ICmdletProvider provider)
+    public object? InvokeItemParameters()
         => this.InvokeUnderlyingOrDefault<IInvokeItem>(invokeItem => invokeItem.InvokeItemParameters(this.CmdletProvider));
 
     #endregion IInvokeItem
@@ -186,7 +186,7 @@ public abstract record ProviderNode
         }
         else
         {
-            var psObject = this.GetItem(this.CmdletProvider);
+            var psObject = this.GetItem();
             if (providerSpecificPickList is null || !providerSpecificPickList.Any())
                 return psObject;
 

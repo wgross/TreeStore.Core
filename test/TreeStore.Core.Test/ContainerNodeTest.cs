@@ -231,7 +231,7 @@ namespace TreeStore.Core.Test
             var node = this.ArrangeNode("name", ServiceProvider());
 
             // ACT
-            var result = node.ItemExists(this.providerMock.Object);
+            var result = node.ItemExists();
 
             // ASSERT
             Assert.True(result);
@@ -249,7 +249,7 @@ namespace TreeStore.Core.Test
             var node = this.ArrangeNode("name", ServiceProvider(With<IItemExists>(itemExists)));
 
             // ACT
-            var result = node.ItemExists(this.providerMock.Object);
+            var result = node.ItemExists();
 
             // ASSERT
             Assert.False(result);
@@ -268,7 +268,7 @@ namespace TreeStore.Core.Test
             var node = this.ArrangeNode("name", ServiceProvider(With<IItemExists>(itemExists)));
 
             // ACT
-            var result = node.ItemExistsParameters(this.providerMock.Object);
+            var result = node.ItemExistsParameters();
 
             // ASSERT
             Assert.Same(parameters, result);
@@ -281,7 +281,7 @@ namespace TreeStore.Core.Test
             var node = this.ArrangeNode("name", ServiceProvider());
 
             // ACT
-            var result = node.ItemExistsParameters(this.providerMock.Object);
+            var result = node.ItemExistsParameters();
 
             // ASSERT
             Assert.Null(result);
@@ -298,7 +298,7 @@ namespace TreeStore.Core.Test
             var node = this.ArrangeNode("name", ServiceProvider());
 
             // ACT
-            var result = Assert.Throws<PSNotSupportedException>(() => node.InvokeItem(this.providerMock.Object));
+            var result = Assert.Throws<PSNotSupportedException>(() => node.InvokeItem());
 
             // ASSERT
             Assert.Equal("Node(name='name') doesn't provide an implementation of capability 'IInvokeItem'.", result.Message);
@@ -315,7 +315,7 @@ namespace TreeStore.Core.Test
             var node = this.ArrangeNode("name", ServiceProvider(With<IInvokeItem>(itemExists)));
 
             // ACT
-            node.InvokeItem(this.providerMock.Object);
+            node.InvokeItem();
         }
 
         [Fact]
@@ -331,7 +331,7 @@ namespace TreeStore.Core.Test
             var node = this.ArrangeNode("name", ServiceProvider(With<IInvokeItem>(itemExists)));
 
             // ACT
-            var result = node.InvokeItemParameters(this.providerMock.Object);
+            var result = node.InvokeItemParameters();
 
             // ASSERT
             Assert.Same(parameters, result);
@@ -344,7 +344,7 @@ namespace TreeStore.Core.Test
             var node = this.ArrangeNode("name", ServiceProvider());
 
             // ACT
-            var result = node.InvokeItemParameters(this.providerMock.Object);
+            var result = node.InvokeItemParameters();
 
             // ASSERT
             Assert.Null(result);

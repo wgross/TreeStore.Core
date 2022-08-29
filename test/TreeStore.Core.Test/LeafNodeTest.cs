@@ -71,7 +71,7 @@ namespace TreeStore.Core.Test
             var node = ArrangeLeafNode(this.providerMock.Object, "name", new GetItemData());
 
             // ACT
-            var result = node.GetItem(this.providerMock.Object);
+            var result = node.GetItem();
 
             // ASSERT
             Assert.Equal("name", result.Property<string>("PSChildName"));
@@ -124,7 +124,7 @@ namespace TreeStore.Core.Test
             var node = ArrangeLeafNode(this.providerMock.Object, "name", ServiceProvider(With<IGetItem>(getItem)));
 
             // ACT
-            var result = node.GetItem(this.providerMock.Object);
+            var result = node.GetItem();
 
             // ASSERT
             Assert.Same(psObject, result);
@@ -144,7 +144,7 @@ namespace TreeStore.Core.Test
             var node = ArrangeLeafNode(this.providerMock.Object, "name", ServiceProvider(With<IGetItem>(getItem)));
 
             // ACT
-            var result = node.GetItem(this.providerMock.Object);
+            var result = node.GetItem();
 
             // ASSERT
             Assert.Same(psObject, result);

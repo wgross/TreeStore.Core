@@ -1,16 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Management.Automation;
-using System.Management.Automation.Provider;
-using TreeStore.Core.Nodes;
+﻿using TreeStore.Core.Nodes;
 
 namespace TreeStore.Core.Providers;
 
 public abstract partial class TreeStoreCmdletProviderBase : NavigationCmdletProvider
 {
-    private TreeStoreDriveInfoBase TreeStoreDriveInfo => (TreeStoreDriveInfoBase)this.PSDriveInfo;
+    private TreeStoreDriveInfoBase? treeStoreDriveInfo = null;
+
+    private TreeStoreDriveInfoBase? TreeStoreDriveInfo
+        => this.treeStoreDriveInfo ?? (TreeStoreDriveInfoBase)this.PSDriveInfo;
 
     /// <summary>
     /// Create a <see cref="RootNode"/> instance from the <see cref="IServiceProvider"/> representing the root nodes
@@ -27,8 +24,24 @@ public abstract partial class TreeStoreCmdletProviderBase : NavigationCmdletProv
         return (childNode is not null, childNode);
     }
 
+    private void EnsureTreeStoreDriveInfo(string? drive)
+    {
+        if (drive is not null && this.PSDriveInfo is null)
+        {
+            this.treeStoreDriveInfo = SessionState.Drive.Get(drive) as TreeStoreDriveInfoBase;
+        };
+
+        ArgumentNullException.ThrowIfNull(this.TreeStoreDriveInfo, nameof(PSDriveInfo));
+    }
+
     protected bool TryGetNodeByPath(string path, [NotNullWhen(returnValue: true)] out ProviderNode? pathNode)
-        => this.TryGetNodeByPath(new PathTool().SplitProviderPath(path).path.items, out pathNode);
+    {
+        var splitted = new PathTool().SplitProviderPath(path);
+
+        this.EnsureTreeStoreDriveInfo(splitted.drive);
+
+        return this.TryGetNodeByPath(splitted.path.items, out pathNode);
+    }
 
     protected bool TryGetNodeByPath(string[] path, [NotNullWhen(returnValue: true)] out ProviderNode? pathNode)
     {
@@ -45,28 +58,6 @@ public abstract partial class TreeStoreCmdletProviderBase : NavigationCmdletProv
         }
         pathNode = traversal.node;
         return true;
-    }
-
-    protected bool TryGetNodeByPath<T>(ProviderNode startNode, string[] path, [NotNullWhen(returnValue: true)] out ProviderNode? providerNode, [NotNullWhen(returnValue: true)] out T? providerNodeCapbility) where T : class
-    {
-        providerNode = default;
-        providerNodeCapbility = default;
-
-        (bool exists, ProviderNode? node) cursor = (true, startNode);
-        foreach (var pathItem in path)
-        {
-            cursor = cursor.node switch
-            {
-                ContainerNode container => this.TryGetChildNode(container, pathItem),
-                _ => (false, default)
-            };
-            if (!cursor.exists) return false;
-        }
-
-        providerNode = cursor.node;
-        // check if the underlying of the this.ICmdletProvider implements the required capability
-        providerNodeCapbility = cursor.node.NodeServiceProvider as T;
-        return providerNodeCapbility is not null;
     }
 
     protected ProviderNode GetDeepestNodeByPath(string path, out string[] missingPath)
@@ -124,7 +115,7 @@ public abstract partial class TreeStoreCmdletProviderBase : NavigationCmdletProv
     {
         // PowerShell would wrap the underlying with a PSObject itself
         // but taking the PSObject from the node allows to provide additional properties
-        var psobject = node.GetItem(provider: this);
+        var psobject = node.GetItem();
         if (psobject is null)
             return;
 
