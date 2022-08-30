@@ -125,66 +125,6 @@ public sealed class ItemCmdletProviderTest : ItemCmdletProviderTestBase
 
     #endregion Get-Item -Path
 
-    #region Get-Item -Path (File system provider)
-
-    [Fact]
-    public void Powershell_reads_root_child_node_from_filesystem_provider()
-    {
-        // ARRANGE
-        var root = this.ArrangeFileSystem(new UnderlyingDictionary
-        {
-            ["item"] = new UnderlyingDictionary()
-        });
-
-        // ACT
-        var result = this.PowerShell.AddCommand("Get-Item")
-            .AddParameter("Path", @"c:\temp")
-            .Invoke()
-            .ToArray();
-
-        // ASSERT
-        Assert.False(this.PowerShell.HadErrors);
-
-        var psobject = result.Single();
-
-        Assert.Equal("temp", psobject.Property<string>("PSChildName"));
-        Assert.True(psobject.Property<bool>("PSIsContainer"));
-        Assert.Equal("C", psobject.Property<PSDriveInfo>("PSDrive").Name);
-        Assert.Equal("FileSystem", psobject.Property<ProviderInfo>("PSProvider").Name);
-        Assert.Equal(@"Microsoft.PowerShell.Core\FileSystem::C:\temp", psobject.Property<string>("PSPath"));
-        Assert.Equal(@"Microsoft.PowerShell.Core\FileSystem::C:\", psobject.Property<string>("PSParentPath"));
-    }
-
-    [Fact]
-    public void Powershell_reads_root_child_node_from_filesystem_provider_with_providerqualified_path()
-    {
-        // ARRANGE
-        var root = this.ArrangeFileSystem(new UnderlyingDictionary
-        {
-            ["item"] = new UnderlyingDictionary()
-        });
-
-        // ACT
-        var result = this.PowerShell.AddCommand("Get-Item")
-            .AddParameter("Path", @"Microsoft.PowerShell.Core\FileSystem::c:\temp")
-            .Invoke()
-            .ToArray();
-
-        // ASSERT
-        Assert.False(this.PowerShell.HadErrors);
-
-        var psobject = result.Single();
-
-        Assert.Equal("temp", psobject.Property<string>("PSChildName"));
-        Assert.True(psobject.Property<bool>("PSIsContainer"));
-        Assert.True(psobject.PropertyIsNull("PSDrive"));
-        Assert.Equal("FileSystem", psobject.Property<ProviderInfo>("PSProvider").Name);
-        Assert.Equal(@"Microsoft.PowerShell.Core\FileSystem::c:\temp", psobject.Property<string>("PSPath"));
-        Assert.Equal(@"Microsoft.PowerShell.Core\FileSystem::c:\", psobject.Property<string>("PSParentPath"));
-    }
-
-    #endregion Get-Item -Path (File system provider)
-
     #region Resolve-Path -Path
 
     [Fact]

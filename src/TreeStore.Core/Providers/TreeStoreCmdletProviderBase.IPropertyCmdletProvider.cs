@@ -1,6 +1,4 @@
 ﻿using System.Collections.ObjectModel;
-using System.Management.Automation;
-using System.Management.Automation.Provider;
 using TreeStore.Core.Nodes;
 
 namespace TreeStore.Core.Providers
@@ -17,7 +15,7 @@ namespace TreeStore.Core.Providers
 
         public object? ClearPropertyDynamicParameters(string path, Collection<string> propertyToClear)
              => this.InvokeProviderNodeOrDefault(
-                path: new PathTool().SplitProviderPath(path).path.items,
+                path: new PathTool().SplitProviderQualifiedPath(path).Items,
                 invoke: n => n.ClearItemPropertyParameters(propertyToClear),
                 fallback: () => null);
 
@@ -36,7 +34,7 @@ namespace TreeStore.Core.Providers
 
         public object? GetPropertyDynamicParameters(string path, Collection<string>? providerSpecificPickList)
              => this.InvokeProviderNodeOrDefault(
-                path: new PathTool().SplitProviderPath(path).path.items,
+                path: new PathTool().SplitProviderQualifiedPath(path).Items,
                 invoke: n => n.GetItemPropertyParameters(providerSpecificPickList),
                 fallback: () => null);
 
@@ -50,7 +48,7 @@ namespace TreeStore.Core.Providers
 
         public object? SetPropertyDynamicParameters(string path, PSObject propertyValue)
             => this.InvokeProviderNodeOrDefault(
-                path: new PathTool().SplitProviderPath(path).path.items,
+                path: new PathTool().SplitProviderQualifiedPath(path).Items,
                 invoke: n => n.SetItemPropertyParameters(propertyValue),
                 fallback: () => null);
     }

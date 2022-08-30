@@ -24,7 +24,7 @@ namespace TreeStore.Core.Providers
 
         protected override void MoveItem(string path, string destination)
         {
-            var (parentPath, childName) = new PathTool().SplitParentPathAndChildName(path);
+            var (parentPath, childName) = new PathTool().SplitProviderQualifiedPath(path).ParentAndChild;
 
             this.InvokeContainerNodeOrDefault(
                 path: parentPath,
@@ -51,7 +51,7 @@ namespace TreeStore.Core.Providers
 
         protected override object? MoveItemDynamicParameters(string path, string destination)
             => this.InvokeContainerNodeOrDefault(
-                path: new PathTool().SplitProviderPath(path).path.items,
+                path: new PathTool().SplitProviderQualifiedPath(path).Items,
                 invoke: c => c.MoveChildItemParameters(path, destination),
                 fallback: () => base.MoveItemDynamicParameters(path, destination));
 

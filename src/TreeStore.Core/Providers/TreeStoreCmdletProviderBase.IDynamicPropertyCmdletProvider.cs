@@ -14,7 +14,7 @@ namespace TreeStore.Core.Providers
 
         public object? CopyPropertyDynamicParameters(string sourcePath, string sourceProperty, string destinationPath, string destinationProperty)
             => this.InvokeProviderNodeOrDefault(
-                path: new PathTool().SplitProviderPath(destinationPath).path.items,
+                path: new PathTool().SplitProviderQualifiedPath(destinationPath).Items,
                 invoke: n => n.CopyItemPropertyParameters(sourcePath, sourceProperty, destinationPath, destinationProperty),
                 fallback: () => null);
 
@@ -28,7 +28,7 @@ namespace TreeStore.Core.Providers
 
         public object? MovePropertyDynamicParameters(string sourcePath, string sourceProperty, string destinationPath, string destinationProperty)
             => this.InvokeProviderNodeOrDefault(
-                path: new PathTool().SplitProviderPath(destinationPath).path.items,
+                path: new PathTool().SplitProviderQualifiedPath(destinationPath).Items,
                 invoke: n => n.MoveItemPropertyParameters(sourcePath, sourceProperty, destinationPath, destinationProperty),
                 fallback: () => null);
 
@@ -42,7 +42,7 @@ namespace TreeStore.Core.Providers
 
         public object? NewPropertyDynamicParameters(string path, string propertyName, string propertyTypeName, object? value)
             => this.InvokeProviderNodeOrDefault(
-                path: new PathTool().SplitProviderPath(path).path.items,
+                path: new PathTool().SplitProviderQualifiedPath(path).Items,
                 invoke: n => n.NewItemPropertyParameter(propertyName, propertyTypeName, value),
                 fallback: () => null);
 
@@ -61,7 +61,7 @@ namespace TreeStore.Core.Providers
         public object? RemovePropertyDynamicParameters(string path, string propertyName)
 #pragma warning restore CS8766 // Nullability of reference types in return type doesn't match implicitly implemented member (possibly because of nullability attributes).
             => this.InvokeProviderNodeOrDefault(
-                path: new PathTool().SplitProviderPath(path).path.items,
+                path: new PathTool().SplitProviderQualifiedPath(path).Items,
                 invoke: n => n.RemoveItemPropertyParameters(propertyName),
                 fallback: () => null);
 
@@ -75,7 +75,7 @@ namespace TreeStore.Core.Providers
 
         public object? RenamePropertyDynamicParameters(string path, string sourceProperty, string destinationProperty)
             => this.InvokeProviderNodeOrDefault(
-                path: new PathTool().SplitProviderPath(path).path.items,
+                path: new PathTool().SplitProviderQualifiedPath(path).Items,
                 invoke: n => n.RenameItemPropertyParameters(sourceProperty, destinationProperty),
                 fallback: () => null);
     }

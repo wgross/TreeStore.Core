@@ -1,97 +1,84 @@
-﻿using Sprache;
-using System.Linq;
+﻿using Superpower;
+using Superpower.Parsers;
 
-namespace TreeStore.Core.Providers
+namespace TreeStore.Core.Providers;
+
+public record UnqualifiedPath(bool IsRooted, string[] Items)
 {
-    public class PathTool
+    public (string[] Parent, string Child) ParentAndChild => this.Items.Length switch
     {
-        private static class PathParser
-        {
-            //TODO: should come from the provider
-            private static readonly char[] invalidPathCharacters = System.IO.Path.GetInvalidFileNameChars();
+        0 => (Array.Empty<string>(), null),
+        1 => (Array.Empty<string>(), this.Items[0]),
+        _ => (this.Items[0..^1], this.Items[^1])
+    };
 
-            private static readonly Parser<char> PathCharacters = Parse.CharExcept(invalidPathCharacters);
+    public bool IsRoot => this.IsRooted && this.Items.Length == 0;
+}
 
-            private static readonly Parser<char> PathSeperator = Parse.Chars('\\', '/');
+public record DriveQualifedPath(string? DriveName, bool IsRooted, string[] Items) : UnqualifiedPath(IsRooted, Items);
 
-            // pathItem(\)
-            private static readonly Parser<string> PathItem =
-                from pathItem in PathCharacters.AtLeastOnce().Text()
-                from _ in PathSeperator.Once().Optional()
-                select pathItem;
+public record ProviderName(string Module, string Name);
+public record ProviderQualifiedPath(string? Module, string? Provider, string? DriveName, bool IsRooted, string[] Items)
+    : DriveQualifedPath(DriveName, IsRooted, Items);
 
-            // (\)p\a\t\h
-            public static readonly Parser<(bool isRooted, string[] items)> Path =
-                from isRooted in Parse.Char('\\').Once().Optional()
-                from items in PathItem.Many()
-                select (isRooted.IsDefined, items.ToArray());
+public sealed class PathTool
+{
+    #region Path items
 
-            // drive:
-            private static readonly Parser<string> Drive =
-                from drive in Parse.LetterOrDigit.AtLeastOnce().Text()
-                from _1 in Parse.Char(':').Once()
-                select drive;
+    // Define characters that are allowed in a path
+    private static readonly TextParser<char> ParsePathCharacters
+        = Character.ExceptIn(System.IO.Path.GetInvalidFileNameChars());
 
-            // Not required at the moment
-            // drive:\p\a\t\h
-            //public static readonly Parser<(string drive, bool isRooted, string[] path)> DriveAndPath =
-            //    from drive in Drive
-            //    from path in Path
-            //    select (drive, isRooted: true, path.items); // a path with a drive is always rooted
+    // path items are separated by / or \
+    private static readonly TextParser<char> ParsePathSeperator = Character.In('\\', '/');
 
-            // module\provider::
-            private static readonly Parser<(string module, string provider)> ModuleProvider =
-                from module in Parse.LetterOrDigit.AtLeastOnce().Text()
-                from _1 in Parse.Char('\\').Once()
-                from provider in Parse.AtLeastOnce(Parse.LetterOrDigit).Text()
-                from _2 in Parse.Char(':').Repeat(2)
-                select (module, provider);
+    /// <summary>
+    /// A path item is a collection of <see cref="ParsePathCharacters"/> followed by
+    /// a <see cref="ParsePathSeperator"/>
+    /// </summary>
+    private static readonly TextParser<string> ParsePathItem =
+       from pathItem in ParsePathCharacters.AtLeastOnce()
+       from _ in ParsePathSeperator.Optional() // the last item isn't followed by a /
+       select new string(pathItem);
 
-            // (module\provider::)drive: a drive is optionally prefixed with the module\provider name
-            private static readonly Parser<(string module, string provider, string drive)> ModuleProviderDrive =
-                from moduleProvider in ModuleProvider.Optional()
-                from drive in Drive
-                select (
-                    module: moduleProvider.GetOrDefault().module,
-                    provider: moduleProvider.GetOrDefault().provider,
-                    drive: drive
-                );
+    /// <summary>
+    /// A path consists of multiple <see cref="ParsePathItem"/>
+    /// </summary>
+    private static readonly TextParser<string[]> ParsePathItems =
+         from items in ParsePathItem.Many()
+         select items.ToArray();
 
-            // (module\provider::drive:)\p\a\t\h
-            public static readonly Parser<(string module, string provider, string drive, (bool isRooted, string[] items) path)> ProviderPath =
-                from moduleProviderDrive in ModuleProviderDrive.Optional()
-                from path in Path
-                select (
-                    module: moduleProviderDrive.GetOrDefault().module,
-                    provider: moduleProviderDrive.GetOrDefault().provider,
-                    drive: moduleProviderDrive.GetOrDefault().drive,
-                    path: (
-                        isrooted: moduleProviderDrive.IsDefined ? true : path.isRooted, // a path with module/provider/drive is implicitly rooted
-                        items: path.items
-                    )
-                );
-        }
+    private static readonly TextParser<(bool isRooted, string[] items)> ParseRootedPath =
+        from rootPath in ParsePathSeperator.Optional()
+        from items in ParsePathItems
+        select (rootPath.HasValue, items);
 
-        public (string[] parentPath, string? childName) SplitParentPathAndChildName(string path)
-        {
-            var splitted = this.SplitProviderPath(path);
-            return splitted.path.items.Any()
-                ? (parentPath: splitted.path.items[0..^1], childName: splitted.path.items[^1])
-                : (parentPath: new string[0], childName: null);
-        }
+    private static readonly TextParser<string> ParseDriveName =
+           from drive in Character.LetterOrDigit.AtLeastOnce()
+           from _ in Character.EqualTo(':')
+           select new string(drive);
 
-        /// <summary>
-        /// Parse a fully qualified provider path to its parts.
-        /// </summary>
-        /// <param name="fullyQualifiedProviderPath"></param>
-        /// <returns></returns>
-        public (string? module, string? provider, string? drive, (bool isRooted, string[] items) path) SplitProviderPath(string fullyQualifiedProviderPath)
-        {
-            if (string.IsNullOrEmpty(fullyQualifiedProviderPath))
-            {
-                return (null, null, null, (false, new string[0]));
-            }
-            else return PathParser.ProviderPath.Parse(fullyQualifiedProviderPath);
-        }
-    }
+    private static readonly TextParser<(string module, string provider)> ParseProviderName =
+        from module in Character.LetterOrDigit.AtLeastOnce().Named("module name")
+        from _1 in ParsePathSeperator.Repeat(1)
+        from provider in Character.LetterOrDigit.AtLeastOnce().Named("provider name")
+        from _2 in Character.EqualTo(':').Repeat(2)
+        select (new string(module), new string(provider));
+
+    #endregion Path items
+
+    private static readonly TextParser<ProviderQualifiedPath> ParseProviderQualifiedPath =
+       from provider in ParseProviderName.Try().OptionalOrDefault((module: null, provider: null))
+       from driveName in ParseDriveName.Try().OptionalOrDefault(null)
+       from path in ParseRootedPath
+       select new ProviderQualifiedPath(provider.module, provider.provider, driveName, path.isRooted, path.items);
+
+    public ProviderQualifiedPath SplitProviderQualifiedPath(string path)
+        => ParseProviderQualifiedPath.Parse(path);
+
+    public UnqualifiedPath SplitUnqualifiedPath(string path)
+        => ParseProviderQualifiedPath.Parse(path);
+
+    public DriveQualifedPath SplitDriveQualifiedPath(string path)
+        => ParseProviderQualifiedPath.Parse(path);
 }
