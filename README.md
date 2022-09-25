@@ -7,14 +7,14 @@ Simply build the solution.
 
 The project references  a current version of `System.Management.Automation` instead of the `PowerShellStandrad.Library`. The project also targets net6.0 instead netstatdrd2.0 and is therefore not portable between PS 5.1 and PS 7. Support the old platform would require to change the code from C# 10 to C# 7.3 which is quiet some work. 
 
-For PowerShell Debugging the PowerShell project is referenced as a submodule. This can be enabled by uncommenting the section in [TreeStore.Core](src/TreeStore.Core/TreeStore.Core.csproj). 
+For PowerShell Debugging the PowerShell project is referenced as a submodule. This can be enabled by uncommenting the section in [Directory.Build.props](/Directory.Build.props). 
 
 ## Core Concepts
 
 ### The Cmdlet Provider
-The provider (implemented by [TreeStoreCmdletProviderBase](./src/TreeStoreCmdletProviderBase/Providers/PowershellFileSystemDriveInfo.cs)) inherits from PowerShells `NavigationCmdletProvider` which enables the use of all item Cmdlets PowerShell provides for file system access.
+The provider (implemented by [TreeStoreCmdletProviderBase](src/TreeStore.Core/Providers/readme.md) inherits from PowerShells `NavigationCmdletProvider` which enables the use of all item Cmdlets PowerShell provides for file system access.
 
-In addition it implements the `IDynamicPropertyCmdletProvider` which enables interaction with dynamic properties (`New-,Remove-,Copy- and Move-ItemProperty`) and `IPropertyCmdletProvider` for non-dynamic item property interaction.
+In addition it implements the `IDynamicPropertyCmdletProvider` which enables interaction with dynamic properties (`New-,Remove-,Copy- and Move-ItemProperty`) and `IPropertyCmdletProvider` for non-dynamic item property interaction. It also supports the `IContentCmdletProvider` for reading and writing a file system its raw data.
 
 The provider is only meant to be a base for a new custom provider and doesn't implements a working file system itself. The sample implementation of [DictionaryFS](./src/TreeStore.DictionaryFS/readme.md) shows how a file system may reuse it parts from the base provider.
 

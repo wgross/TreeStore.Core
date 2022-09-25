@@ -1,4 +1,6 @@
-﻿namespace TreeStore.Core.Providers
+﻿using TreeStore.Core.Nodes;
+
+namespace TreeStore.Core.Providers
 {
     public partial class TreeStoreCmdletProviderBase : IContentCmdletProvider
     {
@@ -39,20 +41,31 @@
 
         public IContentWriter? GetContentWriter(string path)
         {
-            if (this.TryGetNodeByPath(path, out var node))
+            var (parentPath, childName) = new PathTool().SplitProviderQualifiedPath(path).ParentAndChild;
+
+            if (this.TryGetNodeByPath(parentPath, out var parentNode))
             {
-                return node.GetItemContentWriter();
+                if (parentNode is ContainerNode parentContainer)
+                {
+                    return parentContainer.GetChildItemContentWriter(childName!);
+                }
             }
-            else return null;
+
+            return null;
         }
 
         public object? GetContentWriterDynamicParameters(string path)
         {
-            if (this.TryGetNodeByPath(path, out var node))
+            var (parentPath, childName) = new PathTool().SplitProviderQualifiedPath(path).ParentAndChild;
+
+            if (this.TryGetNodeByPath(parentPath, out var parentNode))
             {
-                return node.SetItemContentParameters();
+                if (parentNode is ContainerNode parentContainer)
+                {
+                    return parentContainer.SetChildItemContentParameters(childName!);
+                }
             }
-            else return null;
+            return null;
         }
     }
 }

@@ -286,13 +286,5 @@ public abstract record ProviderNode
 
     #endregion IGetItemContent
 
-    #region ISetItemContent
-
-    public IContentWriter? GetItemContentWriter()
-        => this.InvokeUnderlyingOrThrow<ISetItemContent>(moveChildItem => moveChildItem.GetItemContentWriter(this.CmdletProvider));
-
-    public object? SetItemContentParameters()
-        => this.InvokeUnderlyingOrDefault<ISetItemContent>(moveChildItem => moveChildItem.SetItemContentParameters());
-
-    #endregion ISetItemContent
+    
 }

@@ -957,35 +957,35 @@ namespace TreeStore.Core.Test
         public void SetItemContent_invokes_underlying()
         {
             // ARRANGE
-            var underlying = this.mocks.Create<ISetItemContent>();
+            var underlying = this.mocks.Create<ISetChildItemContent>();
             var contentReader = Mock.Of<IContentWriter>();
             underlying
-              .Setup(u => u.GetItemContentWriter(this.providerMock.Object))
+              .Setup(u => u.GetChildItemContentWriter(this.providerMock.Object, "childName"))
               .Returns(contentReader);
 
-            var node = this.ArrangeNode("name", ServiceProvider(With<ISetItemContent>(underlying)));
+            var node = this.ArrangeNode("name", ServiceProvider(With<ISetChildItemContent>(underlying)));
 
             // ACT
-            var result = node.GetItemContentWriter();
+            var result = node.GetChildItemContentWriter("childName");
 
             // ASSERT
             Assert.Same(contentReader, result);
         }
-
+        
         [Fact]
         public void SetItemContentParameters_invokes_underlying()
         {
             // ARRANGE
             var parameters = new object();
-            var underlying = this.mocks.Create<ISetItemContent>();
+            var underlying = this.mocks.Create<ISetChildItemContent>();
             underlying
-                .Setup(u => u.SetItemContentParameters())
+                .Setup(u => u.SetChildItemContentParameters("childName"))
                 .Returns(parameters);
 
-            var node = this.ArrangeNode("name", ServiceProvider(With<ISetItemContent>(underlying)));
+            var node = this.ArrangeNode("name", ServiceProvider(With<ISetChildItemContent>(underlying)));
 
             // ACT
-            node.SetItemContentParameters();
+            node.SetChildItemContentParameters("childName");
         }
 
         [Fact]
@@ -995,10 +995,10 @@ namespace TreeStore.Core.Test
             var node = this.ArrangeNode("name", ServiceProvider());
 
             // ACT
-            var result = Assert.Throws<PSNotSupportedException>(() => node.GetItemContentWriter());
+            var result = Assert.Throws<PSNotSupportedException>(() => node.GetChildItemContentWriter("childName"));
 
             // ASSERT
-            Assert.Equal("Node(name='name') doesn't provide an implementation of capability 'ISetItemContent'.", result.Message);
+            Assert.Equal("Node(name='name') doesn't provide an implementation of capability 'ISetChildItemContent'.", result.Message);
         }
 
         [Fact]
@@ -1008,7 +1008,7 @@ namespace TreeStore.Core.Test
             var node = this.ArrangeNode("name", ServiceProvider());
 
             // ACT
-            var result = node.SetItemContentParameters();
+            var result = node.SetChildItemContentParameters("childName");
 
             // ASSEERT
             Assert.Null(result);

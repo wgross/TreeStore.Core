@@ -96,11 +96,14 @@ For supporting PowerShell `*-ItemProperty*` commands which modify properties dyn
 - `IRenameItemProperty`
 
 ## Implementing `IContentProvider`
-Supporting PowerShells `*-Content` commands is optional and works a bit different than the other providers at least for treading and writing content. PowerShell will ask for a reader or writer implementation (`IContentReader`, `IContentWriter`) to interact with. It will ask for 'blocks' of information to read an d write. Th implementation has to decide what such a 'block' of information is. 
+Supporting PowerShells `*-Content` commands is optional and works a bit different than the other providers at least for reading and writing content. PowerShell will ask for a reader or writer implementation (`IContentReader`, `IContentWriter`) to interact with. It will ask for 'blocks' of information to read and write. The implementation has to decide what such a 'block' of information is. 
 
 Not all capabilities have to be implemented:
 - `IClearItemContent`
 - `IGetItemContent`
-- `ISetItemContent`
+- `ISetChildItemContent`
 
 As for the reader and writer implementations: It seems that PowerShell only call the `Read(long readcont)` and the `Writer(IList)` method. `Seek(..)` seems to be reserved for the internal file system provider.
+
+### Implementing `ISetChiIdItemContent` at the parent node
+It is necessary to implement this capability at the parent node. instead of the actula node the set the content at. This Because the parenet node may create the child node during this process.  

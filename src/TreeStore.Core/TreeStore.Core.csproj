@@ -10,7 +10,7 @@
   <PropertyGroup>
     <!-- Nuget package properties -->
   	<Authors>github.com/wgross</Authors>
-  	<VersionPrefix>0.3.2</VersionPrefix>
+  	<VersionPrefix>0.4.1</VersionPrefix>
   	<Description>Base class provider for implementing PowerShell file system/cmdlet providers</Description>
   	<RepositoryUrl>http://github.com/wgross/TreeStore.Core</RepositoryUrl>
   	<PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -24,17 +24,4 @@
     <PackageReference Include="Superpower" Version="3.0.0" />
   </ItemGroup>
 
-  <!-- reference PowerShell packages -->
-<!--
-  <ItemGroup>
-  	<PackageReference Include="System.Management.Automation" Version="7.2.4" />
-  </ItemGroup>
-  -->	
-  <!-- reference the PowerShell project from 'submodules'-->
-
-  <ItemGroup>
-    <ProjectReference Include="..\..\submodules\PowerShell\src\Microsoft.WSMan.Management\Microsoft.WSMan.Management.csproj" />
-    <ProjectReference Include="..\..\submodules\PowerShell\src\System.Management.Automation\System.Management.Automation.csproj" />
-  </ItemGroup>
-  
 </Project>

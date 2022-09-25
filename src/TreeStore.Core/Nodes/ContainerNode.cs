@@ -155,4 +155,14 @@ public record ContainerNode : ProviderNode
         => this.InvokeUnderlyingOrDefault<IMoveChildItem>(moveChildItem => moveChildItem.MoveChildItemParameters(name, destination));
 
     #endregion IMoveChildItem
+
+    #region ISetChildItemContent
+
+    public IContentWriter? GetChildItemContentWriter(string childName)
+        => this.InvokeUnderlyingOrThrow<ISetChildItemContent>(setChildItemContent => setChildItemContent.GetChildItemContentWriter(this.CmdletProvider, childName));
+
+    public object? SetChildItemContentParameters(string childName)
+        => this.InvokeUnderlyingOrDefault<ISetChildItemContent>(setChildTemContent => setChildTemContent.SetChildItemContentParameters(childName));
+
+    #endregion ISetChildItemContent
 }
