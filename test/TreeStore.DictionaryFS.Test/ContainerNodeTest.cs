@@ -9,7 +9,7 @@ using static TreeStore.Core.Test.TestData;
 
 namespace TreeStore.DictionaryFS.Test;
 
-public class ContainerNodeTest
+public class ContainerNodeTest : IDisposable
 {
     private readonly MockRepository mocks = new(MockBehavior.Strict);
     private readonly Mock<ICmdletProvider> providerMock;

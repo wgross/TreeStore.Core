@@ -14,7 +14,7 @@ public static class PSObjectExtensions
     public static V Property<V>(this PSObject obj, string name) => (V)obj.Properties[name].Value;
 
     /// <summary>
-    /// Reads the value <paramref name="name"/> from the given <see cref="PSObject"/> and casts it to <typeparamref name="V"/>.
+    /// Reads the value <paramref name="name"/> from the given <see cref="PSObject"/> and evaliates if null.
     /// </summary>
     public static bool PropertyIsNull(this PSObject obj, string name) => obj.Properties[name] is null;
 }

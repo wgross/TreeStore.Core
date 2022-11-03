@@ -138,6 +138,33 @@ public class DynamicPropertyCmdletProviderTest : ItemCmdletProviderTestBase
         Assert.Equal(1, result.Property<int>("newdata"));
     }
 
+    [Fact]
+    public void Powershell_creates_item_property_from_array()
+    {
+        // ARRANGE
+        var child = new UnderlyingDictionary();
+        var root = this.ArrangeFileSystem(new UnderlyingDictionary
+        {
+            ["data"] = 1,
+            ["child"] = child
+        });
+
+        // ACT
+        var result = this.PowerShell.AddCommand("New-ItemProperty")
+            .AddParameter("Path", @"test:\")
+            .AddParameter("Name", "newdata")
+            .AddParameter("Value", new int[] { 1, 2, 3 })
+            .AddStatement()
+            .AddCommand("Get-Item")
+            .AddParameter("Path", @"test:\")
+            .Invoke()
+            .Single();
+
+        // ASSERT
+        Assert.False(this.PowerShell.HadErrors);
+        Assert.Equal(new[] { 1, 2, 3 }, result.Property<int[]>("newdata"));
+    }
+
     #endregion New-ItemProperty -Path -Name -Value
 
     #region Rename-ItemProperty -Path -Name -NewName

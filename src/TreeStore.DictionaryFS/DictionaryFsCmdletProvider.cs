@@ -12,7 +12,7 @@ public sealed class DictionaryFsCmdletProvider : TreeStoreCmdletProviderBase
     /// <summary>
     /// Creates the root node. The input string is the drive name.
     /// </summary>
-    public static Func<string, IServiceProvider>? RootNodeProvider { get; set; }
+    public Func<string, IServiceProvider>? RootNodeProvider { get; set; }
 
     /// <summary>
     /// Creates a new drive from the given creation parameters in <paramref name="drive"/>.
