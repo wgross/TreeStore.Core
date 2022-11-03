@@ -5,7 +5,7 @@ namespace TreeStore.Core.Providers;
 
 public record UnqualifiedPath(bool IsRooted, string[] Items)
 {
-    public (string[] Parent, string Child) ParentAndChild => this.Items.Length switch
+    public (string[] Parent, string? Child) ParentAndChild => this.Items.Length switch
     {
         0 => (Array.Empty<string>(), null),
         1 => (Array.Empty<string>(), this.Items[0]),
@@ -53,12 +53,12 @@ public sealed class PathTool
         from items in ParsePathItems
         select (rootPath.HasValue, items);
 
-    private static readonly TextParser<string> ParseDriveName =
+    private static readonly TextParser<string?> ParseDriveName =
            from drive in Character.LetterOrDigit.AtLeastOnce()
            from _ in Character.EqualTo(':')
            select new string(drive);
 
-    private static readonly TextParser<(string module, string provider)> ParseProviderName =
+    private static readonly TextParser<(string? module, string? provider)> ParseProviderName =
         from module in Character.LetterOrDigit.AtLeastOnce().Named("module name")
         from _1 in ParsePathSeperator.Repeat(1)
         from provider in Character.LetterOrDigit.AtLeastOnce().Named("provider name")

@@ -115,7 +115,7 @@ public record ContainerNode : ProviderNode
                         targetObject: null));
 
                 // copy the sources roots children
-                var copiedContainerNode = new ContainerNode(this.CmdletProvider, copied.Name, copied.NodeServices!);
+                var copiedContainerNode = new ContainerNode(this.CmdletProvider, copied!.Name, copied.NodeServices!);
 
                 foreach (var containerToCopyChild in containerToCopy.GetChildItems(this.CmdletProvider))
                 {
