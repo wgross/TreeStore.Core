@@ -64,9 +64,17 @@ public abstract partial class TreeStoreCmdletProviderBase : NavigationCmdletProv
         return true;
     }
 
+    /// <summary>
+    /// From the current root node a given path <paramref name="path"/> is traversed as depp as possible.
+    /// The deppest node is returned and the part of the path tht couldn't be retrieved is retuned in <paramref name="missingPath"/>.
+    /// </summary>
     protected ProviderNode GetDeepestNodeByPath(string path, out string[] missingPath)
-        => GetDeepestNodeByPath(this.RootNode(), new PathTool().SplitProviderQualifiedPath(path).Items, out missingPath);
+        => this.GetDeepestNodeByPath(this.RootNode(), new PathTool().SplitProviderQualifiedPath(path).Items, out missingPath);
 
+    /// <summary>
+    /// From the goven strat node <paramref name="startNode"/> the given path <paramref name="path"/> is traversed as depp as possible.
+    /// The deppest node is returned and the part of the path tht couldn't be retrieved is retuned in <paramref name="missingPath"/>.
+    /// </summary>
     protected ProviderNode GetDeepestNodeByPath(ProviderNode startNode, string[] path, out string[] missingPath)
     {
         var traversal = this.TraversePathComplete(startNode, path).ToArray();

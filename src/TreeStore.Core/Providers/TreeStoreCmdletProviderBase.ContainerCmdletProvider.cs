@@ -27,17 +27,38 @@ public partial class TreeStoreCmdletProviderBase
                 if (!sourceParentNode.TryGetChildNode(childName!, out var nodeToCopy))
                     throw new InvalidOperationException($"Item '{path}' doesn't exist");
 
-                // find the deepest ancestor which serves as a destination to copy to
-                var destinationAncestor = this.GetDeepestNodeByPath(destination, out var missingPath);
+                // check if the destination node is at the same provider
+                var destinationSplitted = new PathTool().SplitProviderQualifiedPath(destination);
 
-                if (destinationAncestor is ContainerNode destinationAncestorContainer)
+                if (string.IsNullOrEmpty(destinationSplitted.DriveName) || this.PSDriveInfo.Name.Equals(destinationSplitted.DriveName, StringComparison.OrdinalIgnoreCase))
                 {
-                    // destination ancestor is a container and might accept the copy
-                    destinationAncestorContainer.CopyChildItem(nodeToCopy, destination: missingPath, recurse);
+                    // find the deepest ancestor which serves as a destination to copy to
+                    var destinationAncestor = this.GetDeepestNodeByPath(destination, out var missingPath);
+
+                    if (destinationAncestor is ContainerNode destinationAncestorContainer)
+                    {
+                        // destination ancestor is a container and might accept the copy
+                        destinationAncestorContainer.CopyChildItem(nodeToCopy, destination: missingPath, recurse);
+                    }
+                    else
+                    {
+                        base.CopyItem(path, destination, recurse);
+                    }
                 }
                 else
                 {
-                    base.CopyItem(path, destination, recurse);
+                    // the destination provider is different from this provider.
+                    // this has to be implemented specifically: get the provoider and the drive info
+                    var providerInfo = this.SessionState.Provider
+                        .GetAll()
+                        .SelectMany(p => p.Drives.Select(d => (provider: p, drive: d)))
+                        .Where(pd => StringComparer.OrdinalIgnoreCase.Equals(pd.drive.Name, destinationSplitted.DriveName))
+                        .FirstOrDefault();
+
+                    if (providerInfo.provider is null || providerInfo.drive is null)
+                        throw new InvalidOperationException($"drive(name:{destinationSplitted.DriveName}) doesn't exists");
+
+                    sourceParentNode.CopyChildItemToProvider(nodeToCopy, providerInfo.provider, providerInfo.drive, destination, recurse);
                 }
             },
             fallback: () => base.CopyItem(path, destination, recurse));

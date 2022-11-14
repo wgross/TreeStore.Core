@@ -82,7 +82,7 @@ public record ContainerNode : ProviderNode
 
     #endregion IRenameChildItem
 
-    #region ICopyChildItemRecursive
+    #region ICopyChildItem
 
     /// <summary>
     /// The copy request receives the destination node and the reminder of the destination path which could not be
@@ -143,7 +143,17 @@ public record ContainerNode : ProviderNode
     public object? CopyChildItemParameters(string childName, string destination, bool recurse)
         => this.InvokeUnderlyingOrDefault<ICopyChildItem>(copyChildItem => copyChildItem.CopyChildItemParameters(childName, destination, recurse));
 
-    #endregion ICopyChildItemRecursive
+    #endregion ICopyChildItem
+
+    #region ICopyChildItemToProvider
+
+    /// <summary>
+    /// Delegates the wholöe copy operation to the provider nodes underlying implementation. The is nothings the provider base can do here.
+    /// </summary>
+    public void CopyChildItemToProvider(ProviderNode nodeToCopy, ProviderInfo provider, PSDriveInfo drive, string destination, bool recurse)
+        => this.InvokeUnderlyingOrThrow<ICopyChildItemToProvider>(copyChildItem => copyChildItem.CopyChildItem(this.CmdletProvider, nodeToCopy, provider, drive, destination, recurse));
+
+    #endregion ICopyChildItemToProvider
 
     #region IMoveChildItem
 
