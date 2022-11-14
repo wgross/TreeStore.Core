@@ -54,7 +54,7 @@ public sealed class PathTool
         select (rootPath.HasValue, items);
 
     private static readonly TextParser<string?> ParseDriveName =
-           from drive in Character.LetterOrDigit.AtLeastOnce()
+           from drive in ParsePathCharacters.AtLeastOnce()
            from _ in Character.EqualTo(':')
            select new string(drive);
 

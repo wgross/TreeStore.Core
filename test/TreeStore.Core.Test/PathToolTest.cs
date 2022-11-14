@@ -136,16 +136,17 @@ namespace TreeStore.Core.Test
         }
 
         [Theory]
-        [InlineData(@"drive:\path\to\item")]
-        [InlineData(@"drive:\path\to\item\")]
-        public void PathTool_splits_provider_qualified_path_without_provider(string path)
+        [InlineData(@"drive:\path\to\item", "drive")]
+        [InlineData(@"drive:\path\to\item\", "drive")]
+        [InlineData(@"drive-1:\path\to\item", "drive-1")]
+        public void PathTool_splits_provider_qualified_path_without_provider(string path, string driveName)
         {
             // ACT
             var result = new PathTool().SplitProviderQualifiedPath(path);
 
             // ASSERT
             Assert.Null(result.Provider);
-            Assert.Equal("drive", result.DriveName);
+            Assert.Equal(driveName, result.DriveName);
             Assert.Equal(new[] { "path", "to", "item" }, result.Items);
             Assert.True(result.IsRooted);
         }
