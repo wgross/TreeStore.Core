@@ -49,9 +49,6 @@ public class ContainerNodeTest : IDisposable
         // ARRANGE
         var underlying = this.mocks.Create<INewChildItem>();
         var underlying2 = this.mocks.Create<IGetChildItem>();
-        underlying2
-            .Setup(u => u.HasChildItems(this.providerMock.Object))
-            .Returns(true);
 
         var value = new object();
         underlying

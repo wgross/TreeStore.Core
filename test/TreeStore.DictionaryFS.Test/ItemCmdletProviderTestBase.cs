@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using TreeStore.DictionaryFS.Nodes;
 
 namespace TreeStore.DictionaryFS.Test;
 
@@ -10,9 +9,17 @@ public abstract class ItemCmdletProviderTestBase : PowerShellTestBase
     /// </summary>
     public IDictionary<string, object?> ArrangeFileSystem(IDictionary<string, object?> data)
     {
-        DictionaryFsCmdletProvider.RootNodeProvider = _ => new DictionaryContainerAdapter(data);
-
-        this.ArrangeFileSystem();
+        this.PowerShell.AddCommand("Import-Module")
+            .AddArgument("./TreeStore.DictionaryFS.dll")
+            .Invoke();
+        this.PowerShell.Commands.Clear();
+        this.PowerShell.AddCommand("New-PSDrive")
+            .AddParameter("PSProvider", "DictionaryFS")
+            .AddParameter("Name", "test")
+            .AddParameter("Root", "")
+            .AddParameter("FromDictionary", data)
+            .Invoke();
+        this.PowerShell.Commands.Clear();
 
         return data;
     }

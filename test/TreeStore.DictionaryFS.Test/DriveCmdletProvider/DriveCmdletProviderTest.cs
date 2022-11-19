@@ -12,8 +12,6 @@ public class DriveCmdletProviderTest : PowerShellTestBase
 {
     public DriveCmdletProviderTest()
     {
-        DictionaryFsCmdletProvider.RootNodeProvider = _ => new DictionaryContainerAdapter(new Dictionary<string, object?>());
-
         this.PowerShell.AddCommand("Import-Module").AddArgument("./TreeStore.DictionaryFS.dll").Invoke();
         this.PowerShell.Commands.Clear();
     }
