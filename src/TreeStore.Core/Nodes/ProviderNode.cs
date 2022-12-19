@@ -22,13 +22,20 @@ public abstract record ProviderNode
 
     protected bool TryGetUnderlyingService<T>([NotNullWhen(true)] out T? service)
     {
-        service = this.NodeServiceProvider.GetService<T>();
+        service = default;
+
+        var serviceAsObject = this.NodeServiceProvider.GetService(typeof(T));
+        if (serviceAsObject is not null)
+            if (serviceAsObject is T t)
+                service = t;
+
         return service is not null;
     }
 
     protected void GetUnderlyingServiceOrThrow<T>(out T service)
     {
-        service = this.NodeServiceProvider.GetService<T>() ?? throw this.CapabilityNotSupported<T>();
+        if (!this.TryGetUnderlyingService<T>(out service))
+            throw this.CapabilityNotSupported<T>();
     }
 
     protected void InvokeUnderlyingOrThrow<T>(Action<T> invoke) where T : class
@@ -81,20 +88,17 @@ public abstract record ProviderNode
 
     protected object? InvokeUnderlyingOrDefault<T>(Func<T, object?> invoke) where T : class
     {
-        var service = this.NodeServiceProvider.GetService<T>();
-        if (service is null)
-            return null;
-
-        return invoke(service);
+        if (this.TryGetUnderlyingService<T>(out var service))
+            return invoke(service);
+        return null;
     }
 
     protected bool InvokeUnderlyingOrDefault<T>(Func<T, bool> invoke, bool defaultValue = false) where T : class
     {
-        var service = this.NodeServiceProvider.GetService<T>();
-        if (service is null)
-            return defaultValue;
+        if (this.TryGetUnderlyingService<T>(out var service))
+            return invoke(service);
 
-        return invoke(service);
+        return defaultValue;
     }
 
     protected Exception CapabilityNotSupported<T>()
@@ -285,6 +289,4 @@ public abstract record ProviderNode
         => this.InvokeUnderlyingOrDefault<IGetItemContent>(getItemContent => getItemContent.GetItemContentParameters());
 
     #endregion IGetItemContent
-
-    
 }

@@ -14,7 +14,7 @@ classDiagram
 
 The nodes types are implemented as immutable [C# records](https://docs.microsoft.com/de-de/dotnet/csharp/language-reference/builtin-types/record) and have a common base class [ProviderNode](./ProviderNode.cs). Their state must not change and except of the root node they live only as long as the path is traversed.
 
-The responsibility of the node is to process the command which was invoked at the PowerShell in context of the node which was selected by the path which was part of the command invocation. Each node is initialized with a name and custom payload which defines the nodes capabilities.
+The responsibility of the node is to process the command which was invoked by the PowerShell. Each node is initialized with a name and custom payload which defines the nodes capabilities.
 
 ## Creation of Node Instances
 Starting at the root node child nodes are as instance of `ContainerNode` or `LeafNode`. To create a node specify its name and a payload:
@@ -25,8 +25,7 @@ var containerNode = new ContainerNode("<node name>", <payload>)
 > [!NOTE] The name must not change during the lifetime of the node and neither may the semantic of the node change (container or leaf)
 > Its OK if payloads parent creates the node during the next traversal with a new name. TreeStore.Core doesn't remember the name.
 
-## Implementing TreeStore Capabilities
-
+## Implementing TreeStore Capabilities by the Payload
 The payload doesn't have to implement the capability interfaces by itself. It only has to implement  [IServiceProvider](https://docs.microsoft.com/en-us/dotnet/api/system.iserviceprovider): 
 
 ```csharp

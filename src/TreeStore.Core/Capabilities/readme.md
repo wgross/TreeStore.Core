@@ -1,8 +1,10 @@
 # TreeStore Capabilities
-Capabilities are interface contracts which are invoked by the file system provider nodes to process a PowerShell file system command. Most capabilities match to a single PowerShell command but some are used at multiple places.
+Capabilities are interface contracts which are invoked by the file system provider nodes to process a PowerShell command. Most capabilities match to a single PowerShell command but some are used at multiple places.
 
 ## Path Traversal
 Path traversal means that a PowerShell provider path is mapped to a TreeStore provider node (leaf or container). It is necessary that the names of nodes are unique under a parent node. Traversal of a path always uses the names and no other properties of the nodes payload to identify every node.
+
+Path trabvesal is the most basio of teh capabilities and is required if mor than a  root node is provided by the file system.
 
 ## ICmdletProvider Parameter
 To each method implementing a node operation the current instance of [ `CmdletProvider`](https://docs.microsoft.com/en-us/dotnet/api/system.management.automation.provider.cmdletprovider) is given. This allows the nodes code to access many of the file system current state and functions like:
@@ -10,9 +12,9 @@ To each method implementing a node operation the current instance of [ `CmdletPr
 - Output messages to the user (methods `WriteDebug`, `WriteVerbose` etc. )
 - Read common parameters values (properties `Filter`, `Force`, `Include`)
 
-To improve testability of implementation of the nodes payload the `CmdletProvider` is represented by a interface which mirrors the `CmdletProvider`s public methods and properties. Interface can be mocked easily with libraries like `Moq` and this allows to test node behavior which relies in `CmdletProvider` properties like `Force` or calling methods like `WriteInformation` if necessary.
+To improve testability of implementation of the nodes  `CmdletProvider` is represented by an interface which mirrors the `CmdletProvider`s public methods and properties. This Interface can be mocked easily with libraries like `Moq` and this allows to test node behavior which relies in `CmdletProvider` properties like `Force` or calling methods like `WriteInformation` if necessary.
 
-Set a mock up like this:
+In Tests set a mock up like this:
 ```csharp
 var cmdletProviderMock = new Mock<ICmdletProvider>();
 cmdlerProviderMock.Setup(m => m.Force).Returns(true);
@@ -28,8 +30,7 @@ A future improvement would be:
 	- [ ] and fall back to `IGetChildItem` capability if `IGetChildNames` is missing
 
 ## Implementing `ItemCmdletProvider`
-PowerShells [ItemCmdletProvider](https://docs.microsoft.com/en-us/dotnet/api/system.management.automation.provider.itemcmdletprovider) is the simplest PowerShell cmdlet provider base classes. To support it completely the capabilities below are required:
-
+PowerShells [ItemCmdletProvider](https://docs.microsoft.com/en-us/dotnet/api/system.management.automation.provider.itemcmdletprovider) is the simplest PowerShell cmdlet provider base classes. To support it completely these capabilities are required:
 * `IClearItem` - Clear the content of a file system item
 * `IGetItem `- Get an item representation to write to the pipe
 * `IItemExists` - Used by several cmdlets to verify existence of the node.
@@ -49,8 +50,8 @@ Also you may build or extend a `PSObject` with manually created properties. If t
 >Piping the payload to the caller may expose implementation details which should remain private.
 
 ### IItemExists
-Availability of this capability is a precondition for several item commandlets that check the existence of an item before they proceed. This is also what the 'Test-Path' command invokes.
-If TreeStore find the node and the node doesn't implement `IItemExists` true is returned. This should fit most uses cases therefore implement `IItemExists` only if the existence of a file system item depends on more then just the path resolution.
+Availability of this capability is a precondition for several commands that check the existence of an item before they proceed. This is also what the `Test-Path` command invokes.
+If TreeStore finds the node and the node doesn't implement `IItemExists` true is returned. This should fit most uses cases therefore implement `IItemExists` only if the existence of a file system item depends on more then just the path resolution.
 
 ### ISetItem/IClearItem
 If a file system item has the semantic of having a 'value' these capability set the value or clear it. They don't depend on each other and can be implemented independently. There is no default behavior for this capabilities. If called and missing in the  payload an error is returned.
@@ -58,12 +59,11 @@ If a file system item has the semantic of having a 'value' these capability set 
 ## Implementing `ContainerCmdletProvider`
 PowerShells [`ContainerCmdletProvider`](https://docs.microsoft.com/en-us/dotnet/api/system.management.automation.provider.containercmdletprovider) extends the `ItemCmdletProvider` with the knowledge of Containers/Folders.
 This requires the capabilities:
-
 * `INewChildItem` - create a new child item under a parent node
 * `IRemoveChildItem` - remove a child item from a parent node
 * `ICopyChildItem` - creates a new child item under a parent node as a copy of an another file system node
 * `ICopyChildItemRecursive` - create a copy of a file system tree under a parent node from an existing file system tree
-* `IMoveChildItem` - create a new file system node under a parent and removes this node from ist former parent
+* `ICopyChildItemToProvider`- create a copy of a file system item at different provider nstale of the same type
 * `IRenameChildItem` - changes the name of a file system node
 
 ### ICopyChildItem and ICopyChildItemRecursive
@@ -77,7 +77,8 @@ If the underlying data structures may handle this process more efficiently itsel
 ### Implementing `NavigationCmdletProvider`
 PowerShells [`NavigationCmdletProvider`](https://docs.microsoft.com/en-us/dotnet/api/system.management.automation.provider.navigationcmdletprovider) extends the `ContainerCmdleProvider` with the knowledge of hierarchy of Items and Containers. 
 
-This requires the capability: `IMoveChildItem` 
+This requires the capability: 
+- `IMoveChildItem` - create a new file system node under a parent and removes this node from ist former parent
 
 ### Implementing `IPropertyCmdletProvider`
 The capability `IGetItemProperty` supports PowerShells `Get-ItemProperty`  command. If the capability isn't implemented `TreeStoreCmdletProviderBase` will fall back to its own logic: The result of `IGetItem.GetItem` will projected to a new `PObject` containing only the properties requested by the caller.
@@ -88,14 +89,14 @@ This requires the capabilities:
 - `IGetItemProperty`
 
 ### Implementing `IDynamicPropertyCmdletProvider`
-For supporting PowerShell `*-ItemProperty*` commands which modify properties dynamically these capabilities: are required:
+For supporting PowerShell `*-ItemProperty*` commands which modify properties dynamically these capabilities are required:
 - `INewItemProperty`
 - `IRemoveItemProperty`
 - `ICopyItemProperty`
 - `IMoveItemProperty`
 - `IRenameItemProperty`
 
-## Implementing `IContentProvider`
+### Implementing `IContentProvider`
 Supporting PowerShells `*-Content` commands is optional and works a bit different than the other providers at least for reading and writing content. PowerShell will ask for a reader or writer implementation (`IContentReader`, `IContentWriter`) to interact with. It will ask for 'blocks' of information to read and write. The implementation has to decide what such a 'block' of information is. 
 
 Not all capabilities have to be implemented:
@@ -105,5 +106,5 @@ Not all capabilities have to be implemented:
 
 As for the reader and writer implementations: It seems that PowerShell only call the `Read(long readcont)` and the `Writer(IList)` method. `Seek(..)` seems to be reserved for the internal file system provider.
 
-### Implementing `ISetChiIdItemContent` at the parent node
-It is necessary to implement this capability at the parent node. instead of the actula node the set the content at. This Because the parenet node may create the child node during this process.  
+#### Implementing `ISetChiIdItemContent` at the parent node
+It is necessary to implement this capability at the parent node because the parenet node may create a new child node during this process.  
