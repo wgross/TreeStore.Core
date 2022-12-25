@@ -18,6 +18,7 @@ public record UnqualifiedPath(bool IsRooted, string[] Items)
 public record DriveQualifedPath(string? DriveName, bool IsRooted, string[] Items) : UnqualifiedPath(IsRooted, Items);
 
 public record ProviderName(string Module, string Name);
+
 public record ProviderQualifiedPath(string? Module, string? Provider, string? DriveName, bool IsRooted, string[] Items)
     : DriveQualifedPath(DriveName, IsRooted, Items);
 
@@ -25,20 +26,35 @@ public sealed class PathTool
 {
     #region Path items
 
+    /// <summary>
+    /// PowerSHell seems to be confused by file names containing special characters like ':' of '\'
+    /// while only '/' is fobidden on unix.
+    /// Therefore i'm using the forbidden chars of windows everywhere as long as it works better
+    /// </summary>
+    private static readonly char[] InvalidFileNameChars = new char[41]
+    {
+        '"', '<', '>', '|', '\0', '\u0001', '\u0002', '\u0003', '\u0004', '\u0005',
+        '\u0006', '\a', '\b', '\t', '\n', '\v', '\f', '\r', '\u000e', '\u000f',
+        '\u0010', '\u0011', '\u0012', '\u0013', '\u0014', '\u0015', '\u0016', '\u0017', '\u0018', '\u0019',
+        '\u001a', '\u001b', '\u001c', '\u001d', '\u001e', '\u001f', ':', '*', '?', '\\',
+        '/'
+    };
+
     // Define characters that are allowed in a path
     private static readonly TextParser<char> ParsePathCharacters
-        = Character.ExceptIn(System.IO.Path.GetInvalidFileNameChars());
+        // = Character.ExceptIn(System.IO.Path.GetInvalidFileNameChars());
+        = Character.ExceptIn(InvalidFileNameChars);
 
     // path items are separated by / or \
-    private static readonly TextParser<char> ParsePathSeperator = Character.In('\\', '/');
+    private static readonly TextParser<char> ParsePathSeparator = Character.In('\\', '/');
 
     /// <summary>
     /// A path item is a collection of <see cref="ParsePathCharacters"/> followed by
-    /// a <see cref="ParsePathSeperator"/>
+    /// a <see cref="ParsePathSeparator"/>
     /// </summary>
     private static readonly TextParser<string> ParsePathItem =
        from pathItem in ParsePathCharacters.AtLeastOnce()
-       from _ in ParsePathSeperator.Optional() // the last item isn't followed by a /
+       from _ in ParsePathSeparator.Optional() // the last item isn't followed by a /
        select new string(pathItem);
 
     /// <summary>
@@ -48,8 +64,8 @@ public sealed class PathTool
          from items in ParsePathItem.Many()
          select items.ToArray();
 
-    private static readonly TextParser<(bool isRooted, string[] items)> ParseRootedPath =
-        from rootPath in ParsePathSeperator.Optional()
+    public static readonly TextParser<(bool isRooted, string[] items)> ParseRootedPath =
+        from rootPath in ParsePathSeparator.Optional()
         from items in ParsePathItems
         select (rootPath.HasValue, items);
 
@@ -60,7 +76,7 @@ public sealed class PathTool
 
     private static readonly TextParser<(string? module, string? provider)> ParseProviderName =
         from module in Character.LetterOrDigit.AtLeastOnce().Named("module name")
-        from _1 in ParsePathSeperator.Repeat(1)
+        from _1 in ParsePathSeparator.Repeat(1)
         from provider in Character.LetterOrDigit.AtLeastOnce().Named("provider name")
         from _2 in Character.EqualTo(':').Repeat(2)
         select (new string(module), new string(provider));
