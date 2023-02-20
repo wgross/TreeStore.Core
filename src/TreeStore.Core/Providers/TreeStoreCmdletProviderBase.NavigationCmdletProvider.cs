@@ -1,5 +1,4 @@
-﻿using System;
-using TreeStore.Core.Nodes;
+﻿using TreeStore.Core.Nodes;
 
 namespace TreeStore.Core.Providers
 {
@@ -24,7 +23,7 @@ namespace TreeStore.Core.Providers
 
         protected override void MoveItem(string path, string destination)
         {
-            var (parentPath, childName) = new PathTool().SplitProviderQualifiedPath(path).ParentAndChild;
+            var (parentPath, childName) = this.EnsureTreeStoreDriveInfoFromPath(path).ParentAndChild;
 
             this.InvokeContainerNodeOrDefault(
                 path: parentPath,
@@ -51,7 +50,7 @@ namespace TreeStore.Core.Providers
 
         protected override object? MoveItemDynamicParameters(string path, string destination)
             => this.InvokeContainerNodeOrDefault(
-                path: new PathTool().SplitProviderQualifiedPath(path).Items,
+                path: this.EnsureTreeStoreDriveInfoFromPath(path).Items,
                 invoke: c => c.MoveChildItemParameters(path, destination),
                 fallback: () => base.MoveItemDynamicParameters(path, destination));
 

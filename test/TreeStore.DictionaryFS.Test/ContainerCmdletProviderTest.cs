@@ -27,7 +27,6 @@ public sealed class ContainerCmdletProviderTest : ItemCmdletProviderTestBase
         // ACT
         var result = this.PowerShell.AddCommand("Get-ChildItem")
             .AddParameter("Path", @"test:\")
-            .AddParameter("Force")
             .Invoke()
             .ToArray();
 
@@ -40,6 +39,36 @@ public sealed class ContainerCmdletProviderTest : ItemCmdletProviderTestBase
         Assert.Equal("child1", psobject.Property<string>("PSChildName"));
         Assert.True(psobject.Property<bool>("PSIsContainer"));
         Assert.Equal("test", psobject.Property<PSDriveInfo>("PSDrive").Name);
+        Assert.Equal("DictionaryFS", psobject.Property<ProviderInfo>("PSProvider").Name);
+        Assert.Equal(@"TreeStore.DictionaryFS\DictionaryFS::test:\child1", psobject.Property<string>("PSPath"));
+        Assert.Equal(@"TreeStore.DictionaryFS\DictionaryFS::test:", psobject.Property<string>("PSParentPath"));
+    }
+
+    [Fact]
+    public void Powershell_reads_roots_childnodes_with_provider_path()
+    {
+        // ARRANGE
+        var root = this.ArrangeFileSystem(new UnderlyingDictionary
+        {
+            ["child1"] = new UnderlyingDictionary(),
+            ["property"] = "text"
+        });
+
+        // ACT
+        var result = this.PowerShell.AddCommand("Get-ChildItem")
+            .AddParameter("Path", @"TreeStore.DictionaryFS\DictionaryFS::test:\")
+            .Invoke()
+            .ToArray();
+
+        // ASSERT
+        Assert.False(this.PowerShell.HadErrors);
+        Assert.Single(result);
+
+        var psobject = result[0];
+
+        Assert.Equal("child1", psobject.Property<string>("PSChildName"));
+        Assert.True(psobject.Property<bool>("PSIsContainer"));
+        Assert.True(psobject.PropertyIsNull("PSDrive"));
         Assert.Equal("DictionaryFS", psobject.Property<ProviderInfo>("PSProvider").Name);
         Assert.Equal(@"TreeStore.DictionaryFS\DictionaryFS::test:\child1", psobject.Property<string>("PSPath"));
         Assert.Equal(@"TreeStore.DictionaryFS\DictionaryFS::test:", psobject.Property<string>("PSParentPath"));
@@ -196,6 +225,26 @@ public sealed class ContainerCmdletProviderTest : ItemCmdletProviderTestBase
     }
 
     [Fact]
+    public void Powershell_removes_root_child_node_with_provider_path()
+    {
+        // ARRANGE
+        var root = this.ArrangeFileSystem(new UnderlyingDictionary
+        {
+            ["child1"] = new UnderlyingDictionary(),
+        });
+
+        // ACT
+        var _ = this.PowerShell.AddCommand("Remove-Item")
+            .AddParameter("Path", @"TreeStore.DictionaryFS\DictionaryFS::test:\child1")
+            .Invoke()
+            .ToArray();
+
+        // ASSERT
+        Assert.False(this.PowerShell.HadErrors);
+        Assert.Empty(root);
+    }
+
+    [Fact]
     public void Powershell_removes_root_child_node_fails_if_node_has_children()
     {
         // ARRANGE
@@ -277,6 +326,36 @@ public sealed class ContainerCmdletProviderTest : ItemCmdletProviderTestBase
     }
 
     [Fact]
+    public void Powershell_creates_child_item_with_provider_path()
+    {
+        // ARRANGE
+        var root = this.ArrangeFileSystem(new UnderlyingDictionary());
+        var child = new UnderlyingDictionary();
+
+        // ACT
+        var result = this.PowerShell.AddCommand("New-Item")
+            .AddParameter("Path", @"TreeStore.DictionaryFS\DictionaryFS::test:\child1")
+            .AddParameter("Value", child)
+            .Invoke()
+            .ToArray();
+
+        // ASSERT
+        Assert.False(this.PowerShell.HadErrors);
+
+        var psobject = result.Single();
+
+        Assert.Equal("child1", psobject.Property<string>("PSChildName"));
+        Assert.True(psobject.Property<bool>("PSIsContainer"));
+        Assert.True(psobject.PropertyIsNull("PSDrive"));
+        Assert.Equal("DictionaryFS", psobject.Property<ProviderInfo>("PSProvider").Name);
+        Assert.Equal(@"TreeStore.DictionaryFS\DictionaryFS::test:\child1", psobject.Property<string>("PSPath"));
+        Assert.Equal(@"TreeStore.DictionaryFS\DictionaryFS::test:", psobject.Property<string>("PSParentPath"));
+
+        Assert.True(root.TryGetValue("child1", out var added));
+        Assert.Same(child, added);
+    }
+
+    [Fact]
     public void Powershell_creating_child_fails_with_null_value()
     {
         // ARRANGE
@@ -339,6 +418,29 @@ public sealed class ContainerCmdletProviderTest : ItemCmdletProviderTestBase
         Assert.Same(child, renamed);
     }
 
+    [Fact]
+    public void Powershell_renames_childitem_with_provider_path()
+    {
+        // ARRANGE
+        var child = new UnderlyingDictionary();
+        var root = this.ArrangeFileSystem(new UnderlyingDictionary
+        {
+            ["child1"] = child
+        });
+
+        // ACT
+        var _ = this.PowerShell.AddCommand("Rename-Item")
+            .AddParameter("Path", @"TreeStore.DictionaryFS\DictionaryFS::test:\child1")
+            .AddParameter("NewName", "newName")
+            .Invoke()
+            .ToArray();
+
+        // ASSERT
+        Assert.False(this.PowerShell.HadErrors);
+        Assert.True(root.TryGetValue("newName", out var renamed));
+        Assert.Same(child, renamed);
+    }
+
     #endregion Rename-Item -Path -NewName
 
     #region Copy-Item -Path -Destination -Recurse
@@ -362,6 +464,36 @@ public sealed class ContainerCmdletProviderTest : ItemCmdletProviderTestBase
         var _ = this.PowerShell.AddCommand("Copy-Item")
             .AddParameter("Path", @"test:\child1")
             .AddParameter("Destination", @"test:\child2")
+            .Invoke()
+            .ToArray();
+
+        // ASSERT
+        Assert.False(this.PowerShell.HadErrors);
+        Assert.True(root.TryGetValue<UnderlyingDictionary>("child2", out var child2));
+        Assert.True(child2!.TryGetValue<UnderlyingDictionary>("child1", out var copy_child1));
+        Assert.NotNull(copy_child1!);
+        Assert.NotSame(child1, copy_child1);
+    }
+
+    [Fact]
+    public void Powershell_copies_child_with_provider_path()
+    {
+        // ARRANGE
+        var child1 = new UnderlyingDictionary()
+        {
+            ["child1"] = new UnderlyingDictionary()
+        };
+
+        var root = this.ArrangeFileSystem(new UnderlyingDictionary
+        {
+            ["child1"] = child1,
+            ["child2"] = new UnderlyingDictionary()
+        });
+
+        // ACT
+        var _ = this.PowerShell.AddCommand("Copy-Item")
+            .AddParameter("Path", @"TreeStore.DictionaryFS\DictionaryFS::test:\child1")
+            .AddParameter("Destination", @"TreeStore.DictionaryFS\DictionaryFS::test:\child2")
             .Invoke()
             .ToArray();
 

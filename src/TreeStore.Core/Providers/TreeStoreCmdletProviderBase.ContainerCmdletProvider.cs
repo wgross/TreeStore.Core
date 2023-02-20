@@ -17,7 +17,7 @@ public partial class TreeStoreCmdletProviderBase
     /// </summary>
     protected override void CopyItem(string path, string destination, bool recurse)
     {
-        var (parentPath, childName) = new PathTool().SplitProviderQualifiedPath(path).ParentAndChild;
+        var (parentPath, childName) = this.EnsureTreeStoreDriveInfoFromPath(path).ParentAndChild;
 
         this.InvokeContainerNodeOrDefault(
             path: parentPath,
@@ -28,9 +28,9 @@ public partial class TreeStoreCmdletProviderBase
                     throw new InvalidOperationException($"Item '{path}' doesn't exist");
 
                 // check if the destination node is at the same provider
-                var destinationSplitted = new PathTool().SplitProviderQualifiedPath(destination);
+                var destinationSplitted = this.EnsureTreeStoreDriveInfoFromPath(destination);
 
-                if (string.IsNullOrEmpty(destinationSplitted.DriveName) || this.PSDriveInfo.Name.Equals(destinationSplitted.DriveName, StringComparison.OrdinalIgnoreCase))
+                if (string.IsNullOrEmpty(destinationSplitted.DriveName) || this.TreeStoreDriveInfo.Name.Equals(destinationSplitted.DriveName, StringComparison.OrdinalIgnoreCase))
                 {
                     // find the deepest ancestor which serves as a destination to copy to
                     var destinationAncestor = this.GetDeepestNodeByPath(destination, out var missingPath);
@@ -48,7 +48,7 @@ public partial class TreeStoreCmdletProviderBase
                 else
                 {
                     // the destination provider is different from this provider.
-                    // this has to be implemented specifically: get the provoider and the drive info
+                    // this has to be implemented specifically: get the provider and the drive info
                     var providerInfo = this.SessionState.Provider
                         .GetAll()
                         .SelectMany(p => p.Drives.Select(d => (provider: p, drive: d)))
@@ -65,7 +65,7 @@ public partial class TreeStoreCmdletProviderBase
     }
 
     protected override object? CopyItemDynamicParameters(string path, string destination, bool recurse) => this.InvokeContainerNodeOrDefault(
-        path: new PathTool().SplitProviderQualifiedPath(path).Items,
+        path: this.EnsureTreeStoreDriveInfoFromPath(path).Items,
         invoke: c => c.CopyChildItemParameters(path, destination, recurse),
         fallback: () => base.CopyItemDynamicParameters(path, destination, recurse));
 
@@ -82,7 +82,7 @@ public partial class TreeStoreCmdletProviderBase
         void writeItemObject(PSObject item, string path, string name, bool isContainer) => this.WriteItemObject(item, path, isContainer);
 
         this.InvokeContainerNodeOrDefault(
-          path: new PathTool().SplitProviderQualifiedPath(path).Items,
+          path: this.EnsureTreeStoreDriveInfoFromPath(path).Items,
           invoke: c => this.GetChildItems(parentContainer: c, path, recurse, depth, writeItemObject),
           fallback: () => base.GetChildItems(path, recurse, depth));
     }
@@ -108,17 +108,20 @@ public partial class TreeStoreCmdletProviderBase
         }
     }
 
-    protected override object? GetChildItemsDynamicParameters(string path, bool recurse) => this.InvokeContainerNodeOrDefault(
-        path: new PathTool().SplitProviderQualifiedPath(path).Items,
-        invoke: c => c.GetChildItemParameters(path, recurse),
-        fallback: () => base.GetChildItemsDynamicParameters(path, recurse));
+    protected override object? GetChildItemsDynamicParameters(string path, bool recurse)
+    {
+        return this.InvokeContainerNodeOrDefault(
+            path: this.EnsureTreeStoreDriveInfoFromPath(path).Items,
+            invoke: c => c.GetChildItemParameters(path, recurse),
+            fallback: () => base.GetChildItemsDynamicParameters(path, recurse));
+    }
 
     protected override void GetChildNames(string path, ReturnContainers returnContainers)
     {
         void writeItemObject(PSObject _, string path, string name, bool isContainer) => this.WriteItemObject(name, path, isContainer);
 
         this.InvokeContainerNodeOrDefault(
-            path: new PathTool().SplitProviderQualifiedPath(path).Items,
+            path: this.EnsureTreeStoreDriveInfoFromPath(path).Items,
             invoke: c => this.GetChildItems(parentContainer: c, path, recurse: false, depth: 0, writeItemObject),
             fallback: () => base.GetChildNames(path, returnContainers));
     }
@@ -128,7 +131,7 @@ public partial class TreeStoreCmdletProviderBase
     protected override bool HasChildItems(string path)
     {
         return this.InvokeProviderNodeOrDefault<bool>(
-            path: new PathTool().SplitProviderQualifiedPath(path).Items,
+            path: this.EnsureTreeStoreDriveInfoFromPath(path).Items,
             invoke: n => n switch
             {
                 ContainerNode c => c.HasChildItems(provider: this),
@@ -141,7 +144,7 @@ public partial class TreeStoreCmdletProviderBase
 
     protected override void RemoveItem(string path, bool recurse)
     {
-        var (parentPath, childName) = new PathTool().SplitProviderQualifiedPath(path).ParentAndChild;
+        var (parentPath, childName) = this.EnsureTreeStoreDriveInfoFromPath(path).ParentAndChild;
 
         this.InvokeContainerNodeOrDefault(
             path: parentPath,
@@ -151,7 +154,7 @@ public partial class TreeStoreCmdletProviderBase
 
     protected override object? RemoveItemDynamicParameters(string path, bool recurse)
     {
-        var (parentPath, childName) = new PathTool().SplitProviderQualifiedPath(path).ParentAndChild;
+        var (parentPath, childName) = this.EnsureTreeStoreDriveInfoFromPath(path).ParentAndChild;
 
         return this.InvokeContainerNodeOrDefault(parentPath,
            invoke: c => c.RemoveChildItemParameters(childName!, recurse),
@@ -160,7 +163,7 @@ public partial class TreeStoreCmdletProviderBase
 
     protected override void NewItem(string path, string itemTypeName, object newItemValue)
     {
-        var (parentPath, childName) = new PathTool().SplitProviderQualifiedPath(path).ParentAndChild;
+        var (parentPath, childName) = this.EnsureTreeStoreDriveInfoFromPath(path).ParentAndChild;
 
         if (this.TryGetNodeByPath(parentPath, out var parentNode))
         {
@@ -182,7 +185,7 @@ public partial class TreeStoreCmdletProviderBase
 
     protected override object? NewItemDynamicParameters(string path, string itemTypeName, object newItemValue)
     {
-        var (parentPath, childName) = new PathTool().SplitProviderQualifiedPath(path).ParentAndChild;
+        var (parentPath, childName) = this.EnsureTreeStoreDriveInfoFromPath(path).ParentAndChild;
 
         return this.InvokeContainerNodeOrDefault(parentPath,
             invoke: c => c.NewChildItemParameters(childName!, itemTypeName, newItemValue),
@@ -191,7 +194,7 @@ public partial class TreeStoreCmdletProviderBase
 
     protected override void RenameItem(string path, string newName)
     {
-        var (parentPath, childName) = new PathTool().SplitProviderQualifiedPath(path).ParentAndChild;
+        var (parentPath, childName) = this.EnsureTreeStoreDriveInfoFromPath(path).ParentAndChild;
         if (this.TryGetNodeByPath(parentPath, out var providerNode))
         {
             if (providerNode is ContainerNode parentContainer)
@@ -203,7 +206,7 @@ public partial class TreeStoreCmdletProviderBase
 
     protected override object? RenameItemDynamicParameters(string path, string newName)
     {
-        var (parentPath, childName) = new PathTool().SplitProviderQualifiedPath(path).ParentAndChild;
+        var (parentPath, childName) = this.EnsureTreeStoreDriveInfoFromPath(path).ParentAndChild;
 
         return this.InvokeContainerNodeOrDefault(parentPath,
             invoke: c => c.RenameChildItemParameters(childName!, newName),

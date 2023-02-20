@@ -11,7 +11,7 @@ public abstract partial class TreeStoreCmdletProviderBase : NavigationCmdletProv
     private TreeStoreDriveInfoBase TreeStoreDriveInfo
         => this.treeStoreDriveInfo ?? (TreeStoreDriveInfoBase)this.PSDriveInfo;
 
-    private void EnsureTreeStoreDriveInfo(string? drive)
+    private void EnsureTreeStoreDriveInfoFromDriveName(string? drive)
     {
         if (drive is not null && this.PSDriveInfo is null)
         {
@@ -19,6 +19,25 @@ public abstract partial class TreeStoreCmdletProviderBase : NavigationCmdletProv
         };
 
         ArgumentNullException.ThrowIfNull(this.TreeStoreDriveInfo, nameof(PSDriveInfo));
+    }
+
+    private ProviderQualifiedPath EnsureTreeStoreDriveInfoFromPath(string path)
+    {
+        var splittedPath = new PathTool().SplitProviderQualifiedPath(path);
+
+        // PSDriveInfio was filled from PowerShell already.
+        // this is the case for non-provider path  specifications
+
+        if (this.PSDriveInfo is not null)
+            return splittedPath;
+
+        // a provider oath was given. It is resolved here
+        if (string.IsNullOrEmpty(splittedPath.DriveName))
+            throw new PSInvalidOperationException("path('{path}') doesn't contain a drive specification: path can't be resolved");
+
+        this.EnsureTreeStoreDriveInfoFromDriveName(splittedPath.DriveName);
+
+        return splittedPath;
     }
 
     #endregion Maintain a reference to the drive state
@@ -40,9 +59,9 @@ public abstract partial class TreeStoreCmdletProviderBase : NavigationCmdletProv
 
     protected bool TryGetNodeByPath(string path, [NotNullWhen(returnValue: true)] out ProviderNode? pathNode)
     {
-        var splitted = new PathTool().SplitProviderQualifiedPath(path);
+        var splitted = this.EnsureTreeStoreDriveInfoFromPath(path);
         if (splitted.DriveName is not null)
-            this.EnsureTreeStoreDriveInfo(splitted.DriveName);
+            this.EnsureTreeStoreDriveInfoFromDriveName(splitted.DriveName);
 
         return this.TryGetNodeByPath(splitted.Items, out pathNode);
     }

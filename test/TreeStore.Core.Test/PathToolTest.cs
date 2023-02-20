@@ -120,6 +120,21 @@ namespace TreeStore.Core.Test
         }
 
         [Theory]
+        [InlineData(@"mod.ule\provider::drive:\path\to\item")]
+        public void PathTool_splits_dotted_provider_qualifed_path_with_drive(string path)
+        {
+            // ACT
+            var result = new PathTool().SplitProviderQualifiedPath(path);
+
+            // ASSERT
+            Assert.Equal("mod.ule", result.Module);
+            Assert.Equal("provider", result.Provider);
+            Assert.Equal("drive", result.DriveName);
+            Assert.Equal(new[] { "path", "to", "item" }, result.Items);
+            Assert.True(result.IsRooted);
+        }
+
+        [Theory]
         [InlineData(@"module\provider::\path\to\item")]
         [InlineData(@"module\provider::\path\to\item\")]
         public void PathTool_splits_provider_qualifed_path_with_provider_without_drive(string path)

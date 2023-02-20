@@ -40,6 +40,10 @@ public sealed class PathTool
         '/'
     };
 
+    // module name may contain a dot.
+    private static readonly TextParser<char> ParseModuleNameCharacters
+        = Character.Matching(c => char.IsLetterOrDigit(c) || c == '.', nameof(ParseModuleNameCharacters));
+
     // Define characters that are allowed in a path
     private static readonly TextParser<char> ParsePathCharacters
         // = Character.ExceptIn(System.IO.Path.GetInvalidFileNameChars());
@@ -75,7 +79,7 @@ public sealed class PathTool
            select new string(drive);
 
     private static readonly TextParser<(string? module, string? provider)> ParseProviderName =
-        from module in Character.LetterOrDigit.AtLeastOnce().Named("module name")
+        from module in ParseModuleNameCharacters.AtLeastOnce().Named("module name")
         from _1 in ParsePathSeparator.Repeat(1)
         from provider in Character.LetterOrDigit.AtLeastOnce().Named("provider name")
         from _2 in Character.EqualTo(':').Repeat(2)

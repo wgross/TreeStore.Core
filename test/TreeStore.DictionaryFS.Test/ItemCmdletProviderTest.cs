@@ -209,6 +209,30 @@ public sealed class ItemCmdletProviderTest : ItemCmdletProviderTestBase
         Assert.True(result.PropertyIsNull("child"));
     }
 
+    [Fact]
+    public void Powershell_clears_item_value_with_providerpath()
+    {
+        // ARRANGE
+        var node = this.ArrangeFileSystem(new UnderlyingDictionary
+        {
+            ["child"] = new object()
+        });
+
+        // ACT
+        var result = this.PowerShell.AddCommand("Clear-Item")
+            .AddParameter("Path", @"TreeStore.DictionaryFS\DictionaryFS::test:\")
+            .AddStatement()
+            .AddCommand("Get-Item")
+            .AddParameter("Path", @"test:\")
+            .Invoke()
+            .Single();
+
+        // ASSERT
+        // underlying dictionary is empty
+        Assert.False(this.PowerShell.HadErrors);
+        Assert.True(result.PropertyIsNull("child"));
+    }
+
     #endregion Clear-Item -Path
 
     #region Test-Path -Path -PathType
@@ -222,6 +246,23 @@ public sealed class ItemCmdletProviderTest : ItemCmdletProviderTestBase
         // ACT
         var result = this.PowerShell.AddCommand("Test-Path")
             .AddParameter("Path", @"test:\")
+            .Invoke()
+            .ToArray();
+
+        // ASSERT
+        Assert.False(this.PowerShell.HadErrors);
+        Assert.True((bool)result.Single().BaseObject);
+    }
+
+    [Fact]
+    public void Powershell_tests_root_path_with_provider_path()
+    {
+        // ARRANGE
+        this.ArrangeFileSystem(new UnderlyingDictionary());
+
+        // ACT
+        var result = this.PowerShell.AddCommand("Test-Path")
+            .AddParameter("Path", @"TreeStore.DictionaryFS\DictionaryFS::test:\")
             .Invoke()
             .ToArray();
 
@@ -305,6 +346,27 @@ public sealed class ItemCmdletProviderTest : ItemCmdletProviderTestBase
         // ACT
         var _ = this.PowerShell.AddCommand("Invoke-Item")
             .AddParameter("Path", @"test:\item")
+            .Invoke()
+            .ToArray();
+
+        // ASSERT
+        Assert.True(this.PowerShell.HadErrors);
+    }
+
+    [Fact]
+    public void Powershell_invoke_default_action_fails_with_provider_path()
+    {
+        // ARRANGE
+        var root = new UnderlyingDictionary
+        {
+            ["item"] = new object()
+        };
+
+        this.ArrangeFileSystem(root);
+
+        // ACT
+        var _ = this.PowerShell.AddCommand("Invoke-Item")
+            .AddParameter("Path", @"TreeStore.DictionaryFS\DictionaryFS::test:\item")
             .Invoke()
             .ToArray();
 

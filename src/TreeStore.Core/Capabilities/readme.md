@@ -4,7 +4,12 @@ Capabilities are interface contracts which are invoked by the file system provid
 ## Path Traversal
 Path traversal means that a PowerShell provider path is mapped to a TreeStore provider node (leaf or container). It is necessary that the names of nodes are unique under a parent node. Traversal of a path always uses the names and no other properties of the nodes payload to identify every node.
 
-Path trabvesal is the most basio of teh capabilities and is required if mor than a  root node is provided by the file system.
+Path traversal is the most basic capability and is required if more than a  root node is provided by the file system.
+
+### Provider Qualified Path
+The concept of provider qualified delegates interpretion and parsing of teh path completely to teh provider. It is ment to be used for path expression spowershell might noct understand for example the  syntax for paths longer the 255 chars (`\\?\C:\Path\path\file.log`).  In PowerShell these paths have syntax `Module.Name\ProviderName::drive:\path\to\file`. If these paths a used PowerShell doesn't even resolve the drive name to a matching `PsDriveInfo` instance before invoking the provider. 
+
+TreeStore.Core interpretes these paths by default, resolving the drive name if possible and interpretes the path as if given without the provider specific prefix.
 
 ## ICmdletProvider Parameter
 To each method implementing a node operation the current instance of [ `CmdletProvider`](https://docs.microsoft.com/en-us/dotnet/api/system.management.automation.provider.cmdletprovider) is given. This allows the nodes code to access many of the file system current state and functions like:
