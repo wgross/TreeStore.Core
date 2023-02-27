@@ -11,12 +11,20 @@ public abstract partial class TreeStoreCmdletProviderBase : NavigationCmdletProv
     private TreeStoreDriveInfoBase TreeStoreDriveInfo
         => this.treeStoreDriveInfo ?? (TreeStoreDriveInfoBase)this.PSDriveInfo;
 
-    private void EnsureTreeStoreDriveInfoFromDriveName(string? drive)
+    private void EnsureTreeStoreDriveInfoFromDriveName(string? driveName)
     {
-        if (drive is not null && this.PSDriveInfo is null)
+        if (driveName is not null)
         {
-            this.treeStoreDriveInfo = SessionState.Drive.Get(drive) as TreeStoreDriveInfoBase;
-        };
+            if (this.PSDriveInfo is null)
+                this.treeStoreDriveInfo = SessionState.Drive.Get(driveName) as TreeStoreDriveInfoBase;
+
+            if (this.PSDriveInfo is not null and not TreeStoreDriveInfoBase)
+                this.treeStoreDriveInfo = SessionState.Drive.Get(driveName) as TreeStoreDriveInfoBase;
+
+            if (this.PSDriveInfo is TreeStoreDriveInfoBase treeStoreDriveInfo)
+                if (!driveName.Equals(this.PSDriveInfo.Name, StringComparison.OrdinalIgnoreCase))
+                    this.treeStoreDriveInfo = SessionState.Drive.Get(driveName) as TreeStoreDriveInfoBase;
+        }
 
         ArgumentNullException.ThrowIfNull(this.TreeStoreDriveInfo, nameof(PSDriveInfo));
     }
