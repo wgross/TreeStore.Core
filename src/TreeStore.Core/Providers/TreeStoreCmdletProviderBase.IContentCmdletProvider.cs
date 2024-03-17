@@ -1,71 +1,100 @@
 ﻿using TreeStore.Core.Nodes;
 
-namespace TreeStore.Core.Providers
+namespace TreeStore.Core.Providers;
+
+public partial class TreeStoreCmdletProviderBase : IContentCmdletProvider
 {
-    public partial class TreeStoreCmdletProviderBase : IContentCmdletProvider
+    /// <inheritdoc/>
+    public void ClearContent(string path)
     {
-        public void ClearContent(string path)
+        var splitted = PathTool.Default.SplitProviderQualifiedPath(path);
+
+        var driveInfo = this.GetTreeStoreDriveInfo(splitted.DriveName);
+
+        if (this.TryGetNodeByPath(driveInfo, splitted.Items, out var node))
         {
-            if (this.TryGetNodeByPath(path, out var node))
+            node.ClearItemContent();
+        }
+    }
+
+    /// <inheritdoc/>
+    public object? ClearContentDynamicParameters(string path)
+    {
+        var splitted = PathTool.Default.SplitProviderQualifiedPath(path);
+
+        var driveInfo = this.GetTreeStoreDriveInfo(splitted.DriveName);
+
+        if (this.TryGetNodeByPath(driveInfo, splitted.Items, out var node))
+        {
+            return node.ClearItemContentParameters();
+        }
+        else return null;
+    }
+
+    /// <inheritdoc/>
+    public IContentReader? GetContentReader(string path)
+    {
+        var splitted = PathTool.Default.SplitProviderQualifiedPath(path);
+
+        var driveInfo = this.GetTreeStoreDriveInfo(splitted.DriveName);
+
+        if (this.TryGetNodeByPath(driveInfo, splitted.Items, out var node))
+        {
+            return node.GetItemContentReader();
+        }
+        else return null;
+    }
+
+    /// <inheritdoc/>
+    public object? GetContentReaderDynamicParameters(string path)
+    {
+        var splitted = PathTool.Default.SplitProviderQualifiedPath(path);
+
+        var driveInfo = this.GetTreeStoreDriveInfo(splitted.DriveName);
+
+        if (this.TryGetNodeByPath(driveInfo, splitted.Items, out var node))
+        {
+            return node.GetItemContentParameters();
+        }
+        else return null;
+    }
+
+    /// <inheritdoc/>
+    public IContentWriter? GetContentWriter(string path)
+    {
+        var splitted = PathTool.Default.SplitProviderQualifiedPath(path);
+
+        var (parentPath, childName) = splitted.ParentAndChild;
+
+        var driveInfo = this.GetTreeStoreDriveInfo(splitted.DriveName);
+
+        if (this.TryGetNodeByPath(driveInfo, parentPath, out var parentNode))
+        {
+            if (parentNode is ContainerNode parentContainer)
             {
-                node.ClearItemContent();
+                return parentContainer.GetChildItemContentWriter(childName!);
             }
         }
 
-        public object? ClearContentDynamicParameters(string path)
+        return null;
+    }
+
+    /// <inheritdoc/>
+    public object? GetContentWriterDynamicParameters(string path)
+    {
+        var splitted = PathTool.Default.SplitProviderQualifiedPath(path);
+
+        var (parentPath, childName) = splitted.ParentAndChild;
+
+        var driveInfo = this.GetTreeStoreDriveInfo(splitted.DriveName);
+
+        if (this.TryGetNodeByPath(driveInfo, parentPath, out var parentNode))
         {
-            if (this.TryGetNodeByPath(path, out var node))
+            if (parentNode is ContainerNode parentContainer)
             {
-                return node.ClearItemContentParameters();
+                return parentContainer.SetChildItemContentParameters(childName!);
             }
-            else return null;
         }
-
-        public IContentReader? GetContentReader(string path)
-        {
-            if (this.TryGetNodeByPath(path, out var node))
-            {
-                return node.GetItemContentReader();
-            }
-            else return null;
-        }
-
-        public object? GetContentReaderDynamicParameters(string path)
-        {
-            if (this.TryGetNodeByPath(path, out var node))
-            {
-                return node.GetItemContentParameters();
-            }
-            else return null;
-        }
-
-        public IContentWriter? GetContentWriter(string path)
-        {
-            var (parentPath, childName) = new PathTool().SplitProviderQualifiedPath(path).ParentAndChild;
-
-            if (this.TryGetNodeByPath(parentPath, out var parentNode))
-            {
-                if (parentNode is ContainerNode parentContainer)
-                {
-                    return parentContainer.GetChildItemContentWriter(childName!);
-                }
-            }
-
-            return null;
-        }
-
-        public object? GetContentWriterDynamicParameters(string path)
-        {
-            var (parentPath, childName) = new PathTool().SplitProviderQualifiedPath(path).ParentAndChild;
-
-            if (this.TryGetNodeByPath(parentPath, out var parentNode))
-            {
-                if (parentNode is ContainerNode parentContainer)
-                {
-                    return parentContainer.SetChildItemContentParameters(childName!);
-                }
-            }
-            return null;
-        }
+        return null;
     }
 }

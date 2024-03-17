@@ -18,5 +18,5 @@ public interface ICopyChildItemToProvider
     /// <summary>
     /// Creates a new child node at <paramref name="destination"/> from the given <paramref name="nodeToCopy"/>
     /// </summary>
-    public CopyChildItemResult CopyChildItem(ICmdletProvider provider, ProviderNode nodeToCopy, ProviderInfo destinationProvider, PSDriveInfo destinationDrive, string destination, bool recurse);
+    public CopyChildItemResult CopyChildItem(ICmdletProvider provider, ProviderNode nodeToCopy, PSDriveInfo destinationDrive, string destination, bool recurse);
 }

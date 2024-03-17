@@ -1,14 +1,8 @@
 ﻿namespace TreeStore.DictionaryFS;
 
-public sealed class DictionaryFsDriveInfo : TreeStore.Core.Providers.TreeStoreDriveInfoBase
+public sealed class DictionaryFsDriveInfo(IServiceProvider rootNodeProvider, PSDriveInfo driveInfo) : TreeStoreDriveInfoBase(driveInfo)
 {
-    private readonly IServiceProvider rootNodeProvider;
-
-    public DictionaryFsDriveInfo(IServiceProvider rootNodeProvider, PSDriveInfo driveInfo)
-        : base(driveInfo)
-    {
-        this.rootNodeProvider = rootNodeProvider;
-    }
+    private readonly IServiceProvider rootNodeProvider = rootNodeProvider;
 
     protected override IServiceProvider GetRootNodeProvider() => this.rootNodeProvider;
 }

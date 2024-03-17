@@ -9,23 +9,34 @@ public record ContainerNode : ProviderNode
         : base(provider, name, underlying)
     { }
 
+    /// <summary>
+    /// Fetches the child node by name <paramref name="childName"/> case insensitive. Returns false if a child
+    /// can't found.
+    /// </summary>
     public bool TryGetChildNode(string childName, [NotNullWhen(true)] out ProviderNode? childNode)
     {
-        childNode = this.GetChildItems(this.CmdletProvider).FirstOrDefault(n => n.Name.Equals(childName, StringComparison.OrdinalIgnoreCase));
+        childNode = this.GetChildItems(this.CmdletProvider)
+            .FirstOrDefault(n => n.Name.Equals(childName, StringComparison.OrdinalIgnoreCase));
         return childNode is not null;
     }
 
     #region IGetChildItem
 
-    ///<inheritdoc/>
+    /// <summary>
+    /// Fetches all child nodes from the underlying <see cref="IGetChildItem"/>.
+    /// </summary>
     public IEnumerable<ProviderNode> GetChildItems(ICmdletProvider provider)
         => this.InvokeUnderlyingOrDefault<IGetChildItem>(getChildItems => getChildItems.GetChildItems(this.CmdletProvider));
 
-    ///<inheritdoc/>
+    /// <summary>
+    /// Fetches dynamic child item parameters from the underlying <see cref="IGetChildItem"/>.
+    /// </summary>
     public object? GetChildItemParameters(string path, bool recurse)
         => this.InvokeUnderlyingOrDefault<IGetChildItem>(getChildItems => getChildItems.GetChildItemParameters(path, recurse));
 
-    ///<inheritdoc/>
+    /// <summary>
+    /// Checks at the underlying <see cref="IGetChildItem"/> i child nodes are available.
+    /// </summary>
     public bool HasChildItems(ICmdletProvider provider)
         => this.InvokeUnderlyingOrDefault<IGetChildItem>(getChildItems => getChildItems.HasChildItems(this.CmdletProvider));
 
@@ -33,11 +44,15 @@ public record ContainerNode : ProviderNode
 
     #region IRemoveChildItem
 
-    ///<inheritdoc/>
+    /// <summary>
+    /// Removes a child node by name <paramref name="childName"/> from te underlying implementation of <see cref="IRemoveChildItem"/>.
+    /// </summary>
     public void RemoveChildItem(string childName, bool recurse)
         => this.InvokeUnderlyingOrThrow<IRemoveChildItem>(removeChildItem => removeChildItem.RemoveChildItem(this.CmdletProvider, childName, recurse));
 
-    ///<inheritdoc/>
+    /// <summary>
+    /// Fetches dynamic remove child item parameters from the underlying <see cref="IRemoveChildItem"/>.
+    /// </summary>
     public object? RemoveChildItemParameters(string childName, bool recurse)
         => this.InvokeUnderlyingOrDefault<IRemoveChildItem>(newChildItem => newChildItem.RemoveChildItemParameters(childName, recurse));
 
@@ -45,7 +60,10 @@ public record ContainerNode : ProviderNode
 
     #region INewChildItem
 
-    ///<inheritdoc/>
+    /// <summary>
+    /// Creates a new child item with name <paramref name="childName"/> and type <paramref name="itemTypeName"/> using the
+    /// underlying implementation of <see cref="INewChildItem"/>.
+    /// </summary>
     public ProviderNode? NewChildItem(string childName, string? itemTypeName, object? value)
         => this.InvokeUnderlyingOrThrow<INewChildItem>(newChildItem =>
             {
@@ -64,7 +82,9 @@ public record ContainerNode : ProviderNode
                 }
             });
 
-    ///<inheritdoc/>
+    /// <summary>
+    /// Fetches the dynamic creation parameter from the underlying implementation of <see cref="INewChildItem"/>.
+    /// </summary>
     public object? NewChildItemParameters(string childName, string itemTypeName, object value)
         => this.InvokeUnderlyingOrDefault<INewChildItem>(newChildItem => newChildItem.NewChildItemParameters(childName, itemTypeName, value));
 
@@ -72,11 +92,16 @@ public record ContainerNode : ProviderNode
 
     #region IRenameChildItem
 
-    ///<inheritdoc/>
+    /// <summary>
+    /// Renames the child node <paramref name="childName"/> with the nwe name <paramref name="newName"/> at the underlying
+    /// implementation of <see cref="IRenameChildItem"/>
+    /// </summary>
     public void RenameChildItem(string childName, string newName)
         => this.InvokeUnderlyingOrThrow<IRenameChildItem>(renameChildItem => renameChildItem.RenameChildItem(this.CmdletProvider, childName, newName));
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Fetches dynamic rename child item parameters from the underlying <see cref="IRenameChildItem"/>.
+    /// </summary>
     public object? RenameChildItemParameters(string childName, string newName)
         => this.InvokeUnderlyingOrDefault<IRenameChildItem>(renameChildItem => renameChildItem.RenameChildItemParameters(childName, newName));
 
@@ -85,13 +110,8 @@ public record ContainerNode : ProviderNode
     #region ICopyChildItem
 
     /// <summary>
-    /// The copy request receives the destination node and the reminder of the destination path which could not be
-    /// resolved from the file system this.ICmdletProvider. It is up to the node implementation to decide if the remaining path items should be created
-    /// on the fly
+    /// Copies the child node <paramref name="nodeToCopy"/> to the destination path <paramref name="destination"/>.
     /// </summary>
-    /// <param name="nodeToCopy">node to copy. May be container of leaf</param>
-    /// <param name="destination">path item under this which couldn't be resolved because they don't exist yet</param>
-    /// <param name="recurse">Copy must include all child item of the <paramref name="nodeToCopy"/></param>
     public void CopyChildItem(ProviderNode nodeToCopy, string[] destination, bool recurse)
     {
         if (recurse)
@@ -140,6 +160,9 @@ public record ContainerNode : ProviderNode
         }
     }
 
+    /// <summary>
+    /// Fetches dynamic copy parameters from the underlying implementation of <see cref="ICopyChildItem"/>.
+    /// </summary>
     public object? CopyChildItemParameters(string childName, string destination, bool recurse)
         => this.InvokeUnderlyingOrDefault<ICopyChildItem>(copyChildItem => copyChildItem.CopyChildItemParameters(childName, destination, recurse));
 
@@ -148,19 +171,25 @@ public record ContainerNode : ProviderNode
     #region ICopyChildItemToProvider
 
     /// <summary>
-    /// Delegates the wholöe copy operation to the provider nodes underlying implementation. The is nothings the provider base can do here.
+    /// Delegates the whole copy operation to the provider nodes underlying implementation. The is nothings the provider base can do here.
     /// </summary>
-    public void CopyChildItemToProvider(ProviderNode nodeToCopy, ProviderInfo provider, PSDriveInfo drive, string destination, bool recurse)
-        => this.InvokeUnderlyingOrThrow<ICopyChildItemToProvider>(copyChildItem => copyChildItem.CopyChildItem(this.CmdletProvider, nodeToCopy, provider, drive, destination, recurse));
+    public void CopyChildItemToProvider(ProviderNode nodeToCopy, PSDriveInfo drive, string destination, bool recurse)
+        => this.InvokeUnderlyingOrThrow<ICopyChildItemToProvider>(copyChildItem => copyChildItem.CopyChildItem(this.CmdletProvider, nodeToCopy, drive, destination, recurse));
 
     #endregion ICopyChildItemToProvider
 
     #region IMoveChildItem
 
-    // TODO: The this.ICmdletProvider gives the original parent to make it easier to remove the connection to the moved node. Necessary?
+    /// <summary>
+    /// Moves the child node <paramref name="nodeToMove"/> from ist current paranet node <paramref name="parentOfNodeToMove"/> to the destination path <paramref name="destination"/>
+    /// using the underlying implementation of <see cref="IMoveChildItem"/>.
+    /// </summary>
     public void MoveChildItem(ContainerNode parentOfNodeToMove, ProviderNode nodeToMove, string[] destination)
         => this.InvokeUnderlyingOrThrow<IMoveChildItem>(moveChildItem => moveChildItem.MoveChildItem(this.CmdletProvider, parentOfNodeToMove, nodeToMove, destination));
 
+    /// <summary>
+    /// Fetches dynamic move child item parameters from the underlying <see cref="IMoveChildItem"/>.
+    /// </summary>
     public object? MoveChildItemParameters(string name, string destination)
         => this.InvokeUnderlyingOrDefault<IMoveChildItem>(moveChildItem => moveChildItem.MoveChildItemParameters(name, destination));
 
@@ -168,9 +197,17 @@ public record ContainerNode : ProviderNode
 
     #region ISetChildItemContent
 
+    /// <summary>
+    /// Retrieves a content writer for child <paramref name="childName"/> from the underlying implementation of <see cref="ISetChildItemContent"/>.
+    /// </summary>
     public IContentWriter? GetChildItemContentWriter(string childName)
         => this.InvokeUnderlyingOrThrow<ISetChildItemContent>(setChildItemContent => setChildItemContent.GetChildItemContentWriter(this.CmdletProvider, childName));
 
+    /// <summary>
+    /// Fetches dynamic parameters from the underlying implementation of <see cref="ISetChildItemContent"/>
+    /// </summary>
+    /// <param name="childName"></param>
+    /// <returns></returns>
     public object? SetChildItemContentParameters(string childName)
         => this.InvokeUnderlyingOrDefault<ISetChildItemContent>(setChildTemContent => setChildTemContent.SetChildItemContentParameters(childName));
 

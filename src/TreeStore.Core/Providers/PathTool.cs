@@ -1,5 +1,6 @@
 ﻿using Superpower;
 using Superpower.Parsers;
+using System.Text;
 
 namespace TreeStore.Core.Providers;
 
@@ -20,10 +21,26 @@ public record DriveQualifedPath(string? DriveName, bool IsRooted, string[] Items
 public record ProviderName(string Module, string Name);
 
 public record ProviderQualifiedPath(string? Module, string? Provider, string? DriveName, bool IsRooted, string[] Items)
-    : DriveQualifedPath(DriveName, IsRooted, Items);
+    : DriveQualifedPath(DriveName, IsRooted, Items)
+{
+    public string ToPathString()
+    {
+        return new StringBuilder()
+            .Append(this.Module is not null ? $"{this.Module}\\{this.Provider}::" : string.Empty)
+            .Append(this.DriveName is not null ? $"{this.DriveName}:" : string.Empty)
+            .Append(this.IsRooted ? "\\" : string.Empty)
+            .AppendJoin("\\", this.Items)
+            .ToString();
+    }
+}
 
 public sealed class PathTool
 {
+    /// <summary>
+    /// Singleton to use
+    /// </summary>
+    public static PathTool Default = new();
+
     #region Path items
 
     /// <summary>

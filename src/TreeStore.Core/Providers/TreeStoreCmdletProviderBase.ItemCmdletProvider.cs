@@ -2,38 +2,58 @@
 
 public partial class TreeStoreCmdletProviderBase
 {
+    /// <inheritdoc/>
     protected override void ClearItem(string path)
     {
-        if (this.TryGetNodeByPath(path, out var node))
+        var splitted = PathTool.Default.SplitProviderQualifiedPath(path);
+
+        var driveInfo = this.GetTreeStoreDriveInfo(splitted.DriveName);
+
+        if (this.TryGetNodeByPath(driveInfo, splitted.Items, out var node))
         {
             node.ClearItem();
         }
     }
 
+    /// <inheritdoc/>
     protected override object? ClearItemDynamicParameters(string path)
     {
-        if (this.TryGetNodeByPath(path, out var node))
+        var splitted = PathTool.Default.SplitProviderQualifiedPath(path);
+
+        var driveInfo = this.GetTreeStoreDriveInfo(splitted.DriveName);
+
+        if (this.TryGetNodeByPath(driveInfo, splitted.Items, out var node))
         {
             return node.ClearItemParameters();
         }
-        return null;
+        else return null;
     }
 
+    /// <inheritdoc/>
     protected override void SetItem(string path, object value)
     {
-        if (this.TryGetNodeByPath(path, out var node))
+        var splitted = PathTool.Default.SplitProviderQualifiedPath(path);
+
+        var driveInfo = this.GetTreeStoreDriveInfo(splitted.DriveName);
+
+        if (this.TryGetNodeByPath(driveInfo, splitted.Items, out var node))
         {
             node.SetItem(value);
         }
     }
 
+    /// <inheritdoc/>
     protected override object? SetItemDynamicParameters(string path, object value)
     {
-        if (this.TryGetNodeByPath(path, out var node))
+        var splitted = PathTool.Default.SplitProviderQualifiedPath(path);
+
+        var driveInfo = this.GetTreeStoreDriveInfo(splitted.DriveName);
+
+        if (this.TryGetNodeByPath(driveInfo, splitted.Items, out var node))
         {
             return node.SetItemParameters();
         }
-        return null;
+        else return null;
     }
 
     // override not necessary.
@@ -42,57 +62,88 @@ public partial class TreeStoreCmdletProviderBase
     //    return base.ExpandPath(path);
     //}
 
+    /// <inheritdoc/>
     protected override void InvokeDefaultAction(string path)
     {
-        if (this.TryGetNodeByPath(path, out var node))
+        var splitted = PathTool.Default.SplitProviderQualifiedPath(path);
+
+        var driveInfo = this.GetTreeStoreDriveInfo(splitted.DriveName);
+
+        if (this.TryGetNodeByPath(driveInfo, splitted.Items, out var node))
         {
             node.InvokeItem();
         }
     }
 
+    /// <inheritdoc/>
     protected override object? InvokeDefaultActionDynamicParameters(string path)
     {
-        if (this.TryGetNodeByPath(path, out var node))
+        var splitted = PathTool.Default.SplitProviderQualifiedPath(path);
+
+        var driveInfo = this.GetTreeStoreDriveInfo(splitted.DriveName);
+
+        if (this.TryGetNodeByPath(driveInfo, splitted.Items, out var node))
         {
             return node.InvokeItemParameters();
         }
         else return null;
     }
 
+    /// <inheritdoc/>
     protected override void GetItem(string path)
     {
-        if (this.TryGetNodeByPath(path, out var node))
+        var splitted = PathTool.Default.SplitProviderQualifiedPath(path);
+
+        var driveInfo = this.GetTreeStoreDriveInfo(splitted.DriveName);
+
+        if (this.TryGetNodeByPath(driveInfo, splitted.Items, out var node))
         {
             this.WriteProviderNode(path, node);
         }
     }
 
+    /// <inheritdoc/>
     protected override object? GetItemDynamicParameters(string path)
     {
-        if (this.TryGetNodeByPath(path, out var node))
+        var splitted = PathTool.Default.SplitProviderQualifiedPath(path);
+
+        var driveInfo = this.GetTreeStoreDriveInfo(splitted.DriveName);
+
+        if (this.TryGetNodeByPath(driveInfo, splitted.Items, out var node))
         {
             return node.GetItemParameters();
         }
         else return null;
     }
 
+    /// <inheritdoc/>
     protected override bool IsValidPath(string path)
     {
         throw new System.NotImplementedException();
     }
 
+    /// <inheritdoc/>
     protected override bool ItemExists(string path)
     {
-        if (this.TryGetNodeByPath(path, out var node))
+        var splitted = PathTool.Default.SplitProviderQualifiedPath(path);
+
+        var driveInfo = this.GetTreeStoreDriveInfo(splitted.DriveName);
+
+        if (this.TryGetNodeByPath(driveInfo, splitted.Items, out var node))
         {
             return node.ItemExists();
         }
-        return false;
+        else return false;
     }
 
+    /// <inheritdoc/>
     protected override object? ItemExistsDynamicParameters(string path)
     {
-        if (this.TryGetNodeByPath(path, out var node))
+        var splitted = PathTool.Default.SplitProviderQualifiedPath(path);
+
+        var driveInfo = this.GetTreeStoreDriveInfo(splitted.DriveName);
+
+        if (this.TryGetNodeByPath(driveInfo, splitted.Items, out var node))
         {
             return node.ItemExistsParameters();
         }

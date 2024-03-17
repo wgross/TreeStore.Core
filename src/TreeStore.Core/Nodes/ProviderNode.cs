@@ -66,6 +66,9 @@ public abstract record ProviderNode
         return invoke(service);
     }
 
+    /// <summary>
+    /// Processes <paramref name="invoke"/> at the capability <typeparamref name="T"/> if available. Otherwise returns <see cref="Enumerable.Empty{ProviderNode}"/>
+    /// </summary>
     protected IEnumerable<ProviderNode> InvokeUnderlyingOrDefault<T>(Func<T, IEnumerable<ProviderNode>> invoke) where T : class
     {
         return (this.TryGetUnderlyingService<T>(out var service))
@@ -73,6 +76,9 @@ public abstract record ProviderNode
             : Enumerable.Empty<ProviderNode>();
     }
 
+    /// <summary>
+    /// Processes <paramref name="invoke"/> at the capability <typeparamref name="T"/> if available. Otherwise returns <paramref name="defaultValue"/>
+    /// </summary>
     protected bool TryInvokeUnderlyingOrDefault<T>(Func<T, object?> invoke, out object? result) where T : class
     {
         result = default;
@@ -86,6 +92,9 @@ public abstract record ProviderNode
         return false;
     }
 
+    /// <summary>
+    /// Processes <paramref name="invoke"/> at the capability <typeparamref name="T"/> if available. Otherwise returns <paramref name="defaultValue"/>
+    /// </summary>
     protected object? InvokeUnderlyingOrDefault<T>(Func<T, object?> invoke) where T : class
     {
         if (this.TryGetUnderlyingService<T>(out var service))
@@ -93,6 +102,9 @@ public abstract record ProviderNode
         return null;
     }
 
+    /// <summary>
+    /// Processes <paramref name="invoke"/> at the capability <typeparamref name="T"/> if available. Otherwise returns <paramref name="defaultValue"/>
+    /// </summary>
     protected bool InvokeUnderlyingOrDefault<T>(Func<T, bool> invoke, bool defaultValue = false) where T : class
     {
         if (this.TryGetUnderlyingService<T>(out var service))
@@ -101,14 +113,16 @@ public abstract record ProviderNode
         return defaultValue;
     }
 
+    /// <summary>
+    /// Creates an exception indicating that the capability is not supported.
+    /// </summary>
     protected Exception CapabilityNotSupported<T>()
-        => new PSNotSupportedException($"Node(name='{this.Name}') doesn't provide an implementation of capability '{typeof(T).Name}'.");
+        => new PSNotSupportedException(string.Format(Resources.Error_CapabilityNotImplemented, this.Name, typeof(T).Name));
 
     #endregion Delegate to Underlying or ..
 
     #region IGetItem
 
-    /// <inheritdoc/>
     public object? GetItemParameters()
         => this.InvokeUnderlyingOrDefault<IGetItem>(getItem => getItem.GetItemParameters());
 
@@ -124,11 +138,9 @@ public abstract record ProviderNode
 
     #region ISetItem
 
-    /// <inheritdoc/>
     public void SetItem(object value)
         => this.InvokeUnderlyingOrThrow<ISetItem>(setItem => setItem.SetItem(this.CmdletProvider, value));
 
-    /// <inheritdoc/>
     public object? SetItemParameters()
        => this.InvokeUnderlyingOrDefault<ISetItem>(setItem => setItem.SetItemParameters());
 
@@ -136,11 +148,9 @@ public abstract record ProviderNode
 
     #region IClearItem
 
-    /// <inheritdoc/>
     public void ClearItem()
         => this.InvokeUnderlyingOrThrow<IClearItem>(clearItem => clearItem.ClearItem(this.CmdletProvider));
 
-    /// <inheritdoc/>
     public object? ClearItemParameters()
         => this.InvokeUnderlyingOrDefault<IClearItem>(clearItem => clearItem.ClearItemParameters());
 
@@ -148,11 +158,9 @@ public abstract record ProviderNode
 
     #region IItemExists
 
-    /// <inheritdoc/>
     public bool ItemExists()
         => this.InvokeUnderlyingOrDefault<IItemExists>(itemExists => itemExists.ItemExists(this.CmdletProvider), defaultValue: true);
 
-    /// <inheritdoc/>
     public object? ItemExistsParameters()
         => this.InvokeUnderlyingOrDefault<IItemExists>(itemExists => itemExists.ItemExistsParameters(this.CmdletProvider));
 
@@ -160,11 +168,9 @@ public abstract record ProviderNode
 
     #region IInvokeItem
 
-    /// <inheritdoc/>
     public void InvokeItem()
         => this.InvokeUnderlyingOrThrow<IInvokeItem>(invokeItem => invokeItem.InvokeItem(this.CmdletProvider));
 
-    /// <inheritdoc/>
     public object? InvokeItemParameters()
         => this.InvokeUnderlyingOrDefault<IInvokeItem>(invokeItem => invokeItem.InvokeItemParameters(this.CmdletProvider));
 

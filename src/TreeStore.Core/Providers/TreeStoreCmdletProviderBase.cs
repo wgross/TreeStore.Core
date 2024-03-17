@@ -11,99 +11,73 @@ public abstract partial class TreeStoreCmdletProviderBase : NavigationCmdletProv
     private TreeStoreDriveInfoBase TreeStoreDriveInfo
         => this.treeStoreDriveInfo ?? (TreeStoreDriveInfoBase)this.PSDriveInfo;
 
-    private void EnsureTreeStoreDriveInfoFromDriveName(string? driveName)
+    private TreeStoreDriveInfoBase GetTreeStoreDriveInfo(string? driveName)
     {
-        if (driveName is not null)
-        {
-            if (this.PSDriveInfo is null)
-                this.treeStoreDriveInfo = SessionState.Drive.Get(driveName) as TreeStoreDriveInfoBase;
+        ArgumentException.ThrowIfNullOrWhiteSpace(driveName, nameof(driveName));
 
-            if (this.PSDriveInfo is not null and not TreeStoreDriveInfoBase)
-                this.treeStoreDriveInfo = SessionState.Drive.Get(driveName) as TreeStoreDriveInfoBase;
+        if (this.SessionState.Drive.Get(driveName) is TreeStoreDriveInfoBase { } treeStoreDriveInfo)
+            return treeStoreDriveInfo;
 
-            if (this.PSDriveInfo is TreeStoreDriveInfoBase treeStoreDriveInfo)
-                if (!driveName.Equals(this.PSDriveInfo.Name, StringComparison.OrdinalIgnoreCase))
-                    this.treeStoreDriveInfo = SessionState.Drive.Get(driveName) as TreeStoreDriveInfoBase;
-        }
-
-        ArgumentNullException.ThrowIfNull(this.TreeStoreDriveInfo, nameof(PSDriveInfo));
+        throw new InvalidOperationException(string.Format(Resources.Error_UnkownTreeStoreDriveName, driveName));
     }
 
-    private ProviderQualifiedPath EnsureTreeStoreDriveInfoFromPath(string path)
+    /// <summary>
+    /// Fetches the <see cref="TreeStoreDriveInfoBase"/> derived drive info by name from
+    /// PowerShells <see cref="DriveManagementIntrinsics"/> by name <paramref name="driveName"/>.
+    /// </summary>
+    protected T GetTreeStoreDriveInfo<T>(string? driveName)
+        where T : TreeStoreDriveInfoBase
     {
-        var splittedPath = new PathTool().SplitProviderQualifiedPath(path);
+        if (this.GetTreeStoreDriveInfo(driveName) is T treeStoreDriveInfo)
+            return treeStoreDriveInfo!;
 
-        // PSDriveInfio was filled from PowerShell already.
-        // this is the case for non-provider path  specifications
-
-        if (this.PSDriveInfo is not null)
-            return splittedPath;
-
-        // a provider oath was given. It is resolved here
-        if (string.IsNullOrEmpty(splittedPath.DriveName))
-            throw new PSInvalidOperationException("path('{path}') doesn't contain a drive specification: path can't be resolved");
-
-        this.EnsureTreeStoreDriveInfoFromDriveName(splittedPath.DriveName);
-
-        return splittedPath;
+        throw new InvalidOperationException(string.Format(Resources.Error_UnkownTreeStoreDriveName, driveName));
     }
 
     #endregion Maintain a reference to the drive state
 
+    #region Traverse paths in drive
+
+    private RootNode RootNode<T>(T driveInfo) where T : TreeStoreDriveInfoBase
+        => new RootNode(this, driveInfo.GetRootNodeProvider());
+
     /// <summary>
-    /// Create a <see cref="RootNode"/> instance from the <see cref="IServiceProvider"/> representing the root nodes
-    /// payload
+    /// At the given tree store drive <paramref name="driveInfo"/> traverse from the root node along the path <paramref name="path"/>
+    /// until the path ends. the last path items node id returned as <paramref name="pathNode"/>. If traversal fails before false is returned.
     /// </summary>
-    private RootNode RootNode() => new RootNode(this, this.TreeStoreDriveInfo.GetRootNodeProvider());
-
-    public (bool exists, ProviderNode? node) TryGetChildNode(ContainerNode parentNode, string childName)
-    {
-        var childNode = parentNode
-            .GetChildItems(provider: this)
-            .FirstOrDefault(n => StringComparer.OrdinalIgnoreCase.Equals(n.Name, childName));
-
-        return (childNode is not null, childNode);
-    }
-
-    protected bool TryGetNodeByPath(string path, [NotNullWhen(returnValue: true)] out ProviderNode? pathNode)
-    {
-        var splitted = this.EnsureTreeStoreDriveInfoFromPath(path);
-        if (splitted.DriveName is not null)
-            this.EnsureTreeStoreDriveInfoFromDriveName(splitted.DriveName);
-
-        return this.TryGetNodeByPath(splitted.Items, out pathNode);
-    }
-
-    protected bool TryGetNodeByPath(string[] path, [NotNullWhen(returnValue: true)] out ProviderNode? pathNode)
+    protected bool TryGetNodeByPath<T>(T driveInfo, string[] path, [NotNullWhen(true)] out ProviderNode? pathNode) where T : TreeStoreDriveInfoBase
     {
         pathNode = default;
-        (bool exists, ProviderNode? node) traversal = (true, this.RootNode());
+
+        // start the traversal at the root node.
+        (bool exists, ProviderNode? node) cursor = (true, this.RootNode(driveInfo));
+
         foreach (var pathItem in path)
         {
-            traversal = traversal.node switch
+            cursor = cursor.node switch
             {
-                ContainerNode container => TryGetChildNode(container, pathItem),
+                // for a container node fetch the child by name
+                ContainerNode container => container.TryGetChildNode(pathItem, out var childNode) ? (true, childNode) : (false, default),
+
+                // in any other case fails
                 _ => (false, default)
             };
-            if (!traversal.exists) return false;
+
+            if (!cursor.exists)
+                return false;
         }
-        pathNode = traversal.node;
+        pathNode = cursor.node!;
+
         return true;
     }
 
     /// <summary>
     /// From the current root node a given path <paramref name="path"/> is traversed as depp as possible.
-    /// The deppest node is returned and the part of the path tht couldn't be retrieved is retuned in <paramref name="missingPath"/>.
+    /// The deepest node is returned and the part of the path tht couldn't be retrieved is retuned in <paramref name="missingPath"/>.
     /// </summary>
-    protected ProviderNode GetDeepestNodeByPath(string path, out string[] missingPath)
-        => this.GetDeepestNodeByPath(this.RootNode(), new PathTool().SplitProviderQualifiedPath(path).Items, out missingPath);
-
-    /// <summary>
-    /// From the goven strat node <paramref name="startNode"/> the given path <paramref name="path"/> is traversed as depp as possible.
-    /// The deppest node is returned and the part of the path tht couldn't be retrieved is retuned in <paramref name="missingPath"/>.
-    /// </summary>
-    protected ProviderNode GetDeepestNodeByPath(ProviderNode startNode, string[] path, out string[] missingPath)
+    protected ProviderNode GetDeepestNodeByPath<T>(T driveInfo, string[] path, out string[] missingPath) where T : TreeStoreDriveInfoBase
     {
+        var startNode = this.RootNode(driveInfo);
         var traversal = this.TraversePathComplete(startNode, path).ToArray();
 
         // the whole path might not exists
@@ -113,7 +87,7 @@ public abstract partial class TreeStoreCmdletProviderBase : NavigationCmdletProv
         return traversal.TakeWhile(t => t.node is not null).LastOrDefault().node ?? startNode;
     }
 
-    protected IEnumerable<(string name, bool exists, ProviderNode? node)> TraversePathComplete(ProviderNode startNode, string[] path)
+    private IEnumerable<(string name, bool exists, ProviderNode? node)> TraversePathComplete(ProviderNode startNode, string[] path)
     {
         (bool exists, ProviderNode? node) cursor = (true, startNode);
 
@@ -125,7 +99,7 @@ public abstract partial class TreeStoreCmdletProviderBase : NavigationCmdletProv
                 cursor = cursor.node switch
                 {
                     // you can only fetch child node from containers
-                    ContainerNode c => this.TryGetChildNode(c, pathItem),
+                    ContainerNode c => c.TryGetChildNode(pathItem, out var childNode) ? (true, childNode) : (false, null),
 
                     // from leaf nodes, no child can be retrieved
                     _ => (false, null)
@@ -148,6 +122,8 @@ public abstract partial class TreeStoreCmdletProviderBase : NavigationCmdletProv
         }
     }
 
+    #endregion Traverse paths in drive
+
     #region Write a ProviderNode to pipeline
 
     protected void WriteProviderNode(string path, ProviderNode node)
@@ -169,21 +145,20 @@ public abstract partial class TreeStoreCmdletProviderBase : NavigationCmdletProv
     #region Invoke a node capability
 
     /// <summary>
-    /// Invokes a member of <see cref="ContainerNode"/>. If the node isn't a container the fallback is invoked
+    /// Invokes a member of <see cref="ContainerNode"/>. If the node isn't a container the <paramref name="fallback"/> is invoked.
     /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <param name="path"></param>
-    /// <param name="invoke"></param>
-    /// <param name="fallback"></param>
-    /// <returns></returns>
-    protected T InvokeContainerNodeOrDefault<T>(string[] path, Func<ContainerNode, T> invoke, Func<T> fallback)
-    {
-        return this.TryGetContainerNodeByPath(path, out var containerNode) ? invoke(containerNode) : fallback();
-    }
+    protected T InvokeContainerNodeOrDefault<T, D>(D driveInfo, string[] path, Func<ContainerNode, T> invoke, Func<T> fallback)
+        where D : TreeStoreDriveInfoBase
+        => this.TryGetContainerNodeByPath(driveInfo, path, out var containerNode) ? invoke(containerNode) : fallback();
 
-    protected void InvokeContainerNodeOrDefault(string[] path, Action<ContainerNode> invoke, Action fallback)
+    /// <summary>
+    /// Invokes a member of <see cref="ContainerNode"/>. If the node isn't a container the <paramref name="fallback"/> is invoked.
+    /// If there is no node at all an <see cref="ItemNotFoundException"/> is thrown.
+    /// </summary>
+    protected void InvokeContainerNodeOrDefault<T>(T driveInfo, string[] path, Action<ContainerNode> invoke, Action fallback)
+        where T : TreeStoreDriveInfoBase
     {
-        if (this.TryGetContainerNodeByPath(path, out var containerNode))
+        if (this.TryGetContainerNodeByPath(driveInfo, path, out var containerNode))
         {
             invoke(containerNode);
         }
@@ -193,9 +168,25 @@ public abstract partial class TreeStoreCmdletProviderBase : NavigationCmdletProv
         }
     }
 
-    protected bool TryGetContainerNodeByPath(string[] path, [NotNullWhen(true)] out ContainerNode? containerNode)
+    /// <summary>
+    /// At the node at <paramref name="path"/> invoke the function <paramref name="invoke"/>. If the node isn't found the <paramref name="fallback"/> is invoked.
+    /// Path is traverse from root node of <paramref name="driveInfo"/>.
+    /// If there is no node at all an <see cref="ItemNotFoundException"/> is thrown.
+    /// </summary>
+    protected T? InvokeProviderNodeOrDefault<T, D>(D driveInfo, string[] path, Func<ProviderNode, T> invoke, Func<T> fallback)
+        where D : TreeStoreDriveInfoBase
     {
-        if (this.TryGetNodeByPath(path, out var providerNode))
+        return this.TryGetNodeByPath(driveInfo, path, out var node) ? invoke(node) : fallback();
+    }
+
+    /// <summary>
+    /// Retrieve the node at <paramref name="path"/>. Path traversal begins at <paramref name="containerNode"/> at drive <paramref name="driveInfo"/>.
+    /// If the node isn't found an <see cref="ItemNotFoundException"/> is thrown.
+    /// </summary>
+    protected bool TryGetContainerNodeByPath<T>(T driveInfo, string[] path, [NotNullWhen(true)] out ContainerNode? containerNode)
+        where T : TreeStoreDriveInfoBase
+    {
+        if (this.TryGetNodeByPath(driveInfo, path, out var providerNode))
         {
             if (providerNode is ContainerNode container)
             {
@@ -208,25 +199,8 @@ public abstract partial class TreeStoreCmdletProviderBase : NavigationCmdletProv
         }
         else
         {
-            throw new ItemNotFoundException($"Can't find path '{string.Join("\\", path)}'");
+            throw new ItemNotFoundException(string.Format(Resources.Error_CantFindPath, string.Join("\\", path)));
         }
-    }
-
-    protected void InvokeProviderNodeOrDefault(string[] path, Action<ProviderNode> invoke, Action fallback)
-    {
-        if (this.TryGetNodeByPath(path, out var node))
-        {
-            invoke(node);
-        }
-        else
-        {
-            fallback();
-        }
-    }
-
-    protected T? InvokeProviderNodeOrDefault<T>(string[] path, Func<ProviderNode, T> invoke, Func<T> fallback)
-    {
-        return this.TryGetNodeByPath(path, out var node) ? invoke(node) : fallback();
     }
 
     #endregion Invoke a node capability

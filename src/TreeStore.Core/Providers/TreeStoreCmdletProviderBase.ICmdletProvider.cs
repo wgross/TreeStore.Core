@@ -1,7 +1,6 @@
-﻿namespace TreeStore.Core.Providers
+﻿namespace TreeStore.Core.Providers;
+
+public partial class TreeStoreCmdletProviderBase : ICmdletProvider
 {
-    public partial class TreeStoreCmdletProviderBase : ICmdletProvider
-    {
-        object ICmdletProvider.DynamicParameters => this.DynamicParameters;
-    }
+    object ICmdletProvider.DynamicParameters => this.DynamicParameters;
 }

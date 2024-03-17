@@ -9,7 +9,7 @@ namespace TreeStore.Core.Test
         public void PathTool_splits_empty_path()
         {
             // ACT
-            var result = new PathTool().SplitUnqualifiedPath("");
+            var result = PathTool.Default.SplitUnqualifiedPath("");
 
             // ASSERT
             Assert.Empty(result.Items);
@@ -21,7 +21,7 @@ namespace TreeStore.Core.Test
         public void PathTool_splits_root_path()
         {
             // ACT
-            var result = new PathTool().SplitUnqualifiedPath(@"\");
+            var result = PathTool.Default.SplitUnqualifiedPath(@"\");
 
             // ASSERT
             Assert.Empty(result.Items);
@@ -35,7 +35,7 @@ namespace TreeStore.Core.Test
         public void PathTool_splits_rooted_path(string path)
         {
             // ACT
-            var result = new PathTool().SplitUnqualifiedPath(path);
+            var result = PathTool.Default.SplitUnqualifiedPath(path);
 
             // ASSERT
             Assert.Equal(new[] { "path", "to", "item" }, result.Items);
@@ -50,7 +50,7 @@ namespace TreeStore.Core.Test
         public void PathTool_splits_not_rooted_path(string path)
         {
             // ACT
-            var result = new PathTool().SplitUnqualifiedPath(path);
+            var result = PathTool.Default.SplitUnqualifiedPath(path);
 
             // ASSERT
             Assert.Equal(new[] { "path", "to", "item" }, result.Items);
@@ -66,7 +66,7 @@ namespace TreeStore.Core.Test
         public void PathTool_splits_drive_qualified_path(string path)
         {
             // ACT
-            var result = new PathTool().SplitDriveQualifiedPath(path);
+            var result = PathTool.Default.SplitDriveQualifiedPath(path);
 
             // ASSERT
             Assert.Equal("drive", result.DriveName);
@@ -81,7 +81,7 @@ namespace TreeStore.Core.Test
         public void PathTool_splits_drive_qualified_rooted_path_without_drive(string path)
         {
             // ACT
-            var result = new PathTool().SplitDriveQualifiedPath(path);
+            var result = PathTool.Default.SplitDriveQualifiedPath(path);
 
             // ASSERT
             Assert.Null(result.DriveName);
@@ -95,7 +95,7 @@ namespace TreeStore.Core.Test
         public void PathTool_splits_drive_qualified_path_without_drive(string path)
         {
             // ACT
-            var result = new PathTool().SplitDriveQualifiedPath(path);
+            var result = PathTool.Default.SplitDriveQualifiedPath(path);
 
             // ASSERT
             Assert.Null(result.DriveName);
@@ -109,7 +109,7 @@ namespace TreeStore.Core.Test
         public void PathTool_splits_provider_qualifed_path_with_drive(string path)
         {
             // ACT
-            var result = new PathTool().SplitProviderQualifiedPath(path);
+            var result = PathTool.Default.SplitProviderQualifiedPath(path);
 
             // ASSERT
             Assert.Equal("module", result.Module);
@@ -124,7 +124,7 @@ namespace TreeStore.Core.Test
         public void PathTool_splits_dotted_provider_qualifed_path_with_drive(string path)
         {
             // ACT
-            var result = new PathTool().SplitProviderQualifiedPath(path);
+            var result = PathTool.Default.SplitProviderQualifiedPath(path);
 
             // ASSERT
             Assert.Equal("mod.ule", result.Module);
@@ -140,7 +140,7 @@ namespace TreeStore.Core.Test
         public void PathTool_splits_provider_qualifed_path_with_provider_without_drive(string path)
         {
             // ACT
-            var result = new PathTool().SplitProviderQualifiedPath(path);
+            var result = PathTool.Default.SplitProviderQualifiedPath(path);
 
             // ASSERT
             Assert.Equal("module", result.Module);
@@ -157,7 +157,7 @@ namespace TreeStore.Core.Test
         public void PathTool_splits_provider_qualified_path_without_provider(string path, string driveName)
         {
             // ACT
-            var result = new PathTool().SplitProviderQualifiedPath(path);
+            var result = PathTool.Default.SplitProviderQualifiedPath(path);
 
             // ASSERT
             Assert.Null(result.Provider);
@@ -172,7 +172,7 @@ namespace TreeStore.Core.Test
         public void PathTool_splits_rooted_provider_qualified_path_without_provider_and_drive(string path)
         {
             // ACT
-            var result = new PathTool().SplitProviderQualifiedPath(path);
+            var result = PathTool.Default.SplitProviderQualifiedPath(path);
 
             // ASSERT
             Assert.Null(result.Provider);
@@ -187,13 +187,28 @@ namespace TreeStore.Core.Test
         public void PathTool_splits_provider_qualified_path_without_provider_and_drive(string path)
         {
             // ACT
-            var result = new PathTool().SplitProviderQualifiedPath(path);
+            var result = PathTool.Default.SplitProviderQualifiedPath(path);
 
             // ASSERT
             Assert.Null(result.Provider);
             Assert.Null(result.DriveName);
             Assert.Equal(new[] { "path", "to", "item" }, result.Items);
             Assert.False(result.IsRooted);
+        }
+
+        [Theory]
+        [InlineData(@"module\provider::drive:\path\to\item")]
+        [InlineData(@"module\provider::drive:path\to\item")]
+        [InlineData(@"drive:\path\to\item")]
+        [InlineData(@"drive:path\to\item")]
+        [InlineData(@"path\to\item")]
+        public void Path_tool_combines_path_to_string(string path)
+        {
+            // ACT
+            var result = PathTool.Default.SplitProviderQualifiedPath(path);
+
+            // ASSERT
+            Assert.Equal(path, result.ToPathString());
         }
     }
 }

@@ -1,80 +1,141 @@
-﻿namespace TreeStore.Core.Providers
+﻿namespace TreeStore.Core.Providers;
+
+public partial class TreeStoreCmdletProviderBase : IDynamicPropertyCmdletProvider
 {
-    public partial class TreeStoreCmdletProviderBase : IDynamicPropertyCmdletProvider
+    /// <inheritdoc/>
+    public void CopyProperty(string sourcePath, string sourceProperty, string destinationPath, string destinationProperty)
     {
-        public void CopyProperty(string sourcePath, string sourceProperty, string destinationPath, string destinationProperty)
+        var sourceSplitted = PathTool.Default.SplitProviderQualifiedPath(sourcePath);
+        var sourceDriveInfo = this.GetTreeStoreDriveInfo(sourceSplitted.DriveName);
+
+        var destinationSplitted = PathTool.Default.SplitProviderQualifiedPath(destinationPath);
+        var destinationDriveInfo = this.GetTreeStoreDriveInfo(destinationSplitted.DriveName);
+
+        if (this.TryGetNodeByPath(sourceDriveInfo, sourceSplitted.Items, out var sourceNode) && this.TryGetNodeByPath(destinationDriveInfo, destinationSplitted.Items, out var destinationNode))
         {
-            if (this.TryGetNodeByPath(sourcePath, out var sourceNode) && this.TryGetNodeByPath(destinationPath, out var destinationNode))
-            {
-                destinationNode.CopyItemProperty(sourceNode, sourceProperty, destinationProperty);
-            }
+            destinationNode.CopyItemProperty(sourceNode, sourceProperty, destinationProperty);
         }
+    }
 
-        public object? CopyPropertyDynamicParameters(string sourcePath, string sourceProperty, string destinationPath, string destinationProperty)
-            => this.InvokeProviderNodeOrDefault(
-                path: this.EnsureTreeStoreDriveInfoFromPath(destinationPath).Items,
-                invoke: n => n.CopyItemPropertyParameters(sourcePath, sourceProperty, destinationPath, destinationProperty),
-                fallback: () => null);
+    /// <inheritdoc/>
+    public object? CopyPropertyDynamicParameters(string sourcePath, string sourceProperty, string destinationPath, string destinationProperty)
+    {
+        var sourceSplitted = PathTool.Default.SplitProviderQualifiedPath(sourcePath);
+        var sourceDriveInfo = this.GetTreeStoreDriveInfo(sourceSplitted.DriveName);
 
-        public void MoveProperty(string sourcePath, string sourceProperty, string destinationPath, string destinationProperty)
+        return this.InvokeProviderNodeOrDefault(
+            driveInfo: sourceDriveInfo,
+            path: sourceSplitted.Items,
+            invoke: n => n.CopyItemPropertyParameters(sourcePath, sourceProperty, destinationPath, destinationProperty),
+            fallback: () => null);
+    }
+
+    /// <inheritdoc/>
+    public void MoveProperty(string sourcePath, string sourceProperty, string destinationPath, string destinationProperty)
+    {
+        var sourceSplitted = PathTool.Default.SplitProviderQualifiedPath(sourcePath);
+        var sourceDriveInfo = this.GetTreeStoreDriveInfo(sourceSplitted.DriveName);
+
+        var destinationSplitted = PathTool.Default.SplitProviderQualifiedPath(destinationPath);
+        var destinationDriveInfo = this.GetTreeStoreDriveInfo(destinationSplitted.DriveName);
+
+        if (this.TryGetNodeByPath(sourceDriveInfo, sourceSplitted.Items, out var sourceNode) && this.TryGetNodeByPath(destinationDriveInfo, destinationSplitted.Items, out var destinationNode))
         {
-            if (this.TryGetNodeByPath(sourcePath, out var sourceNode) && this.TryGetNodeByPath(destinationPath, out var destinationNode))
-            {
-                destinationNode.MoveItemProperty(sourceNode, sourceProperty, destinationProperty);
-            }
+            destinationNode.MoveItemProperty(sourceNode, sourceProperty, destinationProperty);
         }
+    }
 
-        public object? MovePropertyDynamicParameters(string sourcePath, string sourceProperty, string destinationPath, string destinationProperty)
-            => this.InvokeProviderNodeOrDefault(
-                path: this.EnsureTreeStoreDriveInfoFromPath(destinationPath).Items,
-                invoke: n => n.MoveItemPropertyParameters(sourcePath, sourceProperty, destinationPath, destinationProperty),
-                fallback: () => null);
+    /// <inheritdoc/>
+    public object? MovePropertyDynamicParameters(string sourcePath, string sourceProperty, string destinationPath, string destinationProperty)
+    {
+        var sourceSplitted = PathTool.Default.SplitProviderQualifiedPath(sourcePath);
+        var sourceDriveInfo = this.GetTreeStoreDriveInfo(sourceSplitted.DriveName);
 
-        public void NewProperty(string path, string propertyName, string propertyTypeName, object? value)
+        return this.InvokeProviderNodeOrDefault(
+            driveInfo: sourceDriveInfo,
+            path: sourceSplitted.Items,
+            invoke: n => n.MoveItemPropertyParameters(sourcePath, sourceProperty, destinationPath, destinationProperty),
+            fallback: () => null);
+    }
+
+    /// <inheritdoc/>
+    public void NewProperty(string path, string propertyName, string propertyTypeName, object? value)
+    {
+        var splitted = PathTool.Default.SplitProviderQualifiedPath(path);
+
+        var driveInfo = this.GetTreeStoreDriveInfo(splitted.DriveName);
+
+        if (this.TryGetNodeByPath(driveInfo, splitted.Items, out var providerNode))
         {
-            if (this.TryGetNodeByPath(path, out var providerNode))
-            {
-                providerNode.NewItemProperty(propertyName, propertyTypeName, value);
-            }
+            providerNode.NewItemProperty(propertyName, propertyTypeName, value);
         }
+    }
 
-        public object? NewPropertyDynamicParameters(string path, string propertyName, string propertyTypeName, object? value)
-            => this.InvokeProviderNodeOrDefault(
-                path: this.EnsureTreeStoreDriveInfoFromPath(path).Items,
-                invoke: n => n.NewItemPropertyParameter(propertyName, propertyTypeName, value),
-                fallback: () => null);
+    /// <inheritdoc/>
+    public object? NewPropertyDynamicParameters(string path, string propertyName, string propertyTypeName, object? value)
+    {
+        var splitted = PathTool.Default.SplitProviderQualifiedPath(path);
 
-        public void RemoveProperty(string path, string propertyName)
+        var driveInfo = this.GetTreeStoreDriveInfo(splitted.DriveName);
+
+        return this.InvokeProviderNodeOrDefault(
+            driveInfo: driveInfo,
+            path: splitted.Items,
+            invoke: n => n.NewItemPropertyParameter(propertyName, propertyTypeName, value),
+            fallback: () => null);
+    }
+
+    /// <inheritdoc/>
+    public void RemoveProperty(string path, string propertyName)
+    {
+        var splitted = PathTool.Default.SplitProviderQualifiedPath(path);
+
+        var driveInfo = this.GetTreeStoreDriveInfo(splitted.DriveName);
+
+        if (this.TryGetNodeByPath(driveInfo, splitted.Items, out var providerNode))
         {
-            if (this.TryGetNodeByPath(path, out var providerNode))
-            {
-                providerNode.RemoveItemProperty(propertyName);
-            }
+            providerNode.RemoveItemProperty(propertyName);
         }
+    }
 
-#pragma warning disable CS8766
+    /// <inheritdoc/>
+    public object RemovePropertyDynamicParameters(string path, string propertyName)
+    {
+        var splitted = PathTool.Default.SplitProviderQualifiedPath(path);
 
-        // Nullability of reference types in return type doesn't match implicitly implemented member (possibly because of nullability attributes).
-        // Powershell doesn provide a nullability hint in its interface
-        public object? RemovePropertyDynamicParameters(string path, string propertyName)
-#pragma warning restore CS8766 // Nullability of reference types in return type doesn't match implicitly implemented member (possibly because of nullability attributes).
-            => this.InvokeProviderNodeOrDefault(
-                path: this.EnsureTreeStoreDriveInfoFromPath(path).Items,
-                invoke: n => n.RemoveItemPropertyParameters(propertyName),
-                fallback: () => null);
+        var driveInfo = this.GetTreeStoreDriveInfo(splitted.DriveName);
 
-        public void RenameProperty(string path, string sourceProperty, string destinationProperty)
+        return this.InvokeProviderNodeOrDefault(
+            driveInfo: driveInfo,
+            path: splitted.Items,
+            invoke: n => n.RemoveItemPropertyParameters(propertyName),
+            fallback: () => default) ?? default!; // satisfy interface definition
+    }
+
+    /// <inheritdoc/>
+    public void RenameProperty(string path, string sourceProperty, string destinationProperty)
+    {
+        var splitted = PathTool.Default.SplitProviderQualifiedPath(path);
+
+        var driveInfo = this.GetTreeStoreDriveInfo(splitted.DriveName);
+
+        if (this.TryGetNodeByPath(driveInfo, splitted.Items, out var providerNode))
         {
-            if (this.TryGetNodeByPath(path, out var providerNode))
-            {
-                providerNode.RenameItemProperty(sourceProperty, destinationProperty);
-            }
+            providerNode.RenameItemProperty(sourceProperty, destinationProperty);
         }
+    }
 
-        public object? RenamePropertyDynamicParameters(string path, string sourceProperty, string destinationProperty)
-            => this.InvokeProviderNodeOrDefault(
-                path: this.EnsureTreeStoreDriveInfoFromPath(path).Items,
-                invoke: n => n.RenameItemPropertyParameters(sourceProperty, destinationProperty),
-                fallback: () => null);
+    /// <inheritdoc/>
+    public object? RenamePropertyDynamicParameters(string path, string sourceProperty, string destinationProperty)
+    {
+        var splitted = PathTool.Default.SplitProviderQualifiedPath(path);
+
+        var driveInfo = this.GetTreeStoreDriveInfo(splitted.DriveName);
+
+        return this.InvokeProviderNodeOrDefault(
+            driveInfo: driveInfo,
+            path: splitted.Items,
+            invoke: n => n.RenameItemPropertyParameters(sourceProperty, destinationProperty),
+            fallback: () => null);
     }
 }
