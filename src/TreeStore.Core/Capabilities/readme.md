@@ -5,7 +5,6 @@ Capabilities are interface contracts which are invoked by the file system provid
 Path traversal means that a PowerShell provider path is mapped to a TreeStore provider node (leaf or container). It is necessary that the names of nodes are unique under a parent node. Traversal of a path always uses the names and no other properties of the nodes payload to identify every node.
 
 Path traversal is the most basic capability and is required if more than a  root node is provided by the file system.
-
 ### Provider Qualified Path
 The concept of provider qualified delegates interpretion and parsing of teh path completely to teh provider. It is ment to be used for path expression spowershell might noct understand for example the  syntax for paths longer the 255 chars (`\\?\C:\Path\path\file.log`).  In PowerShell these paths have syntax `Module.Name\ProviderName::drive:\path\to\file`. If these paths a used PowerShell doesn't even resolve the drive name to a matching `PsDriveInfo` instance before invoking the provider. 
 
@@ -92,7 +91,6 @@ This requires the capabilities:
 - `ISetItemProperty`
 - `IClearItemProperty`
 - `IGetItemProperty`
-
 ### Implementing `IDynamicPropertyCmdletProvider`
 For supporting PowerShell `*-ItemProperty*` commands which modify properties dynamically these capabilities are required:
 - `INewItemProperty`
@@ -100,7 +98,6 @@ For supporting PowerShell `*-ItemProperty*` commands which modify properties dyn
 - `ICopyItemProperty`
 - `IMoveItemProperty`
 - `IRenameItemProperty`
-
 ### Implementing `IContentProvider`
 Supporting PowerShells `*-Content` commands is optional and works a bit different than the other providers at least for reading and writing content. PowerShell will ask for a reader or writer implementation (`IContentReader`, `IContentWriter`) to interact with. It will ask for 'blocks' of information to read and write. The implementation has to decide what such a 'block' of information is. 
 

@@ -108,6 +108,39 @@ public sealed class ContainerCmdletProviderTest : ItemCmdletProviderTestBase
     }
 
     [Fact]
+    public void Powershell_reads_roots_childnodes_names_with_provider_path()
+    {
+        // ARRANGE
+        var root = this.ArrangeFileSystem(new UnderlyingDictionary
+        {
+            ["child1"] = new UnderlyingDictionary(),
+            ["property"] = "text"
+        });
+
+        // ACT
+        var result = this.PowerShell.AddCommand("Get-ChildItem")
+            .AddParameter("Path", @"TreeStore.DictionaryFS\DictionaryFS::test:\")
+            .AddParameter("Name")
+            .Invoke()
+            .ToArray();
+
+        // ASSERT
+        Assert.False(this.PowerShell.HadErrors);
+        Assert.Single(result);
+
+        var psobject = result[0];
+
+        Assert.IsType<string>(psobject.ImmediateBaseObject);
+        Assert.Equal("child1", psobject.ImmediateBaseObject as string);
+        Assert.Equal("child1", psobject.Property<string>("PSChildName"));
+        Assert.True(psobject.Property<bool>("PSIsContainer"));
+        Assert.True(psobject.PropertyIsNull("PSDrive"));
+        Assert.Equal("DictionaryFS", psobject.Property<ProviderInfo>("PSProvider").Name);
+        Assert.Equal(@"TreeStore.DictionaryFS\DictionaryFS::test:\child1", psobject.Property<string>("PSPath"));
+        Assert.Equal(@"TreeStore.DictionaryFS\DictionaryFS::test:", psobject.Property<string>("PSParentPath"));
+    }
+
+    [Fact]
     public void Powershell_retrieves_roots_childnodes_recursive()
     {
         // ARRANGE
