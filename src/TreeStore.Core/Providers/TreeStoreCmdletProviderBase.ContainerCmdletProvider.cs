@@ -14,11 +14,11 @@ public partial class TreeStoreCmdletProviderBase
     /// <inheritdoc/>
     protected override void CopyItem(string path, string destination, bool recurse)
     {
-        var splittedSource = PathTool.Default.SplitProviderQualifiedPath(path);
+        var splitSource = PathTool.Default.SplitProviderQualifiedPath(path);
 
-        var (parentPath, childName) = splittedSource.ParentAndChild;
+        var (parentPath, childName) = splitSource.ParentAndChild;
 
-        var sourceDriveInfo = this.GetTreeStoreDriveInfo(splittedSource.DriveName);
+        var sourceDriveInfo = this.GetTreeStoreDriveInfo(splitSource.DriveName);
 
         this.InvokeContainerNodeOrDefault(
             driveInfo: sourceDriveInfo,
@@ -83,25 +83,28 @@ public partial class TreeStoreCmdletProviderBase
     {
         void writeItemObject(PSObject item, string path, string name, bool isContainer) => this.WriteItemObject(item, path, isContainer);
 
-        var splitted = PathTool.Default.SplitProviderQualifiedPath(path);
+        var splitPath = PathTool.Default.SplitProviderQualifiedPath(path);
 
-        var driveInfo = this.GetTreeStoreDriveInfo(splitted.DriveName);
+        var driveInfo = this.GetTreeStoreDriveInfo(splitPath.DriveName);
 
         this.InvokeContainerNodeOrDefault(
             driveInfo: driveInfo,
-            path: splitted.Items,
-            invoke: c => this.GetChildItems(parentContainer: c, path, recurse, depth, writeItemObject),
+            path: splitPath.Items,
+            invoke: c => this.GetChildItems(parentContainer: c, splitPath, recurse, depth, writeItemObject),
             fallback: () => base.GetChildItems(path, recurse, depth));
     }
 
-    private void GetChildItems(ContainerNode parentContainer, string path, bool recurse, uint depth, Action<PSObject, string, string, bool> writeItemObject)
+    private void GetChildItems(ContainerNode parentContainer, ProviderQualifiedPath path, bool recurse, uint depth, Action<PSObject, string, string, bool> writeItemObject)
     {
         foreach (var childGetItem in parentContainer.GetChildItems(provider: this))
         {
             var childItemPSObject = childGetItem.GetItem();
             if (childItemPSObject is not null)
             {
-                var childItemPath = Path.Join(path, childGetItem.Name);
+                // build the path of the child item from the parts of the path and the name of the child item
+                // and writ it to the output stream
+                var childItemPath = Path.Join(path.ToPathString(), childGetItem.Name);
+
                 writeItemObject(childItemPSObject, childItemPath, childGetItem.Name, childGetItem is ContainerNode);
 
                 //TODO: recurse in cmdlet this.ICmdletProvider will be slow if the underlying model could optimize fetching of data.
@@ -110,7 +113,11 @@ public partial class TreeStoreCmdletProviderBase
                 // - notify first container of incoming request so it can prepare the fetch: IPrepareGetChildItems: Prepare(bool recurse, uint depth) then resurce in this.ICmdletProvider
                 //   General solution would be to introduce a call context to allow an impl. to inspect the original request.
                 if (recurse && depth > 0 && childGetItem is ContainerNode childContainer)
-                    this.GetChildItems(childContainer, childItemPath, recurse, depth - 1, writeItemObject);
+                {
+                    var splitChildItemPath = PathTool.Default.SplitProviderQualifiedPath(childItemPath);
+
+                    this.GetChildItems(childContainer, splitChildItemPath, recurse, depth - 1, writeItemObject);
+                }
             }
         }
     }
@@ -118,13 +125,13 @@ public partial class TreeStoreCmdletProviderBase
     /// <inheritdoc/>
     protected override object? GetChildItemsDynamicParameters(string path, bool recurse)
     {
-        var splitted = PathTool.Default.SplitProviderQualifiedPath(path);
+        var splitPath = PathTool.Default.SplitProviderQualifiedPath(path);
 
-        var driveInfo = this.GetTreeStoreDriveInfo(splitted.DriveName);
+        var driveInfo = this.GetTreeStoreDriveInfo(splitPath.DriveName);
 
         return this.InvokeContainerNodeOrDefault(
             driveInfo: driveInfo,
-            path: splitted.Items,
+            path: splitPath.Items,
             invoke: c => c.GetChildItemParameters(path, recurse),
             fallback: () => base.GetChildItemsDynamicParameters(path, recurse));
     }
@@ -134,14 +141,14 @@ public partial class TreeStoreCmdletProviderBase
     {
         void writeItemObject(PSObject _, string path, string name, bool isContainer) => this.WriteItemObject(name, path, isContainer);
 
-        var splitted = PathTool.Default.SplitProviderQualifiedPath(path);
+        var splitPath = PathTool.Default.SplitProviderQualifiedPath(path);
 
-        var driveInfo = this.GetTreeStoreDriveInfo(splitted.DriveName);
+        var driveInfo = this.GetTreeStoreDriveInfo(splitPath.DriveName);
 
         this.InvokeContainerNodeOrDefault(
             driveInfo: driveInfo,
-            path: splitted.Items,
-            invoke: c => this.GetChildItems(parentContainer: c, path, recurse: false, depth: 0, writeItemObject),
+            path: splitPath.Items,
+            invoke: c => this.GetChildItems(parentContainer: c, splitPath, recurse: false, depth: 0, writeItemObject),
             fallback: () => base.GetChildNames(path, returnContainers));
     }
 
@@ -151,13 +158,13 @@ public partial class TreeStoreCmdletProviderBase
     /// <inheritdoc/>
     protected override bool HasChildItems(string path)
     {
-        var splitted = PathTool.Default.SplitProviderQualifiedPath(path);
+        var splitPath = PathTool.Default.SplitProviderQualifiedPath(path);
 
-        var driveInfo = this.GetTreeStoreDriveInfo(splitted.DriveName);
+        var driveInfo = this.GetTreeStoreDriveInfo(splitPath.DriveName);
 
         return this.InvokeProviderNodeOrDefault(
             driveInfo: driveInfo,
-            path: splitted.Items,
+            path: splitPath.Items,
             invoke: n => n switch
             {
                 ContainerNode c => c.HasChildItems(provider: this),
@@ -171,11 +178,11 @@ public partial class TreeStoreCmdletProviderBase
     /// <inheritdoc/>
     protected override void RemoveItem(string path, bool recurse)
     {
-        var splitted = PathTool.Default.SplitProviderQualifiedPath(path);
+        var splitPath = PathTool.Default.SplitProviderQualifiedPath(path);
 
-        var (parentPath, childName) = splitted.ParentAndChild;
+        var (parentPath, childName) = splitPath.ParentAndChild;
 
-        var driveInfo = this.GetTreeStoreDriveInfo(splitted.DriveName);
+        var driveInfo = this.GetTreeStoreDriveInfo(splitPath.DriveName);
 
         this.InvokeContainerNodeOrDefault(
             driveInfo: driveInfo,
@@ -187,11 +194,11 @@ public partial class TreeStoreCmdletProviderBase
     /// <inheritdoc/>
     protected override object? RemoveItemDynamicParameters(string path, bool recurse)
     {
-        var splitted = PathTool.Default.SplitProviderQualifiedPath(path);
+        var splitPath = PathTool.Default.SplitProviderQualifiedPath(path);
 
-        var (parentPath, childName) = splitted.ParentAndChild;
+        var (parentPath, childName) = splitPath.ParentAndChild;
 
-        var driveInfo = this.GetTreeStoreDriveInfo(splitted.DriveName);
+        var driveInfo = this.GetTreeStoreDriveInfo(splitPath.DriveName);
 
         return this.InvokeContainerNodeOrDefault(
             driveInfo: driveInfo,
@@ -203,11 +210,11 @@ public partial class TreeStoreCmdletProviderBase
     /// <inheritdoc/>
     protected override void NewItem(string path, string itemTypeName, object newItemValue)
     {
-        var splitted = PathTool.Default.SplitProviderQualifiedPath(path);
+        var splitPath = PathTool.Default.SplitProviderQualifiedPath(path);
 
-        var driveInfo = this.GetTreeStoreDriveInfo(splitted.DriveName);
+        var driveInfo = this.GetTreeStoreDriveInfo(splitPath.DriveName);
 
-        var (parentPath, childName) = splitted.ParentAndChild;
+        var (parentPath, childName) = splitPath.ParentAndChild;
 
         if (this.TryGetNodeByPath(driveInfo, parentPath, out var parentNode))
         {
@@ -230,11 +237,11 @@ public partial class TreeStoreCmdletProviderBase
     /// <inheritdoc/>
     protected override object? NewItemDynamicParameters(string path, string itemTypeName, object newItemValue)
     {
-        var splitted = PathTool.Default.SplitProviderQualifiedPath(path);
+        var splitPath = PathTool.Default.SplitProviderQualifiedPath(path);
 
-        var (parentPath, childName) = splitted.ParentAndChild;
+        var (parentPath, childName) = splitPath.ParentAndChild;
 
-        var driveInfo = this.GetTreeStoreDriveInfo(splitted.DriveName);
+        var driveInfo = this.GetTreeStoreDriveInfo(splitPath.DriveName);
 
         return this.InvokeContainerNodeOrDefault(
             driveInfo: driveInfo,
@@ -246,11 +253,11 @@ public partial class TreeStoreCmdletProviderBase
     /// <inheritdoc/>
     protected override void RenameItem(string path, string newName)
     {
-        var splitted = PathTool.Default.SplitProviderQualifiedPath(path);
+        var splitPath = PathTool.Default.SplitProviderQualifiedPath(path);
 
-        var (parentPath, childName) = splitted.ParentAndChild;
+        var (parentPath, childName) = splitPath.ParentAndChild;
 
-        var driveInfo = this.GetTreeStoreDriveInfo(splitted.DriveName);
+        var driveInfo = this.GetTreeStoreDriveInfo(splitPath.DriveName);
 
         if (this.TryGetNodeByPath(driveInfo, parentPath, out var providerNode))
         {
@@ -264,11 +271,11 @@ public partial class TreeStoreCmdletProviderBase
     /// <inheritdoc/>
     protected override object? RenameItemDynamicParameters(string path, string newName)
     {
-        var splitted = PathTool.Default.SplitProviderQualifiedPath(path);
+        var splitPath = PathTool.Default.SplitProviderQualifiedPath(path);
 
-        var (parentPath, childName) = splitted.ParentAndChild;
+        var (parentPath, childName) = splitPath.ParentAndChild;
 
-        var driveInfo = this.GetTreeStoreDriveInfo(splitted.DriveName);
+        var driveInfo = this.GetTreeStoreDriveInfo(splitPath.DriveName);
 
         return this.InvokeContainerNodeOrDefault(
             driveInfo: driveInfo,

@@ -20,6 +20,14 @@ public record DriveQualifedPath(string? DriveName, bool IsRooted, string[] Items
 
 public record ProviderName(string Module, string Name);
 
+/// <summary>
+/// Represents a fully qualified PowerShell path
+/// </summary>
+/// <param name="Module">Name of the PowerShell module providing the cmdlet provider (may be null)</param>
+/// <param name="Provider">Name of the PowerShell cmdlet provider (may be null)</param>
+/// <param name="DriveName">Drive name (may be null)</param>
+/// <param name="IsRooted">Indicates if the path is rooted (starts wit / or \) or not</param>
+/// <param name="Items">the split path items; may be empty</param>
 public record ProviderQualifiedPath(string? Module, string? Provider, string? DriveName, bool IsRooted, string[] Items)
     : DriveQualifedPath(DriveName, IsRooted, Items)
 {
@@ -28,8 +36,7 @@ public record ProviderQualifiedPath(string? Module, string? Provider, string? Dr
         return new StringBuilder()
             .Append(this.Module is not null ? $"{this.Module}\\{this.Provider}::" : string.Empty)
             .Append(this.DriveName is not null ? $"{this.DriveName}:" : string.Empty)
-            .Append(this.IsRooted ? "\\" : string.Empty)
-            .AppendJoin("\\", this.Items)
+            .Append(new PathString(this.Items).ToString(this.IsRooted))
             .ToString();
     }
 }
@@ -110,12 +117,21 @@ public sealed class PathTool
        from path in ParseRootedPath
        select new ProviderQualifiedPath(provider.module, provider.provider, driveName, path.isRooted, path.items);
 
+    /// <summary>
+    /// Splits a path that may be fully qualified with provider name and module name in its parts
+    /// </summary>
     public ProviderQualifiedPath SplitProviderQualifiedPath(string path)
         => ParseProviderQualifiedPath.Parse(path);
 
+    /// <summary>
+    /// Splits a path which doesn't have provider and drive qualification in it
+    /// </summary>
     public UnqualifiedPath SplitUnqualifiedPath(string path)
         => ParseProviderQualifiedPath.Parse(path);
 
+    /// <summary>
+    /// Splits a path which doesn't have provider bit may have a drive qualification in it.
+    /// </summary>
     public DriveQualifedPath SplitDriveQualifiedPath(string path)
         => ParseProviderQualifiedPath.Parse(path);
 }

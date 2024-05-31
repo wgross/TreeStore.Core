@@ -1,4 +1,5 @@
-﻿using TreeStore.Core.Providers;
+﻿using System.Collections.Generic;
+using TreeStore.Core.Providers;
 using Xunit;
 
 namespace TreeStore.Core.Test
@@ -196,19 +197,33 @@ namespace TreeStore.Core.Test
             Assert.False(result.IsRooted);
         }
 
+        public static IEnumerable<object[]> CombinedPathItems
+        {
+            get
+            {
+                yield return [@"module\provider::drive:", true, new PathString("path", "to", "item")];
+                yield return [@"module\provider::drive:", false, new PathString("path", "to", "item")];
+                yield return [@"drive:", true, new PathString("path", "to", "item")];
+                yield return [@"drive:", false, new PathString("path", "to", "item")];
+                yield return [@"", true, new PathString("path", "to", "item")];
+                yield return [@"", false, new PathString("path", "to", "item")];
+            }
+        }
+
         [Theory]
-        [InlineData(@"module\provider::drive:\path\to\item")]
-        [InlineData(@"module\provider::drive:path\to\item")]
-        [InlineData(@"drive:\path\to\item")]
-        [InlineData(@"drive:path\to\item")]
-        [InlineData(@"path\to\item")]
-        public void Path_tool_combines_path_to_string(string path)
+        [MemberData(nameof(PathToolTest.CombinedPathItems), MemberType = typeof(PathToolTest))]
+        //[InlineData(@"module\provider::drive:\path\to\item")]
+        //[InlineData(@"module\provider::drive:path\to\item")]
+        //[InlineData(@"drive:\path\to\item")]
+        //[InlineData(@"drive:path\to\item")]
+        //[InlineData(@"path\to\item")]
+        public void Path_tool_combines_path_to_string(string prefix, bool isRooted, PathString path)
         {
             // ACT
-            var result = PathTool.Default.SplitProviderQualifiedPath(path);
+            var result = PathTool.Default.SplitProviderQualifiedPath($"{prefix}{path.ToString(isRooted)}");
 
             // ASSERT
-            Assert.Equal(path, result.ToPathString());
+            Assert.Equal($"{prefix}{path.ToString(isRooted)}", result.ToPathString());
         }
     }
 }

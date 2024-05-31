@@ -61,11 +61,11 @@ public partial class TreeStoreCmdletProviderBase : IDynamicPropertyCmdletProvide
     /// <inheritdoc/>
     public void NewProperty(string path, string propertyName, string propertyTypeName, object? value)
     {
-        var splitted = PathTool.Default.SplitProviderQualifiedPath(path);
+        var splitPath = PathTool.Default.SplitProviderQualifiedPath(path);
 
-        var driveInfo = this.GetTreeStoreDriveInfo(splitted.DriveName);
+        var driveInfo = this.GetTreeStoreDriveInfo(splitPath.DriveName);
 
-        if (this.TryGetNodeByPath(driveInfo, splitted.Items, out var providerNode))
+        if (this.TryGetNodeByPath(driveInfo, splitPath.Items, out var providerNode))
         {
             providerNode.NewItemProperty(propertyName, propertyTypeName, value);
         }
@@ -74,13 +74,13 @@ public partial class TreeStoreCmdletProviderBase : IDynamicPropertyCmdletProvide
     /// <inheritdoc/>
     public object? NewPropertyDynamicParameters(string path, string propertyName, string propertyTypeName, object? value)
     {
-        var splitted = PathTool.Default.SplitProviderQualifiedPath(path);
+        var splitPath = PathTool.Default.SplitProviderQualifiedPath(path);
 
-        var driveInfo = this.GetTreeStoreDriveInfo(splitted.DriveName);
+        var driveInfo = this.GetTreeStoreDriveInfo(splitPath.DriveName);
 
         return this.InvokeProviderNodeOrDefault(
             driveInfo: driveInfo,
-            path: splitted.Items,
+            path: splitPath.Items,
             invoke: n => n.NewItemPropertyParameter(propertyName, propertyTypeName, value),
             fallback: () => null);
     }
@@ -88,11 +88,11 @@ public partial class TreeStoreCmdletProviderBase : IDynamicPropertyCmdletProvide
     /// <inheritdoc/>
     public void RemoveProperty(string path, string propertyName)
     {
-        var splitted = PathTool.Default.SplitProviderQualifiedPath(path);
+        var splitPath = PathTool.Default.SplitProviderQualifiedPath(path);
 
-        var driveInfo = this.GetTreeStoreDriveInfo(splitted.DriveName);
+        var driveInfo = this.GetTreeStoreDriveInfo(splitPath.DriveName);
 
-        if (this.TryGetNodeByPath(driveInfo, splitted.Items, out var providerNode))
+        if (this.TryGetNodeByPath(driveInfo, splitPath.Items, out var providerNode))
         {
             providerNode.RemoveItemProperty(propertyName);
         }
@@ -101,13 +101,13 @@ public partial class TreeStoreCmdletProviderBase : IDynamicPropertyCmdletProvide
     /// <inheritdoc/>
     public object RemovePropertyDynamicParameters(string path, string propertyName)
     {
-        var splitted = PathTool.Default.SplitProviderQualifiedPath(path);
+        var splitPath = PathTool.Default.SplitProviderQualifiedPath(path);
 
-        var driveInfo = this.GetTreeStoreDriveInfo(splitted.DriveName);
+        var driveInfo = this.GetTreeStoreDriveInfo(splitPath.DriveName);
 
         return this.InvokeProviderNodeOrDefault(
             driveInfo: driveInfo,
-            path: splitted.Items,
+            path: splitPath.Items,
             invoke: n => n.RemoveItemPropertyParameters(propertyName),
             fallback: () => default) ?? default!; // satisfy interface definition
     }
@@ -115,11 +115,11 @@ public partial class TreeStoreCmdletProviderBase : IDynamicPropertyCmdletProvide
     /// <inheritdoc/>
     public void RenameProperty(string path, string sourceProperty, string destinationProperty)
     {
-        var splitted = PathTool.Default.SplitProviderQualifiedPath(path);
+        var splitPath = PathTool.Default.SplitProviderQualifiedPath(path);
 
-        var driveInfo = this.GetTreeStoreDriveInfo(splitted.DriveName);
+        var driveInfo = this.GetTreeStoreDriveInfo(splitPath.DriveName);
 
-        if (this.TryGetNodeByPath(driveInfo, splitted.Items, out var providerNode))
+        if (this.TryGetNodeByPath(driveInfo, splitPath.Items, out var providerNode))
         {
             providerNode.RenameItemProperty(sourceProperty, destinationProperty);
         }
@@ -128,13 +128,13 @@ public partial class TreeStoreCmdletProviderBase : IDynamicPropertyCmdletProvide
     /// <inheritdoc/>
     public object? RenamePropertyDynamicParameters(string path, string sourceProperty, string destinationProperty)
     {
-        var splitted = PathTool.Default.SplitProviderQualifiedPath(path);
+        var splitPath = PathTool.Default.SplitProviderQualifiedPath(path);
 
-        var driveInfo = this.GetTreeStoreDriveInfo(splitted.DriveName);
+        var driveInfo = this.GetTreeStoreDriveInfo(splitPath.DriveName);
 
         return this.InvokeProviderNodeOrDefault(
             driveInfo: driveInfo,
-            path: splitted.Items,
+            path: splitPath.Items,
             invoke: n => n.RenameItemPropertyParameters(sourceProperty, destinationProperty),
             fallback: () => null);
     }

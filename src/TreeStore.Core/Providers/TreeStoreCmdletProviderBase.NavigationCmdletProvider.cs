@@ -13,11 +13,11 @@ public partial class TreeStoreCmdletProviderBase
     /// <inheritdoc/>
     protected override bool IsItemContainer(string path)
     {
-        var splitted = PathTool.Default.SplitProviderQualifiedPath(path);
+        var splitPath = PathTool.Default.SplitProviderQualifiedPath(path);
 
-        var driveInfo = this.GetTreeStoreDriveInfo(splitted.DriveName);
+        var driveInfo = this.GetTreeStoreDriveInfo(splitPath.DriveName);
 
-        return this.TryGetNodeByPath(driveInfo, splitted.Items, out var node)
+        return this.TryGetNodeByPath(driveInfo, splitPath.Items, out var node)
             ? node is ContainerNode
             : false;
     }
@@ -25,11 +25,11 @@ public partial class TreeStoreCmdletProviderBase
     /// <inheritdoc/>
     protected override void MoveItem(string path, string destination)
     {
-        var splittedSourcePath = PathTool.Default.SplitProviderQualifiedPath(path);
+        var splitSourcePath = PathTool.Default.SplitProviderQualifiedPath(path);
 
-        var (parentPath, childName) = splittedSourcePath.ParentAndChild;
+        var (parentPath, childName) = splitSourcePath.ParentAndChild;
 
-        var sourceDriveInfo = this.GetTreeStoreDriveInfo(splittedSourcePath.DriveName);
+        var sourceDriveInfo = this.GetTreeStoreDriveInfo(splitSourcePath.DriveName);
 
         this.InvokeContainerNodeOrDefault(
             driveInfo: sourceDriveInfo,
@@ -39,11 +39,11 @@ public partial class TreeStoreCmdletProviderBase
                 if (!sourceParentNode.TryGetChildNode(childName!, out var childNodeToMove))
                     throw new InvalidOperationException(string.Format(Resources.Error_CanFindFileSystemItem, path));
 
-                var splittedDestinationPath = PathTool.Default.SplitProviderQualifiedPath(destination);
+                var splitDestinationPath = PathTool.Default.SplitProviderQualifiedPath(destination);
 
                 // find the deepest ancestor which serves as a destination to copy to
                 // only moving with this provider is supported.
-                var destinationAncestor = this.GetDeepestNodeByPath(sourceDriveInfo, splittedDestinationPath.Items, out var missingPath);
+                var destinationAncestor = this.GetDeepestNodeByPath(sourceDriveInfo, splitDestinationPath.Items, out var missingPath);
 
                 if (destinationAncestor is ContainerNode destinationAncestorContainer)
                 {
@@ -62,13 +62,13 @@ public partial class TreeStoreCmdletProviderBase
     /// <inheritdoc/>
     protected override object? MoveItemDynamicParameters(string path, string destination)
     {
-        var splittedPath = PathTool.Default.SplitProviderQualifiedPath(path);
+        var splitPath = PathTool.Default.SplitProviderQualifiedPath(path);
 
-        var driveInfo = this.GetTreeStoreDriveInfo(splittedPath.DriveName);
+        var driveInfo = this.GetTreeStoreDriveInfo(splitPath.DriveName);
 
         return this.InvokeContainerNodeOrDefault(
             driveInfo: driveInfo,
-            path: splittedPath.Items,
+            path: splitPath.Items,
             invoke: c => c.MoveChildItemParameters(path, destination),
             fallback: () => base.MoveItemDynamicParameters(path, destination));
     }

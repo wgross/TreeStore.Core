@@ -8,11 +8,11 @@ public partial class TreeStoreCmdletProviderBase : IPropertyCmdletProvider
     /// <inheritdoc/>
     public void ClearProperty(string path, Collection<string> propertyToClear)
     {
-        var splitted = PathTool.Default.SplitProviderQualifiedPath(path);
+        var splitPath = PathTool.Default.SplitProviderQualifiedPath(path);
 
-        var driveInfo = this.GetTreeStoreDriveInfo(splitted.DriveName);
+        var driveInfo = this.GetTreeStoreDriveInfo(splitPath.DriveName);
 
-        if (this.TryGetNodeByPath(driveInfo, splitted.Items, out var providerNode))
+        if (this.TryGetNodeByPath(driveInfo, splitPath.Items, out var providerNode))
         {
             providerNode.ClearItemProperty(propertyToClear);
         }
@@ -21,13 +21,13 @@ public partial class TreeStoreCmdletProviderBase : IPropertyCmdletProvider
     /// <inheritdoc/>
     public object? ClearPropertyDynamicParameters(string path, Collection<string> propertyToClear)
     {
-        var splitted = PathTool.Default.SplitProviderQualifiedPath(path);
+        var splitPath = PathTool.Default.SplitProviderQualifiedPath(path);
 
-        var driveInfo = this.GetTreeStoreDriveInfo(splitted.DriveName);
+        var driveInfo = this.GetTreeStoreDriveInfo(splitPath.DriveName);
 
         return this.InvokeProviderNodeOrDefault(
             driveInfo: driveInfo,
-            path: splitted.Items,
+            path: splitPath.Items,
             invoke: n => n.ClearItemPropertyParameters(propertyToClear),
             fallback: () => null);
     }
@@ -35,11 +35,11 @@ public partial class TreeStoreCmdletProviderBase : IPropertyCmdletProvider
     /// <inheritdoc/>
     public void GetProperty(string path, Collection<string>? providerSpecificPickList)
     {
-        var splitted = PathTool.Default.SplitProviderQualifiedPath(path);
+        var splitPath = PathTool.Default.SplitProviderQualifiedPath(path);
 
-        var driveInfo = this.GetTreeStoreDriveInfo(splitted.DriveName);
+        var driveInfo = this.GetTreeStoreDriveInfo(splitPath.DriveName);
 
-        if (this.TryGetNodeByPath(driveInfo, splitted.Items, out var providerNode))
+        if (this.TryGetNodeByPath(driveInfo, splitPath.Items, out var providerNode))
         {
             var pso = providerNode.GetItemProperty(providerSpecificPickList);
 
@@ -53,13 +53,13 @@ public partial class TreeStoreCmdletProviderBase : IPropertyCmdletProvider
     /// <inheritdoc/>
     public object? GetPropertyDynamicParameters(string path, Collection<string>? providerSpecificPickList)
     {
-        var splitted = PathTool.Default.SplitProviderQualifiedPath(path);
+        var splitPath = PathTool.Default.SplitProviderQualifiedPath(path);
 
-        var driveInfo = this.GetTreeStoreDriveInfo(splitted.DriveName);
+        var driveInfo = this.GetTreeStoreDriveInfo(splitPath.DriveName);
 
         return this.InvokeProviderNodeOrDefault(
             driveInfo: driveInfo,
-            path: splitted.Items,
+            path: splitPath.Items,
             invoke: n => n.GetItemPropertyParameters(providerSpecificPickList),
             fallback: () => null);
     }
@@ -67,11 +67,11 @@ public partial class TreeStoreCmdletProviderBase : IPropertyCmdletProvider
     /// <inheritdoc/>
     public void SetProperty(string path, PSObject propertyValue)
     {
-        var splitted = PathTool.Default.SplitProviderQualifiedPath(path);
+        var splitPath = PathTool.Default.SplitProviderQualifiedPath(path);
 
-        var driveInfo = this.GetTreeStoreDriveInfo(splitted.DriveName);
+        var driveInfo = this.GetTreeStoreDriveInfo(splitPath.DriveName);
 
-        if (this.TryGetNodeByPath(driveInfo, splitted.Items, out var providerNode))
+        if (this.TryGetNodeByPath(driveInfo, splitPath.Items, out var providerNode))
         {
             providerNode.SetItemProperty(propertyValue);
         }
@@ -80,13 +80,13 @@ public partial class TreeStoreCmdletProviderBase : IPropertyCmdletProvider
     /// <inheritdoc/>
     public object? SetPropertyDynamicParameters(string path, PSObject propertyValue)
     {
-        var splitted = PathTool.Default.SplitProviderQualifiedPath(path);
+        var splitPath = PathTool.Default.SplitProviderQualifiedPath(path);
 
-        var driveInfo = this.GetTreeStoreDriveInfo(splitted.DriveName);
+        var driveInfo = this.GetTreeStoreDriveInfo(splitPath.DriveName);
 
         return this.InvokeProviderNodeOrDefault(
             driveInfo: driveInfo,
-            path: splitted.Items,
+            path: splitPath.Items,
             invoke: n => n.SetItemPropertyParameters(propertyValue),
             fallback: () => null);
     }
